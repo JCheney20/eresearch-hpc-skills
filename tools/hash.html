@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>UWC_HPC — password hasher (authoring aid)</title>
+  <style>
+    body { background: #000; color: #c0c0c0; font-family: monospace; max-width: 700px; margin: 2rem auto; }
+    textarea, pre { width: 100%; background: #0a0a0a; color: #c0c0c0; border: 1px solid #222; padding: 0.5em; }
+  </style>
+</head>
+<body>
+  <h1>SHA-256 hasher</h1>
+  <p>One password per line → one hex hash per line. For authoring levels by hand;
+     normally <code>tools/generate.py</code> does this.</p>
+  <textarea id="in" rows="6" placeholder="passwords, one per line"></textarea>
+  <button id="go">Hash</button>
+  <pre id="out"></pre>
+  <script>
+    document.getElementById("go").addEventListener("click", async () => {
+      const lines = document.getElementById("in").value.split("\n").filter(Boolean);
+      const out = [];
+      for (const l of lines) {
+        const buf = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(l.trim()));
+        out.push([...new Uint8Array(buf)].map(b => b.toString(16).padStart(2, "0")).join(""));
+      }
+      document.getElementById("out").textContent = out.join("\n");
+    });
+  </script>
+</body>
+</html>
