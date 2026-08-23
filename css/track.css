@@ -1,0 +1,560 @@
+/* The beginner track's stylesheet. Consumes css/tokens.css; invents nothing.
+
+   Three screens share one system: the challenge screen (reading pane left,
+   terminal right), the reading challenge (no terminal, so full width), and
+   the map (the curriculum drawn as a graph). Layout is flex and grid only —
+   nothing is positioned by hand except the wires on the map, and those are
+   measured from where the boxes actually landed.
+  ------------------------------------------------------------------------- */
+
+* { box-sizing: border-box; }
+
+/* Nothing here may scroll sideways at any width. `clip` rather than `hidden`,
+   so position: fixed still works on descendants. */
+html, body { overflow-x: clip; }
+
+body {
+  margin: 0;
+  background: var(--ground);
+  color: var(--ink);
+  font-family: var(--font-body);
+  font-size: var(--step-1);
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3 { text-wrap: balance; margin: 0; }
+
+/* Display type must be able to break inside a word as a last resort: a narrow
+   column has no break opportunity in "getting-on-the-cluster", and an
+   overflowing heading is how a page starts scrolling sideways. */
+.ctitle, .bname, .modalhead h2, .subhead {
+  overflow-wrap: anywhere; min-width: 0;
+}
+
+code, kbd, samp { font-family: var(--font-mono); font-size: 0.92em; }
+
+a { color: var(--navy); }
+
+:where(a, button, input, [tabindex]):focus-visible {
+  outline: 2px solid var(--gold-ui);
+  outline-offset: 2px;
+}
+
+.vh {
+  position: absolute; width: 1px; height: 1px; overflow: hidden;
+  clip-path: inset(50%); white-space: nowrap;
+}
+
+.icon { width: 1em; height: 1em; display: block; }
+
+@media (prefers-reduced-motion: reduce) {
+  * { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+}
+
+/* ---- app shell ----------------------------------------------------------- */
+.app { display: flex; flex-direction: column; height: 100vh; }
+
+.topbar {
+  display: flex; align-items: center; gap: var(--space-xl);
+  padding: var(--space-s) var(--space-l);
+  background: var(--navy); color: var(--on-navy);
+  border-bottom: 1px solid var(--navy-soft);
+  flex: none;
+}
+.wordmark {
+  font-weight: 800; letter-spacing: 0.06em; text-transform: uppercase;
+  font-size: var(--step-0); color: var(--on-navy); text-decoration: none;
+}
+.wordmark span { color: var(--gold); }
+.crumb { font-size: var(--step-0); color: var(--on-navy-dim); }
+.branchchip { font-size: var(--step-0); font-weight: 700; color: var(--gold); }
+.topbar .spacer { margin-left: auto; }
+.topbar .maplink {
+  font-size: var(--step-0); font-weight: 700;
+  color: var(--on-navy); text-decoration: none;
+}
+.topbar .maplink:hover { color: var(--gold); }
+
+.progress { display: flex; align-items: center; gap: var(--space-2xs); }
+.pip {
+  width: 9px; height: 9px; border-radius: 2px;
+  background: color-mix(in oklab, var(--on-navy) 22%, transparent);
+}
+.pip.done { background: var(--gold); }
+.pip.here {
+  background: var(--on-navy);
+  box-shadow: 0 0 0 2px color-mix(in oklab, var(--on-navy) 30%, transparent);
+}
+
+/* ---- the two panes ------------------------------------------------------- */
+.panes { display: flex; flex: 1; min-height: 0; }
+.reading {
+  width: calc(33% + 10px); min-width: 350px;
+  overflow-y: auto;
+  padding: var(--space-xl) var(--space-xl) var(--space-2xl);
+  background: var(--ground);
+  display: flex; flex-direction: column; gap: var(--space-l);
+}
+.termwrap {
+  flex: 1; min-width: 0; display: flex; flex-direction: column;
+  background: var(--term-ground);
+  border-left: 1px solid var(--term-rule);
+}
+
+/* the gold rule over a title, 80px wide, as UWC does it */
+.headrule { display: block; height: 4px; border-radius: 2px; background: var(--gold); }
+.headrule.wide { width: 80px; }
+.headrule.narrow { width: 20px; }
+
+.ctitle {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: var(--step-4); line-height: 1.15; letter-spacing: -0.005em;
+  color: var(--navy); margin-top: var(--space-s);
+}
+/* The one uppercase eyebrow on the page. */
+.cnum {
+  font-size: var(--step-0); font-weight: 700; letter-spacing: 0.08em;
+  text-transform: uppercase; color: var(--gold-text);
+}
+.cnum code {
+  background: var(--surface-2); border-radius: 4px; padding: 0 var(--space-2xs);
+  text-transform: none; letter-spacing: 0;
+}
+
+.block { max-width: 62ch; }
+.block p { margin: 0 0 var(--space-m); }
+.block p:last-child { margin-bottom: 0; }
+/* Sentence case, no trailing rule: five ruled labels down one column read as
+   five section breaks in a pane that has no sections. */
+.blabel {
+  font-size: var(--step-0); font-weight: 700; color: var(--ink-muted);
+  margin-bottom: var(--space-xs);
+}
+
+/* The task is tinted, not striped — the pane has one accent stripe on it and
+   that is the rule over the title. */
+.task {
+  background: var(--surface); border: 1px solid var(--rule);
+  padding: var(--space-m) var(--space-l); border-radius: 6px;
+}
+
+/* ---- worked examples: one click copies the command ----------------------- */
+.example { border: 1px solid var(--rule); border-radius: 8px; overflow: hidden; }
+.exrow { border-top: 1px solid var(--rule); }
+.exrow:first-child { border-top: 0; }
+.excmd {
+  display: flex; width: 100%; text-align: left; align-items: center;
+  gap: var(--space-s);
+  background: var(--surface); border: 0; cursor: pointer;
+  font-family: var(--font-mono); font-size: var(--step-0); color: var(--navy);
+  padding: var(--space-s) var(--space-m);
+  transition: background-color var(--dur-1) var(--ease-move);
+}
+.excmd:hover { background: var(--gold-wash); }
+.excmd:active { background: var(--surface-2); }
+.excmd .dollar { color: var(--gold-text); font-weight: 700; }
+.excmd .cmd { min-width: 0; overflow-wrap: anywhere; }
+.excmd .copy {
+  margin-left: auto; display: inline-flex; align-items: center;
+  color: var(--ink-muted); flex: none;
+}
+.excmd:hover .copy { color: var(--gold-text); }
+.excmd.copied .copy { color: var(--ok); }
+.excmd.copied .copy::after {
+  content: "Copied"; margin-left: var(--space-2xs);
+  font-family: var(--font-body); font-size: var(--step-0); font-weight: 700;
+  color: var(--ok);
+}
+.exout {
+  margin: 0; padding: var(--space-s) var(--space-m);
+  font-family: var(--font-mono); font-size: var(--step-0);
+  color: var(--ink-muted); white-space: pre-wrap; background: var(--ground);
+  max-height: 14lh; overflow-y: auto;
+}
+.exnote {
+  padding: 0 var(--space-m) var(--space-s);
+  font-size: var(--step-0); color: var(--ink-muted);
+}
+
+/* ---- the answer ---------------------------------------------------------- */
+.answer { display: flex; flex-direction: column; gap: var(--space-s); }
+.answerrow { display: flex; gap: var(--space-s); align-items: stretch; }
+.answer input {
+  flex: 1; min-width: 0;
+  font-family: var(--font-mono); font-size: var(--step-1);
+  padding: var(--space-m); line-height: 1.55;
+  border: 1.5px solid var(--rule); border-radius: 6px;
+  background: var(--ground); color: var(--ink);
+}
+.answer input:hover { border-color: var(--ink-muted); }
+.answer input:focus { border-color: var(--navy); }
+.answer input:disabled { opacity: 0.55; cursor: not-allowed; background: var(--surface-2); }
+
+.btn {
+  font-family: var(--font-body); font-weight: 700; font-size: var(--step-1);
+  padding: var(--space-m) var(--space-l); line-height: 1.55;
+  border-radius: 6px; cursor: pointer; white-space: nowrap;
+  background: var(--navy); color: var(--on-navy); border: 1.5px solid var(--navy);
+  text-decoration: none; display: inline-block;
+  transition: background-color var(--dur-1) var(--ease-move),
+              border-color var(--dur-1) var(--ease-move);
+}
+.btn:hover { background: var(--navy-soft); border-color: var(--navy-soft); }
+.btn:active { background: var(--ink); border-color: var(--ink); }
+.btn:disabled {
+  opacity: 0.55; cursor: not-allowed;
+  background: var(--surface-2); color: var(--ink-muted); border-color: var(--rule);
+}
+.btn.ghost { background: transparent; color: var(--navy); border-color: var(--rule); }
+.btn.ghost:hover { background: var(--surface-2); }
+.btn.ghost:active { background: var(--rule); }
+.btn.small { font-size: var(--step-0); padding: var(--space-xs) var(--space-m); }
+
+/* The slot is always there, empty and invisible, so a verdict appearing never
+   pushes the rest of the pane down. */
+.verdict {
+  font-size: var(--step-0); border-radius: 6px;
+  min-height: calc(1lh + var(--space-l));
+  padding: var(--space-s) var(--space-m);
+  visibility: hidden;
+}
+.verdict.show { visibility: visible; }
+.verdict.bad { background: var(--warn-wash); color: var(--warn); }
+.verdict.good { background: var(--ok-wash); color: var(--ok); }
+.verdict a { color: inherit; font-weight: 700; }
+.verdict code { background: color-mix(in oklab, var(--ink) 8%, transparent); border-radius: 4px; padding: 0 var(--space-2xs); }
+
+/* ---- hints: earned, never asked for -------------------------------------- */
+.hints { display: flex; flex-direction: column; gap: var(--space-xs); }
+.hints[hidden] { display: none; }
+.hinthead { display: flex; align-items: baseline; gap: var(--space-s); }
+.hintlabel {
+  font-size: var(--step-0); font-weight: 700; color: var(--ink-muted);
+}
+.hintcount { font-size: var(--step-0); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.rung[hidden] { display: none; }
+.rung {
+  border: 1px solid var(--gold-ui); border-radius: 6px;
+  background: var(--gold-wash); color: var(--ink);
+  padding: var(--space-s) var(--space-m); font-size: var(--step-0);
+  animation: rungin var(--dur-3) var(--ease-enter);
+}
+.rung .rlabel { font-weight: 700; color: var(--gold-text); margin-right: var(--space-2xs); }
+@keyframes rungin {
+  from { opacity: 0; transform: translateY(-0.25rem); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .rung { animation: none; } }
+
+/* ---- terminal ------------------------------------------------------------ */
+.termhead {
+  display: flex; align-items: center; gap: var(--space-s); flex: none;
+  padding: var(--space-xs) var(--space-m);
+  border-bottom: 1px solid var(--term-rule);
+  font-family: var(--font-mono); font-size: var(--step-0);
+  color: var(--term-dim);
+}
+.termhead .host { color: var(--term-accent); }
+.termhead .spacer { margin-left: auto; }
+.termhead button {
+  background: transparent; border: 1px solid var(--term-rule); border-radius: 4px;
+  color: var(--term-dim); cursor: pointer;
+  font-family: var(--font-body); font-size: var(--step-0);
+  padding: 0 var(--space-s);
+  transition: color var(--dur-1) var(--ease-move);
+}
+.termhead button:hover { color: var(--term-ink); }
+.term { flex: 1; min-height: 0; padding: var(--space-s) var(--space-m); }
+.term .xterm { height: 100%; }
+.term .xterm-viewport { background: transparent !important; }
+
+/* ---- reading challenge (no terminal, so the page takes the width) --------- */
+.readingonly {
+  flex: 1; min-height: 0; overflow-y: auto;
+  background: var(--ground);
+  padding: var(--space-3xl) clamp(var(--space-l), 5vw, var(--space-4xl)) var(--space-5xl);
+}
+.readingonly > .rhead { max-width: 68ch; }
+.readingonly .lede { font-size: var(--step-2); margin: var(--space-m) 0 0; }
+.readingonly .footnote {
+  font-size: var(--step-0); color: var(--ink-muted);
+  margin-top: var(--space-m); max-width: 68ch;
+}
+.readingactions { display: flex; gap: var(--space-s); margin-top: var(--space-2xl); }
+
+/* One card per row: the page spans the window, but the ideas read down it in
+   the order they arrive. */
+.readingcards {
+  display: grid; gap: var(--space-l); margin-top: var(--space-2xl);
+  grid-template-columns: minmax(0, 1fr);
+}
+.rcard {
+  background: var(--surface); border: 1px solid var(--rule);
+  border-radius: 10px; padding: var(--space-l) var(--space-l) var(--space-xl);
+}
+.rcard p { max-width: 62ch; }
+.rcard p:last-child { margin-bottom: 0; }
+.subhead {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: var(--step-2); line-height: 1.25;
+  color: var(--navy); margin: 0 0 var(--space-m);
+}
+.subhead .headrule { display: block; margin-bottom: var(--space-s); }
+.readingonly ul { padding-left: var(--space-l); }
+.readingonly li { margin-bottom: var(--space-xs); }
+
+/* A figure inside a card drops its frame — the card is already the frame. */
+.figure {
+  border: 1px solid var(--rule); border-radius: 8px; overflow: hidden;
+  background: var(--term-ground);
+}
+.rcard .figure { border: 0; border-radius: 6px; }
+.figure .demo {
+  padding: var(--space-l); font-family: var(--font-mono);
+  font-size: var(--step-1); color: var(--term-ink);
+}
+.figure .cap {
+  padding: var(--space-s) var(--space-m); font-size: var(--step-0);
+  color: var(--ink-muted); background: var(--surface-2);
+}
+.anno { color: var(--term-accent); font-weight: 700; }
+.rcard .figure .cap .anno, .cap .anno { color: var(--gold-text); }
+
+/* ---- the map ------------------------------------------------------------
+   Core at the top, the three routes across the middle, the finale at the
+   foot. A three-column grid places the bubbles; an SVG overlay, measured
+   from where they actually landed, draws the wires between them. The grid
+   is the structure — if the SVG never renders, the shape still reads.
+  ------------------------------------------------------------------------- */
+.mapscroll { flex: 1; min-height: 0; overflow-y: auto; background: var(--ground); }
+.mappage {
+  max-width: 74rem; margin: 0 auto;
+  padding: var(--space-2xl) var(--space-xl) var(--space-4xl);
+}
+.pagehead { max-width: 64ch; }
+.pagehead .cnum { margin-top: var(--space-s); }
+.pagehead .lede { font-size: var(--step-2); margin: var(--space-m) 0 0; }
+.demonote { margin: var(--space-xl) 0 0; max-width: 68ch; font-size: var(--step-0); color: var(--ink-muted); }
+.mapactions { display: flex; flex-wrap: wrap; gap: var(--space-s); margin-top: var(--space-m); }
+
+.graph {
+  position: relative;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-4xl) var(--space-xl);
+  margin-top: var(--space-2xl);
+}
+.wires { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+.wire { fill: none; stroke: var(--ink-muted); stroke-width: 1.25; }
+.wire.is-locked { stroke-dasharray: 5 5; opacity: 0.5; }
+.wirehead {
+  fill: none; stroke: var(--ink-muted); stroke-width: 1.25;
+  stroke-linecap: round; stroke-linejoin: round;
+}
+
+.gcell { position: relative; display: flex; justify-content: center; }
+.gcell-core   { grid-column: 2; grid-row: 1; }
+.gcell-finale { grid-column: 2; grid-row: 3; }
+.gcell-route  { grid-row: 2; }
+.gcell-route.col-1 { grid-column: 1; }
+.gcell-route.col-2 { grid-column: 2; }
+.gcell-route.col-3 { grid-column: 3; }
+
+.bubble {
+  position: relative;
+  display: flex; flex-direction: column; align-items: center;
+  width: 100%; max-width: 19rem; min-height: 8.5rem;
+  text-align: center; font-family: var(--font-body);
+  background: var(--ground); color: var(--ink);
+  border: 1.5px solid var(--rule); border-radius: 16px;
+  padding: var(--space-l) var(--space-l) var(--space-m);
+}
+button.bubble { cursor: pointer; transition: border-color var(--dur-2) var(--ease-move); }
+button.bubble:hover { border-color: var(--navy); }
+button.bubble:active { border-color: var(--ink); }
+
+.bstate {
+  position: absolute; top: var(--space-m); right: var(--space-m);
+  display: inline-flex; font-size: 1.5rem; color: var(--ink-muted);
+}
+.bname {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: var(--step-3); line-height: 1.2; letter-spacing: -0.005em;
+  color: var(--navy);
+}
+.bcount {
+  margin: var(--space-2xs) 0 0; font-variant-numeric: tabular-nums;
+  font-size: var(--step-0); color: var(--ink-muted);
+}
+.bpips {
+  display: flex; justify-content: center; flex-wrap: wrap;
+  gap: var(--space-2xs); margin-top: auto; padding-top: var(--space-l);
+}
+.bpip {
+  width: 12px; height: 12px; border-radius: 3px; flex: none;
+  background: var(--surface-2); border: 1px solid var(--rule);
+}
+.bpip.is-done { background: var(--gold); border-color: var(--gold-ui); }
+.bpip.is-open { background: var(--ground); border-color: var(--navy); border-width: 1.5px; }
+
+.bubble.is-done { background: var(--surface); }
+.bubble.is-done .bstate { color: var(--ok); }
+.bubble.is-open { border-width: 2.5px; border-color: var(--navy); }
+.bubble.is-open .bstate { color: var(--navy); }
+.bubble.is-locked { border-style: dashed; opacity: 0.55; }
+.bubble.is-locked .bname { color: var(--ink-muted); }
+
+/* ---- modal: the topic panel, and the three-routes explanation ------------ */
+.modalback {
+  position: fixed; inset: 0; z-index: 100;
+  background: color-mix(in oklab, var(--navy) 34%, transparent);
+  display: flex; align-items: center; justify-content: center;
+  padding: var(--space-xl);
+}
+.modal {
+  background: var(--ground); border: 1px solid var(--rule); border-radius: 14px;
+  box-shadow: 0 24px 60px color-mix(in oklab, var(--navy) 28%, transparent);
+  width: min(46rem, 100%); max-height: min(84vh, 52rem);
+  display: flex; flex-direction: column; overflow: hidden;
+  animation: modalin var(--dur-3) var(--ease-enter);
+}
+@keyframes modalin {
+  from { opacity: 0; transform: translateY(0.75rem); }
+  to   { opacity: 1; transform: none; }
+}
+@media (prefers-reduced-motion: reduce) { .modal { animation: none; } }
+
+.modalhead {
+  display: flex; align-items: center; gap: var(--space-l); flex: none;
+  padding: var(--space-l) var(--space-l) var(--space-m);
+  border-bottom: 1px solid var(--rule);
+}
+.modalhead h2 {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: var(--step-3); line-height: 1.2; color: var(--navy);
+}
+.modalclose {
+  margin-left: auto; flex: none;
+  background: transparent; border: 0; cursor: pointer;
+  font-family: var(--font-body); font-size: 1.5rem; line-height: 1;
+  color: var(--ink-muted); padding: 0 var(--space-xs); border-radius: 6px;
+  transition: background-color var(--dur-1) var(--ease-move);
+}
+.modalclose:hover { background: var(--surface-2); color: var(--ink); }
+.modalbody { padding: var(--space-l) var(--space-l) var(--space-xl); overflow-y: auto; }
+.modallede { margin: 0 0 var(--space-l); max-width: 62ch; }
+.modallede code, .modalfoot code, .nwaits code, .nstub code {
+  background: var(--surface-2); border-radius: 4px; padding: 0 var(--space-2xs);
+}
+.modalfoot { margin: var(--space-l) 0 0; max-width: 62ch; font-size: var(--step-0); color: var(--ink-muted); }
+.modalactions { display: flex; margin-top: var(--space-l); }
+
+.routelist { display: grid; gap: var(--space-m); }
+.routerow { background: var(--surface); border-radius: 10px; padding: var(--space-m) var(--space-l); }
+.routerow h3 {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: var(--step-2); line-height: 1.25; color: var(--navy);
+}
+.routerow p { margin: var(--space-2xs) 0 0; font-size: var(--step-0); color: var(--ink-muted); }
+.routerow .routemeta { color: var(--gold-text); font-weight: 700; }
+
+/* ---- one challenge, inside the topic panel ------------------------------- */
+.nodestack { display: grid; gap: var(--space-s); }
+.node {
+  display: block; text-decoration: none; color: var(--ink);
+  background: var(--ground); border: 1.5px solid var(--rule);
+  border-radius: 8px; padding: var(--space-m);
+}
+a.node { transition: border-color var(--dur-1) var(--ease-move); }
+a.node:hover { border-color: var(--navy); }
+a.node:active { border-color: var(--ink); }
+
+.nhead {
+  display: flex; align-items: center; gap: var(--space-s);
+  margin-bottom: var(--space-xs);
+  font-size: var(--step-0); font-weight: 700;
+}
+.nnum { color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+.nstate {
+  margin-left: auto; display: inline-flex; align-items: center; gap: var(--space-2xs);
+  color: var(--ink-muted);
+}
+.ntitle { font-size: var(--step-1); font-weight: 700; line-height: 1.3; color: var(--navy); }
+.ncmds { display: flex; flex-wrap: wrap; gap: var(--space-2xs); margin-top: var(--space-xs); }
+.ncmds code {
+  background: var(--surface-2); color: var(--ink);
+  border-radius: 4px; padding: 0 var(--space-2xs); font-size: 0.8rem;
+}
+.nline { margin: var(--space-s) 0 0; font-size: var(--step-0); color: var(--ink-muted); }
+.nwaits {
+  margin: var(--space-s) 0 0; padding-top: var(--space-s);
+  border-top: 1px dashed var(--rule);
+  font-size: var(--step-0); color: var(--ink);
+}
+.nwaits strong { color: var(--navy); }
+.nstub, .nnote { margin: var(--space-s) 0 0; font-size: var(--step-0); color: var(--ink-muted); }
+.nstub { font-style: italic; }
+
+.is-done.node { background: var(--surface); }
+.is-done.node .nstate { color: var(--ok); }
+.is-open.node { border-width: 2px; border-color: var(--navy); }
+.is-open.node .ntitle { font-size: var(--step-2); }
+.is-open.node .nstate {
+  color: var(--navy); background: var(--gold-wash);
+  border: 1px solid var(--gold-ui); border-radius: 999px;
+  padding: 0 var(--space-s);
+}
+.is-locked.node { border-style: dashed; opacity: 0.7; }
+.is-locked.node .ntitle { color: var(--ink-muted); }
+
+/* ---- narrow windows -----------------------------------------------------
+   The trainer pairs a live terminal with a reading pane and expects a
+   physical keyboard. Below 900px there is no honest arrangement for that, so
+   it says so rather than pretending. The map, which is only reading, keeps
+   working: it collapses to one column and drops the wires, because a wire
+   that has to double back is worse than no wire.
+  ------------------------------------------------------------------------- */
+@media (max-width: 62rem) {
+  .mappage { padding: var(--space-xl) var(--space-l) var(--space-3xl); }
+  .graph { grid-template-columns: minmax(0, 1fr); gap: var(--space-l); }
+  .wires { display: none; }
+  .gcell, .gcell-core, .gcell-finale, .gcell-route,
+  .gcell-route.col-1, .gcell-route.col-2, .gcell-route.col-3 {
+    grid-column: 1; grid-row: auto;
+  }
+  .bubble { max-width: none; min-height: 0; }
+}
+
+@media (max-width: 899px) {
+  .panes { display: none; }
+  .narrownotice { display: block; }
+}
+.narrownotice { display: none; padding: var(--space-3xl) var(--space-xl); max-width: 46ch; }
+.narrownotice h2 {
+  font-family: var(--font-display); font-weight: 800;
+  font-size: var(--step-3); color: var(--navy); margin-bottom: var(--space-m);
+}
+.narrownotice p { color: var(--ink-muted); }
+
+/* ---- skip link ----------------------------------------------------------
+   First in the document so Tab reaches it before anything else. Parked above
+   the fold by a transform rather than by `top`, because a transform is
+   composited and a layout property is not. The ring appears instantly; only
+   the slide is timed. */
+.skiplink {
+  position: fixed; top: 0; left: var(--space-l); z-index: 200;
+  transform: translateY(-150%);
+  background: var(--navy); color: var(--on-navy);
+  padding: var(--space-m) var(--space-l);
+  border-radius: 0 0 8px 8px;
+  font-family: var(--font-body); font-weight: 700; font-size: var(--step-0);
+  text-decoration: none;
+  transition: transform var(--dur-2) var(--ease-enter);
+}
+.skiplink:focus-visible {
+  transform: none;
+  outline: 2px solid var(--gold-ui);
+  outline-offset: 2px;
+}
+.skiplink[hidden] { display: none; }

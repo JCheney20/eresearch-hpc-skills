@@ -1,0 +1,7 @@
+# Tooling installed per-machine, not part of the app.
+.agents/
+.claude/
+skills-lock.json
+
+# Planning and prototypes: useful history, but not the deployed site.
+.scratch/

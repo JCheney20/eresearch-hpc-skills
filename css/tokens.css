@@ -1,0 +1,88 @@
+/* Design tokens for the beginner track.
+   Hallmark · custom theme · editorial genre.
+
+   Every colour, face, size, space and easing the trainer uses is named here,
+   and no stylesheet below this one invents one of its own. Change a value
+   here and the whole trainer moves with it.
+
+   Colour is OKLCH, so lightness means the same thing across the palette and a
+   tint can be moved without dragging its hue along. Navy and gold are UWC's
+   own, read from their stylesheet. UWC's gold scores 2.6:1 on paper and fails
+   AA at every text size, so it is split by role: --gold decorates, --gold-text
+   is the only one allowed to carry words, --gold-ui is the only one allowed
+   to carry meaning without words. tools/contrast.mjs asserts all of that.
+
+   The paper is not #fff. It carries six thousandths of chroma toward the
+   navy — below the point anyone would call it blue, above the point a screen
+   starts to look like a lightbox.
+
+   The terminal palette is hex rather than OKLCH on purpose: xterm.js paints
+   into a canvas and needs literal colours, so those tokens are read by
+   JavaScript as well as CSS and must parse everywhere.
+  ------------------------------------------------------------------------- */
+
+:root {
+  --navy:        oklch(25.9% 0.119 266.5);
+  --navy-soft:   oklch(35.4% 0.101 269.0);
+  --gold:        oklch(70.3% 0.102 84.3);  /* decoration, and text on navy */
+  --gold-text:   oklch(53.2% 0.078 84.4);  /* the only gold allowed to carry words */
+  --gold-ui:     oklch(65.3% 0.094 84.1);  /* non-text UI only */
+  --gold-wash:   oklch(95.3% 0.018 86.1);
+
+  --ink:         oklch(26.1% 0.079 270.1);
+  --ink-muted:   oklch(50.3% 0.057 274.2);
+  --ground:      oklch(98.6% 0.006 267.0);  /* paper, tinted toward the navy */
+  --surface:     oklch(96.6% 0.006 275.0);
+  --surface-2:   oklch(93.6% 0.010 275.0);
+  --rule:        oklch(89.9% 0.017 274.8);
+  --on-navy:     oklch(97.5% 0.006 267.0);
+  --on-navy-dim: oklch(83.0% 0.026 270.0);
+
+  --ok:          oklch(46.5% 0.093 161.2);
+  --ok-wash:     oklch(95.2% 0.025 160.0);
+  --warn:        oklch(47.2% 0.108 56.6);
+  --warn-wash:   oklch(95.2% 0.026 62.0);
+
+  /* ---- terminal (hex: xterm.js reads these too) ------------------------ */
+  --term-ground: #0E1430;
+  --term-ink:    #DBE0F2;
+  --term-dim:    #8A93BC;
+  --term-accent: #E3C070;
+  --term-err:    #F0A08A;
+  --term-rule:   #26305A;
+  --term-sel:    #2B3768;
+
+  /* ---- type ------------------------------------------------------------ */
+  --font-body:    "Open Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+  --font-display: var(--font-body);
+  --font-mono:    "JetBrains Mono", ui-monospace, "DejaVu Sans Mono", Menlo, Consolas, monospace;
+
+  --step-0: 0.8125rem;
+  --step-1: 0.9375rem;
+  --step-2: 1.0625rem;
+  --step-3: 1.375rem;
+  --step-4: 2rem;
+
+  /* ---- space: one 4px-based scale, used for every gap in the trainer --- */
+  --space-3xs: 0.125rem;
+  --space-2xs: 0.25rem;
+  --space-xs:  0.375rem;
+  --space-s:   0.5rem;
+  --space-m:   0.75rem;
+  --space-l:   1rem;
+  --space-xl:  1.5rem;
+  --space-2xl: 2rem;
+  --space-3xl: 2.5rem;
+  --space-4xl: 3.5rem;
+  --space-5xl: 5rem;
+
+  /* ---- motion: three easings, named for what they do. Nothing uses a bare
+     `ease`, and nothing animates a layout property. -------------------- */
+  --ease-enter: cubic-bezier(0.16, 1, 0.30, 1);
+  --ease-exit:  cubic-bezier(0.55, 0, 1, 0.45);
+  --ease-move:  cubic-bezier(0.40, 0, 0.20, 1);
+
+  --dur-1: 120ms;
+  --dur-2: 200ms;
+  --dur-3: 320ms;
+}

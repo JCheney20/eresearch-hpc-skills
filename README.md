@@ -1,83 +1,112 @@
 # UWC_HPC
 
-A browser-based wargame in the spirit of [OverTheWire: Bandit](https://overthewire.org/wargames/bandit/),
-built from the UWC2026 student-cluster tutorials. 25 levels take a player from
-`ls` and `cat`, through pipes, permissions and `journalctl`, to nftables
-firewalls, chrony, NFS, MUNGE, Slurm and HPL tuning — all on a simulated
-Rocky Linux cluster that runs entirely in the browser (xterm.js + a small
-JavaScript shell). No backend, no build step.
+A browser trainer that takes a UWC postgraduate from never having opened a
+terminal to running work on the cluster. No install, no account, no backend:
+the whole thing is static files and a simulated Linux that runs in the tab.
 
-## Run locally
+Open `index.html` over HTTP (ES modules will not load from `file://`):
 
-```sh
-python3 -m http.server 8000
-# open http://localhost:8000
-```
+    python3 -m http.server 8000    # then visit http://localhost:8000
 
-(Opening `index.html` directly from `file://` also works in most browsers,
-since there is no fetch and no bundler.)
+## What is here
 
-## Deploy
+**The beginner track** (`index.html`) is the current trainer. Nineteen
+challenges across five topics, drawn as a graph: a core of nine that takes
+everyone from "what is a prompt" to logging in with `ssh`, then three routes
+that open at once — moving files, keeping a record, running work — and a
+finale that needs all three.
 
-- **GitHub Pages**: push this directory as a repo, then Settings → Pages →
-  deploy from branch, root folder. `.nojekyll` is already in place.
-- **Vercel**: `vercel --prod` with framework preset "Other", output directory `.`.
+Each challenge is a reading pane on the left and a live terminal on the right.
+The learner reads the scenario, copies a worked example, tries it, and answers
+a question about what they saw. Answers are *computed facts* — a job ID, a
+file size, a count — rather than passwords copied from one screen to the next,
+so a right answer means they read the output.
 
-## How the game works
-
-- Each level is a data module in `js/levels/levelNN.js`: a goal, a virtual
-  filesystem, canned outputs for cluster commands (`systemctl`, `journalctl`,
-  `nft`, `chronyc`, `sinfo`…), and optional hooks for stateful moments
-  (`sbatch` producing an output file, fixing munge key permissions).
-- Solving a level yields a **password** that unlocks the next one. The site
-  checks `SHA-256(input)` against `js/levels/hashes.js`; progress lives in
-  `localStorage`. Knowing a later level's password lets you jump straight to
-  it, exactly like Bandit.
-- Every level has **12 variants** (different passwords, filenames, broken
-  services, subnets, HPL numbers). One playthrough seed picks your variant per
-  level; the **new playthrough** footer link rerolls everything for replay.
-- **Honor-system note**: like Bandit, the answers are technically in the
-  (public) source. The gating stops accidental skipping, not determined
-  source-reading — reading the source is arguably also learning.
-
-## Authoring
-
-- `tools/generate.py` — regenerates `js/levels/gen-data.js` (variant passwords
-  and answer data) and `js/levels/hashes.js` (gate hashes) in one run so they
-  can never disagree. Re-run it to rotate all passwords.
-- `tools/validate.mjs` — `node tools/validate.mjs`: checks every level ×
-  variant (hash chain intact, password discoverable in content).
-- `tools/smoke.mjs` — `node tools/smoke.mjs`: plays the intended solution of
-  all 25 levels × 12 variants through the real shell engine.
-- `tools/hash.html` — manual SHA-256 helper for one-off level authoring.
-- Browser console: `validateLevels()` runs the same checks in-page.
-
-### Adding a level
-
-1. Create `js/levels/levelNN.js` exporting `{ n, title, commands, reading,
-   variants, build(v) }` (see any existing level; `variants` needs ≥ 10
-   entries, each with a `pass`).
-2. Register it in `js/levels/index.js` and teach `tools/generate.py` about its
-   yielded passwords (append to `PW` handling or the answer tables).
-3. `python3 tools/generate.py && node tools/validate.mjs && node tools/smoke.mjs`.
+**The original wargame** (`legacy.html`) is the 25-level Bandit-style game this
+repository started as, aimed at people already comfortable in a terminal. It
+still runs, untouched, off `js/levels/` and `js/app.js`. Nothing in the
+beginner track imports it and nothing in it imports the beginner track.
+Whether it is retired is not decided yet, which is why it is still here.
 
 ## Layout
 
-```
-index.html            single page; hash routes: #/  #/level/N  #/cheatsheet  #/docs/<topic>
-css/style.css         matte-black OverTheWire-style theme
-js/shell.js           simulated shell: tokenizer, pipes, > >>, globs, Tab, history
-js/vfs.js             per-level virtual filesystem
-js/commands/          coreutils.js (ls, grep, find…) + scenario.js (systemctl, nft…)
-js/gate.js            SHA-256 unlock + localStorage progress
-js/variants.js        seeded per-playthrough variant selection
-js/levels/            level00–level24 + generated gen-data.js / hashes.js
-js/content.js         cheatsheet + condensed docs
-vendor/               xterm.js 5.3.0 + fit addon (vendored, no CDN)
-tools/                generate.py, validate.mjs, smoke.mjs, hash.html
-```
+    index.html            the beginner track
+    legacy.html           the original 25-level wargame
+    css/tokens.css        every colour, face, size, space and easing
+    css/fonts.css         Open Sans + JetBrains Mono, embedded as woff2
+    css/track.css         the beginner track's stylesheet
+    css/style.css         the original wargame's stylesheet
+    js/shell.js           the shell: tokenising, pipes, redirection, history
+    js/vfs.js             the in-memory filesystem
+    js/commands/          coreutils and the scenario commands
+    js/levels/            the original wargame's 25 levels
+    js/track/             the beginner track
+      topics.js           the curriculum, and what unlocks what
+      challenges/         one file per written challenge
+      commands.js         scp, rsync, ll, tldr, df, watch, git
+      session.js          a challenge, wired to the shell engine
+      progress.js         what is solved, and therefore what is open
+      answer.js           normalising and judging an answer
+      ui/                 the three screens
+    tools/                the checks
+    vendor/               xterm.js
 
-Content sources: the UWC2026 repo — tutorials 1–4, `docs/errata.md` (the
-transposed-subnet, munge-key and package-name bugs are real upstream bugs),
-`modules/firewall.nix`, `modules/chrony.nix`, `modules/slurm.nix`, and
-`benchmarks/hpl/HPL.dat`.
+The two tracks share `js/shell.js`, `js/vfs.js` and `js/commands/`. The
+beginner track adds its commands as per-challenge hooks, which the shell
+consults first, so it needed no changes to make room for them.
+
+## Checks
+
+    node tools/check.mjs
+
+Runs three suites, none of which needs a browser:
+
+- **`contrast.mjs`** converts every OKLCH token in `css/tokens.css` to sRGB and
+  asserts the WCAG ratio for each pair the design actually puts together.
+- **`track-validate.mjs`** runs every challenge's declared solution through the
+  real shell against the real world and checks it yields the declared answer,
+  then checks that every worked example's printed output is exactly what the
+  shell prints for that command. A challenge that becomes unsolvable, or a page
+  that starts lying about what a command produces, fails here rather than in
+  front of a learner.
+- **`render-smoke.mjs`** builds every screen against a small fake DOM
+  (`tools/fakedom.mjs`) in each progress state that changes what a screen does,
+  and asserts what came out: the graph, the pips, the hint thresholds, the
+  answer flow.
+
+The original wargame keeps its own checks: `node tools/validate.mjs` and
+`node tools/smoke.mjs`.
+
+## Writing a challenge
+
+Add the challenge to `js/track/topics.js` if it is not already on the map —
+that file *is* the curriculum, and it derives what unlocks what from the shape,
+so there are no dependency lists to keep in sync. Then write
+`js/track/challenges/<slug>.js` and import it in
+`js/track/challenges/index.js`.
+
+A challenge declares its prose (`scenario`, `task`), its worked `example`s,
+three `hints`, the `answer` with its `alternatives` and its named `failures`,
+the `solution` that produces it, and a `build()` returning the world:
+
+    build() {
+      return {
+        fs: { "/home/student": { "project": { "run.log": { c: "..." } } } },
+        canned: { "rsync -av --stats student@uwc-hpc:logs/ logs/": "..." },
+      };
+    }
+
+`fs` is the filesystem (`js/vfs.js`). `canned` is how `scp`, `rsync`, `ssh` and
+`git` are simulated deterministically: the exact command line is the key, a key
+ending in ` *` is the fallback, and an entry may declare `creates` to leave a
+real file behind where a real copy would have. Then run
+`node tools/check.mjs` — the two invariants above will tell you immediately if
+the challenge is unsolvable or the examples are wrong.
+
+Fifteen of the nineteen challenges are on the map but not yet written. They
+show their place and do not open.
+
+## Credits
+
+Inspired by [OverTheWire: Bandit](https://overthewire.org/wargames/bandit/).
+Terminal by [xterm.js](https://xtermjs.org/). Colours and type are UWC's own.
