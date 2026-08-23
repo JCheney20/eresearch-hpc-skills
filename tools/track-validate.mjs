@@ -111,9 +111,22 @@ for (const slug of Object.keys(CHALLENGES)) {
           !r.err, r.err);
         out += (r.out || "") + "\n";
       }
-      check(`${label}: running the solution yields the answer ("${c.answer}")`,
-        out.includes(c.answer),
+      /* How the answer relates to what the solution printed. Most answers are
+         a value you read off the output; some are a count of what came back,
+         and those will never appear in it verbatim. A challenge says which,
+         and the default is the strict one. */
+      const mode = c.answerCheck || "contains";
+      const words = out.trim() ? out.trim().split(/\s+/).length : 0;
+      const lines = out.trim() ? out.trim().split("\n").length : 0;
+      const found =
+        mode === "countWords" ? words === Number(c.answer) :
+        mode === "countLines" ? lines === Number(c.answer) :
+        out.toLowerCase().includes(String(c.answer).toLowerCase());
+      check(`${label}: running the solution yields the answer ("${c.answer}", by ${mode})`,
+        found,
         `got: ${JSON.stringify(out.slice(0, 240))}`);
+      check(`${label}: declares a known answerCheck`,
+        ["contains", "countWords", "countLines"].includes(mode), mode);
     }
 
     // --- invariant 2: the examples are honest ----------------------------

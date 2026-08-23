@@ -87,8 +87,11 @@ export function exampleBlock(challenge) {
     btn.append(dollar, cmd, el("span", "copy", ICON.copy));
     btn.addEventListener("click", () => copyText(btn, ex.command));
 
-    const out = el("pre", "exout");
-    out.textContent = ex.output;
+    /* Some commands answer with silence — `cd`, `git add`. An empty box looks
+       like something failed to load, so the page says what the silence means
+       rather than leaving a gap. */
+    const out = el("pre", "exout" + (ex.output ? "" : " quiet"));
+    out.textContent = ex.output || "(no output — on a command line that means it worked)";
 
     row.append(btn, out);
     if (ex.note) row.append(el("div", "exnote", ex.note));

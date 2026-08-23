@@ -4,7 +4,8 @@
 
 import { el } from "./dom.js";
 import { topbar } from "./parts.js";
-import { markSolved, unlockedBy } from "../progress.js";
+import { doneActions } from "./challenge.js";
+import { markSolved } from "../progress.js";
 import { topicOf } from "../topics.js";
 
 export function renderReading(challenge, mount) {
@@ -39,17 +40,10 @@ export function renderReading(challenge, mount) {
 
   /* Opening the page is what completes it, so mark it now rather than making
      the learner click a button to agree that they have read something. The
-     button below is navigation, not a gate. */
-  const opened = unlockedBy(challenge.slug);
+     buttons below are navigation, not a gate — and they are the same pair
+     every other challenge ends with. */
   markSolved(challenge.slug);
-
-  const actions = el("div", "readingactions");
-  const next = opened[0];
-  const go = el("a", "btn");
-  go.href = next ? "#/c/" + next.slug : "#/";
-  go.textContent = next ? `Next: ${next.title} →` : "Back to the map →";
-  actions.append(go);
-  page.append(actions);
+  page.append(doneActions(challenge.slug));
 
   if (challenge.footnote) page.append(el("p", "footnote", challenge.footnote));
 

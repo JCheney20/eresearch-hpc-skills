@@ -42,7 +42,7 @@ Whether it is retired is not decided yet, which is why it is still here.
     js/levels/            the original wargame's 25 levels
     js/track/             the beginner track
       topics.js           the curriculum, and what unlocks what
-      challenges/         one file per written challenge
+      challenges/         one file per challenge, plus the shared worlds
       commands.js         scp, rsync, ll, tldr, df, watch, git
       session.js          a challenge, wired to the shell engine
       progress.js         what is solved, and therefore what is open
@@ -74,6 +74,9 @@ Runs three suites, none of which needs a browser:
   and asserts what came out: the graph, the pips, the hint thresholds, the
   answer flow.
 
+- **`fill-examples.mjs`** is not a check but belongs with them: it regenerates
+  every worked example's output from the engine.
+
 The original wargame keeps its own checks: `node tools/validate.mjs` and
 `node tools/smoke.mjs`.
 
@@ -103,8 +106,16 @@ real file behind where a real copy would have. Then run
 `node tools/check.mjs` — the two invariants above will tell you immediately if
 the challenge is unsolvable or the examples are wrong.
 
-Fifteen of the nineteen challenges are on the map but not yet written. They
-show their place and do not open.
+All nineteen are written. The prose is a first pass and expects to be edited;
+the worlds, answers and examples behind it are checked, so editing the words
+will not quietly break a challenge.
+
+Worked-example output is **not typed by hand**. Each challenge declares its
+examples' output as entries in one `const OUT = [...]` block, and
+`node tools/fill-examples.mjs` runs each example command through the real shell
+and rewrites that block with what actually came back. Change a world, re-run
+it, and the page catches up. `track-validate.mjs` then checks the same thing
+independently, so a hand-edit that drifts is still caught.
 
 ## Credits
 

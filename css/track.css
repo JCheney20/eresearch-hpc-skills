@@ -281,8 +281,6 @@ a { color: var(--navy); }
   font-size: var(--step-0); color: var(--ink-muted);
   margin-top: var(--space-m); max-width: 68ch;
 }
-.readingactions { display: flex; gap: var(--space-s); margin-top: var(--space-2xl); }
-
 /* One card per row: the page spans the window, but the ideas read down it in
    the order they arrive. */
 .readingcards {
@@ -558,3 +556,16 @@ a.node:active { border-color: var(--ink); }
   outline-offset: 2px;
 }
 .skiplink[hidden] { display: none; }
+
+/* ---- what to do once a challenge is finished ---------------------------- */
+.afteranswer:empty { display: none; }
+.doneactions {
+  display: flex; flex-wrap: wrap; gap: var(--space-s);
+  padding-top: var(--space-m); border-top: 1px solid var(--rule);
+}
+.doneactions .btn { text-align: center; }
+.donenote {
+  flex-basis: 100%; margin: var(--space-2xs) 0 0;
+  font-size: var(--step-0); color: var(--ink-muted); max-width: 62ch;
+}
+.exout.quiet { color: var(--ink-muted); font-style: italic; font-family: var(--font-body); }

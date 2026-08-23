@@ -18,9 +18,9 @@ document.body.append(root);
 const { renderMap } = await import("../js/track/ui/map.js");
 const { renderChallenge } = await import("../js/track/ui/challenge.js");
 const { renderReading } = await import("../js/track/ui/reading.js");
-const { CHALLENGES } = await import("../js/track/challenges/index.js");
+const { CHALLENGES, isBuilt } = await import("../js/track/challenges/index.js");
 const { TOPICS, ALL_NODES } = await import("../js/track/topics.js");
-const { markSolved, resetProgress, stateOf, nextOpen } = await import("../js/track/progress.js");
+const { markSolved, resetProgress, stateOf, nextOpen, nextAfter } = await import("../js/track/progress.js");
 const { makeSession } = await import("../js/track/session.js");
 
 let total = 0, failed = 0;
@@ -78,18 +78,23 @@ if (map) {
   check("closing the panel removes it", !document.body.querySelector(".modal"));
 }
 
-/* A challenge that has a place on the map but no content yet must say so
-   rather than looking like a dead link. Challenge 1 is one, and it becomes
-   visible the moment challenge 0 is done. */
+/* Every challenge on the map must be playable, or say plainly that it is not.
+   A card that is neither is a dead link, which is the one thing a map may not
+   contain. */
 {
   markSolved("what-is-a-terminal");
   const m2 = renderMap(mount);
   find(m2, "bubble")[0].click();
   const panel = document.body.querySelector(".modal");
-  const unwritten = find(panel, "node").find(n => n.textContent.includes("Where am I"));
-  check("an unwritten challenge is shown as unwritten",
-    !!unwritten && find(unwritten, "nstub").length === 1);
-  check("an unwritten challenge is not a link", unwritten && unwritten.tagName !== "A");
+  const cards = find(panel, "node");
+  check("no card on the map is a dead link",
+    cards.every(c =>
+      c.tagName === "A" ||                                   // playable
+      c.classList.contains("is-locked") ||                   // says what it waits for
+      find(c, "nstub").length === 1));                       // says it is unwritten
+  check("every challenge in the curriculum has content",
+    ALL_NODES.every(n => isBuilt(n.slug)),
+    ALL_NODES.filter(n => !isBuilt(n.slug)).map(n => n.slug).join(", "));
   document.body.querySelector(".modalclose").click();
   resetProgress();
 }
@@ -161,6 +166,56 @@ for (const slug of ["reading-files", "bringing-files-back", "when-the-link-drops
   check("the right answer is accepted", find(screen, "verdict")[0].classList.contains("good"));
   check("the right answer marks the challenge done", stateOf(c.slug) === "done");
   check("the answer box locks once it is right", input.disabled === true && btn.disabled === true);
+
+  const actions = find(screen, "doneactions")[0];
+  check("finishing a challenge offers two ways on", !!actions && actions.childNodes.length === 2);
+  check("the first is the next challenge",
+    actions && actions.childNodes[0].getAttribute("href") === "#/c/finding-the-line",
+    actions && actions.childNodes[0].getAttribute("href"));
+  check("the second is the map",
+    actions && actions.childNodes[1].getAttribute("href") === "#/");
+}
+
+/* At the branch, "next" carries straight on to the leftmost route — which is
+   the lowest-numbered one, because the map is laid out in number order. */
+{
+  resetProgress();
+  for (const n of ALL_NODES.filter(n => n.num <= 8)) markSolved(n.slug);
+  const eight = nextAfter("getting-on-the-cluster", isBuilt);
+  check("finishing the core points at the leftmost route",
+    eight && eight.slug === "bringing-files-back", eight && eight.slug);
+
+  const ten = nextAfter("when-the-link-drops", isBuilt);
+  check("the end of a route carries on into the next one",
+    ten && ten.slug === "what-changed", ten && ten.slug);
+
+  for (const n of ALL_NODES) markSolved(n.slug);
+  check("the last challenge has nowhere further to go",
+    nextAfter("putting-it-together", isBuilt) === null);
+
+  const last = renderChallenge(CHALLENGES["putting-it-together"], mount);
+  const lastInput = find(last, "answer")[0].querySelector("input");
+  const lastBtn = find(last, "answer")[0].querySelector("button");
+  lastInput.value = CHALLENGES["putting-it-together"].answer;
+  lastBtn.dispatch("click");
+  await new Promise(r => setTimeout(r, 0));
+  const lastActions = find(last, "doneactions")[0];
+  check("the last challenge offers only the map",
+    !!lastActions && lastActions.querySelectorAll("a").length === 1 &&
+    lastActions.querySelectorAll("a")[0].getAttribute("href") === "#/");
+  check("and says that it was the last one", find(last, "donenote").length === 1);
+  resetProgress();
+}
+
+/* A reading challenge ends the same way every other one does. */
+{
+  const r = renderReading(CHALLENGES["what-is-a-terminal"], mount);
+  const actions = find(r, "doneactions")[0];
+  check("a reading challenge offers the same two ways on",
+    !!actions && actions.querySelectorAll("a").length === 2);
+  check("its next challenge is the one after it",
+    actions && actions.querySelectorAll("a")[0].getAttribute("href") === "#/c/where-am-i");
+  resetProgress();
 }
 
 /* ---- the map once everything is solved ---------------------------------- */

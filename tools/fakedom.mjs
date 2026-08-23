@@ -40,6 +40,16 @@ class El {
     if (this.tagName === "INPUT" || this.tagName === "TEXTAREA") this.value = "";
   }
 
+  /* href, and a few like it, reflect between property and attribute in a real
+     DOM. Code sets `a.href = ...` and tests read getAttribute("href"); both
+     have to see the same string or the stub quietly lies. */
+  get href() { return this.attrs.href ?? ""; }
+  set href(v) { this.attrs.href = String(v); }
+  get type() { return this.attrs.type ?? ""; }
+  set type(v) { this.attrs.type = String(v); }
+  get title() { return this.attrs.title ?? ""; }
+  set title(v) { this.attrs.title = String(v); }
+
   get className() { return this._class; }
   set className(v) { this._class = String(v || ""); }
   get id() { return this._id; }

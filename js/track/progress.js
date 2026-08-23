@@ -85,6 +85,26 @@ export function nextOpen() {
   return ALL_NODES.filter(n => stateOf(n.slug) === "open").sort((a, b) => a.num - b.num)[0] || null;
 }
 
+/* Where "next challenge" goes after finishing one.
+ *
+ * The lowest-numbered challenge after this one that is not locked. At the
+ * branch — finishing the core opens all three routes at once — that rule
+ * picks the leftmost route on the map, because the map is laid out in number
+ * order and the leftmost route's head is the lowest number of the three. So
+ * the button is always "carry straight on", and the map is there for anyone
+ * who would rather take a different route.
+ *
+ * `built` is asked as well as `stateOf`, so the button can never point at a
+ * challenge that has a place on the map but no content yet.
+ */
+export function nextAfter(slug, isBuiltFn = () => true) {
+  const here = nodeBySlug(slug);
+  if (!here) return null;
+  return ALL_NODES
+    .filter(n => n.num > here.num && stateOf(n.slug) !== "locked" && isBuiltFn(n.slug))
+    .sort((a, b) => a.num - b.num)[0] || null;
+}
+
 export function overallProgress() {
   const solved = read().solved;
   return {

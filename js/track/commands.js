@@ -109,17 +109,81 @@ export const TRACK_COMMANDS = {
 
   watch(args, stdin, ctx) {
     return cannedOr(ctx, "watch", args, () => {
-      const inner = args.filter(a => !a.startsWith("-"));
+      // Only watch's own options are consumed here. Everything from the first
+      // non-option word onward belongs to the command being watched, flags
+      // included — `watch squeue --me` watches `squeue --me`, not `squeue`.
+      let every = "2";
+      let i = 0;
+      while (i < args.length) {
+        if (args[i] === "-n" || args[i] === "--interval") { every = args[i + 1] || "2"; i += 2; continue; }
+        const short = /^-n(\d+(?:\.\d+)?)$/.exec(args[i]);
+        if (short) { every = short[1]; i += 1; continue; }
+        if (args[i] === "-d" || args[i] === "--differences" || args[i] === "-t") { i += 1; continue; }
+        break;
+      }
+      const inner = args.slice(i);
       if (inner.length === 0) return { out: "", err: "watch: usage: watch [-n SECONDS] COMMAND", code: 1 };
-      // A real watch redraws forever. Here it runs the command once and says
-      // so, because a browser tab that never returns a prompt is a trap.
+
+      // A real watch redraws until Ctrl-C. Here it runs once and says so,
+      // because a browser tab that never gives the prompt back is a trap.
       const r = ctx.shell.run(inner.join(" "));
-      const every = (args.includes("-n") ? args[args.indexOf("-n") + 1] : "2") + "s";
       return {
-        out: `Every ${every}: ${inner.join(" ")}\n\n${r.out || r.err || ""}\n\n(the real watch redraws this until you press Ctrl-C; the trainer runs it once)`,
+        out: `Every ${every}s: ${inner.join(" ")}\n\n${r.out || r.err || ""}\n\n(the real watch redraws this until you press Ctrl-C; the trainer runs it once)`,
         code: 0,
       };
     });
+  },
+
+  // grep -r: the curriculum promises it and COREUTILS.grep does not have it.
+  // Anything without -r goes straight through to the real one, so there is
+  // only ever one grep behaving one way.
+  grep(args, stdin, ctx) {
+    const recursive = args.some(a => /^-[a-zA-Z]*[rR]/.test(a));
+    if (!recursive) return COREUTILS.grep(args, stdin, ctx);
+
+    const flags = new Set();
+    const rest = [];
+    for (const a of args) {
+      if (a.startsWith("-") && a.length > 1) for (const f of a.slice(1)) flags.add(f);
+      else rest.push(a);
+    }
+    const pattern = rest.shift();
+    if (pattern === undefined) return { out: "", err: "usage: grep -r PATTERN [DIR...]", code: 2 };
+
+    let re = null;
+    try { re = new RegExp(pattern, flags.has("i") ? "i" : ""); } catch { re = null; }
+    const test = line => (re ? re.test(line) : line.includes(pattern));
+
+    const roots = rest.length ? rest : ["."];
+    const hits = [];
+
+    function walk(node, shownPath) {
+      if (!node) return;
+      if (node.type === "file") {
+        if (node.binary) return;                       // real grep skips these too
+        String(node.c).replace(/\n$/, "").split("\n").forEach((line, i) => {
+          if (flags.has("v") ? !test(line) : test(line)) {
+            hits.push(flags.has("n") ? `${shownPath}:${i + 1}:${line}` : `${shownPath}:${line}`);
+          }
+        });
+        return;
+      }
+      for (const name of Object.keys(node.children).sort()) {
+        if (name.startsWith(".")) continue;
+        walk(node.children[name], `${shownPath}/${name}`);
+      }
+    }
+
+    for (const root of roots) {
+      const node = ctx.vfs.get(ctx.cwd, root);
+      if (!node) { hits.push(`grep: ${root}: No such file or directory`); continue; }
+      // Real grep prefixes matches with the path as you typed it: `grep -r x .`
+      // gives `./run.conf`, `grep -r x archive` gives `archive/run13.conf`.
+      walk(node, root === "." ? "." : root.replace(/\/$/, ""));
+    }
+
+    if (flags.has("c")) return { out: String(hits.length), code: hits.length ? 0 : 1 };
+    return { out: hits.join("\n"), code: hits.length ? 0 : 1 };
   },
 };
 
