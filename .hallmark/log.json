@@ -1,0 +1,11 @@
+[
+  {
+    "date": "2026-08-23",
+    "macrostructure": "two-pane-workbench",
+    "theme": "custom",
+    "theme_axes": "near-white navy-tinted paper / display serif over humanist sans / warm gold accent at hue 84",
+    "vibe": "institutional, plain-spoken, machine on the right",
+    "enrichment": "none",
+    "brief": "Beginner Linux trainer for UWC postgraduates: reading pane left, live simulated terminal right, three layout variants for the client to choose between."
+  }
+]
