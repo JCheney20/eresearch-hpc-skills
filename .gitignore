@@ -5,3 +5,10 @@ skills-lock.json
 
 # Planning and prototypes: useful history, but not the deployed site.
 .scratch/
+
+# Local admin-backend state.
+__pycache__/
+*.py[cod]
+.venv/
+admin_backend/db.sqlite3
+admin_backend/staticfiles/

@@ -133,7 +133,7 @@ When learner SSO is introduced later, offer a one-time confirmed import of brows
 
 ## Phase 4: admin backend and publication pipeline
 
-Add this only after the declarative schema and migration are ready.
+The private Django scaffold in `admin_backend/` now defines drafts, immutable challenge revisions, curriculum drafts, content releases, release membership, and audit records. It remains undeployed: university SSO, optimistic-concurrency forms, publication validation/static generation, and export are still required before Nginx may expose it.
 
 ### Service boundary
 

@@ -51,6 +51,7 @@ Whether it is retired is not decided yet, which is why it is still here.
       ui/                 the three screens
     tools/                the checks
     vendor/               xterm.js
+    admin_backend/        private Django content service (not yet deployed)
 
 The two tracks share `js/shell.js`, `js/vfs.js` and `js/commands/`. The
 beginner track adds its commands as per-challenge hooks, which the shell
