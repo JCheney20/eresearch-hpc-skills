@@ -1,13 +1,12 @@
 // Progress: which challenges are solved, and therefore which are open.
 //
-// The old game chained passwords: level N's answer was level N+1's key, so
-// the order was the chain. This track uses a concept graph instead — a
-// challenge is open when everything in its `requires` is solved — which is
-// what lets finishing the core open three routes at once.
+// The old game chained passwords: level N's answer was level N+1's key. This
+// track uses explicit prerequisite groups, so a challenge can require all or
+// any of a set of earlier challenges.
 //
 // Everything lives in localStorage under one key. There are no accounts.
 
-import { ALL_NODES, nodeBySlug, TOPICS } from "./topics.js";
+import { ALL_NODES, nodeBySlug, requirementsMet, TOPICS } from "./topics.js";
 
 const KEY = "uwc_hpc_track";
 
@@ -50,12 +49,15 @@ export function resetProgress() {
 }
 
 /* "done" | "open" | "locked" — the one rule, applied everywhere. */
+function completedNumbers(solved) {
+  return new Set(solved.map(nodeBySlug).filter(Boolean).map(node => node.number));
+}
+
 export function stateOf(slug) {
   const node = nodeBySlug(slug);
   if (!node) return "locked";
   if (isSolved(slug)) return "done";
-  const solved = read().solved;
-  return (node.requires || []).every(r => solved.includes(r)) ? "open" : "locked";
+  return requirementsMet(node, completedNumbers(read().solved)) ? "open" : "locked";
 }
 
 export function topicProgress(topic) {
@@ -73,10 +75,13 @@ export function topicState(topic) {
 /* What did solving this open up? Used for the line after a correct answer. */
 export function unlockedBy(slug) {
   const solved = read().solved;
-  return ALL_NODES.filter(n =>
-    !solved.includes(n.slug) &&
-    (n.requires || []).includes(slug) &&
-    (n.requires || []).every(r => solved.includes(r))
+  const source = nodeBySlug(slug);
+  if (!source) return [];
+  const completed = completedNumbers([...solved, slug]);
+  return ALL_NODES.filter(node =>
+    !solved.includes(node.slug) &&
+    node.prerequisiteGroups.some(group => group.sources.includes(source.number)) &&
+    requirementsMet(node, completed)
   );
 }
 

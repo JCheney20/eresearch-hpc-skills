@@ -1,10 +1,9 @@
 // The challenge registry.
 //
-// All nineteen are written. js/track/topics.js is the curriculum — it decides
-// where a challenge sits and what unlocks it — and this file decides what is
-// actually playable. Adding a challenge means writing its file and importing
-// it here; a challenge on the map with no file shows its place and does not
-// open, which is how a half-written track stays honest.
+// All nineteen are written. js/track/content.js owns their stable identities,
+// topic membership and explicit prerequisite graph. This compatibility registry
+// supplies the existing prose and worlds while those modules are migrated to
+// the declarative content format.
 
 import whatIsATerminal from "./what-is-a-terminal.js";
 import whereAmI from "./where-am-i.js";
@@ -42,6 +41,11 @@ for (const c of LIST) {
   const where = topicOf(c.slug);
   if (!where) throw new Error(`challenge "${c.slug}" is not placed in js/track/topics.js`);
   c.topicKey = where.topic.key;
+  c.number = where.node.number;
+  c.revision = where.node.revision;
+  c.kind = where.node.kind;
+  c.revisionId = where.node.id;
+  c.prerequisiteGroups = where.node.prerequisiteGroups;
   c.requires = where.node.requires;
   CHALLENGES[c.slug] = c;
 }

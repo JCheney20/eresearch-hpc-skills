@@ -15,7 +15,8 @@
 
 import { CHALLENGES } from "../js/track/challenges/index.js";
 import { makeSession, silentTerm } from "../js/track/session.js";
-import { ALL_NODES, TOPICS, topicOf, nodeBySlug } from "../js/track/topics.js";
+import { ALL_NODES, TOPICS, topicOf, nodeByNumber, requirementsMet } from "../js/track/topics.js";
+import { CONTENT_RELEASE } from "../js/track/content.js";
 import { judge, normalise } from "../js/track/answer.js";
 
 let total = 0, failed = 0;
@@ -37,38 +38,64 @@ check("every challenge in the curriculum has a unique slug",
   new Set(slugs).size === slugs.length);
 
 const nums = ALL_NODES.map(n => n.num);
-check("every challenge in the curriculum has a unique number",
+check("every challenge in the curriculum has a unique numeric position",
   new Set(nums).size === nums.length);
+check("the content release has an identity", !!CONTENT_RELEASE.releaseId);
+check("every challenge has a unique stable number",
+  new Set(ALL_NODES.map(n => n.number)).size === ALL_NODES.length);
+check("every challenge revision has a unique ID",
+  new Set(ALL_NODES.map(n => n.id)).size === ALL_NODES.length);
 
 for (const node of ALL_NODES) {
-  check(`${node.slug}: every requirement it declares exists`,
-    (node.requires || []).every(r => nodeBySlug(r) !== null),
-    `requires: ${JSON.stringify(node.requires)}`);
-  check(`${node.slug}: does not require itself`,
-    !(node.requires || []).includes(node.slug));
+  check(`${node.slug}: has a three-digit hexadecimal challenge number`,
+    /^[0-9A-F]{3}$/.test(node.number), node.number);
+  check(`${node.slug}: has a three-digit hexadecimal revision`,
+    /^[0-9A-F]{3}$/.test(node.revision), node.revision);
+  check(`${node.slug}: revision ID combines its number and revision`,
+    node.id === node.number + node.revision, node.id);
+  check(`${node.slug}: numeric position matches its hexadecimal number`,
+    node.num === Number.parseInt(node.number, 16));
+  check(`${node.slug}: has a known challenge kind`,
+    node.kind === "reading" || node.kind === "interactive", node.kind);
+
+  for (const group of node.prerequisiteGroups) {
+    check(`${node.slug}: prerequisite group has a known mode`,
+      group.mode === "all" || group.mode === "any", group.mode);
+    check(`${node.slug}: prerequisite group is not empty`, group.sources.length > 0);
+    check(`${node.slug}: prerequisite sources are unique`,
+      new Set(group.sources).size === group.sources.length);
+    check(`${node.slug}: every prerequisite source exists`,
+      group.sources.every(source => nodeByNumber(source) !== null),
+      JSON.stringify(group.sources));
+    check(`${node.slug}: does not require itself`, !group.sources.includes(node.number));
+  }
 }
 
-/* No cycles: walking requirements from any node must terminate. */
+/* No cycles: walking every edge from any node must terminate. */
 for (const node of ALL_NODES) {
   const seen = new Set();
-  const stack = [node.slug];
+  const stack = [node.number];
   let cyclic = false;
   while (stack.length) {
-    const s = stack.pop();
-    if (seen.has(s)) continue;
-    seen.add(s);
-    const n = nodeBySlug(s);
-    for (const r of (n && n.requires) || []) {
-      if (r === node.slug) { cyclic = true; break; }
-      stack.push(r);
-    }
-    if (cyclic) break;
+    const number = stack.pop();
+    if (seen.has(number)) continue;
+    seen.add(number);
+    const current = nodeByNumber(number);
+    const sources = current ? current.prerequisiteGroups.flatMap(group => group.sources) : [];
+    if (sources.includes(node.number)) { cyclic = true; break; }
+    stack.push(...sources);
   }
-  check(`${node.slug}: its requirements do not form a cycle`, !cyclic);
+  check(`${node.slug}: its prerequisites do not form a cycle`, !cyclic);
 }
 
 check("the core has no prerequisites at its head",
-  TOPICS[0].nodes[0].requires.length === 0);
+  TOPICS[0].nodes[0].prerequisiteGroups.length === 0);
+check("all-of groups require every source",
+  !requirementsMet({ prerequisiteGroups: [{ mode: "all", sources: ["001", "002"] }] }, ["001"]) &&
+  requirementsMet({ prerequisiteGroups: [{ mode: "all", sources: ["001", "002"] }] }, ["001", "002"]));
+check("any-of groups require at least one source",
+  !requirementsMet({ prerequisiteGroups: [{ mode: "any", sources: ["001", "002"] }] }, []) &&
+  requirementsMet({ prerequisiteGroups: [{ mode: "any", sources: ["001", "002"] }] }, ["002"]));
 
 /* ---- each written challenge --------------------------------------------- */
 
@@ -77,6 +104,10 @@ for (const slug of Object.keys(CHALLENGES)) {
   check(`${slug}: is placed in the curriculum`, topicOf(slug) !== null);
   check(`${slug}: its number matches the curriculum`,
     topicOf(slug) && topicOf(slug).num === c.num);
+  check(`${slug}: exposes its stable revision ID`,
+    c.revisionId === topicOf(slug).node.id);
+  check(`${slug}: uses its declared challenge kind`,
+    c.kind === topicOf(slug).node.kind);
 
   if (c.kind === "reading") {
     check(`${slug} (reading): has cards with content`,

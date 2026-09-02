@@ -12,7 +12,7 @@
 
 import { el, svg, clear, ICON } from "./dom.js";
 import { topbar } from "./parts.js";
-import { TOPICS, ROUTE_KEYS, topicByKey, nodeBySlug } from "../topics.js";
+import { ALL_NODES, TOPICS, ROUTE_KEYS, topicByKey } from "../topics.js";
 import { stateOf, topicProgress, topicState, overallProgress, isSolved } from "../progress.js";
 import { isBuilt } from "../challenges/index.js";
 
@@ -68,15 +68,18 @@ function stateLabel(state) {
    saying "Locked" and nothing else. */
 function waitsHTML(item) {
   if (item.waitsText) return item.waitsText;
-  if (item.waits) return `Waits for <strong>${item.waits.concept}</strong>. You meet that in ${item.waits.from}.`;
 
-  const names = (item.requires || [])
-    .map(nodeBySlug)
-    .filter(Boolean)
-    .map(n => `<strong>${n.title}</strong> (challenge ${n.num})`);
-  if (names.length === 0) return "";
-  if (names.length === 1) return `Waits for ${names[0]}.`;
-  return `Waits for ${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}.`;
+  const groups = item.prerequisiteGroups.map(group => {
+    const names = group.sources
+      .map(source => ALL_NODES.find(node => node.number === source))
+      .filter(Boolean)
+      .map(node => `<strong>${node.title}</strong> (challenge ${node.num})`);
+    if (names.length === 1) return names[0];
+    const joined = `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
+    return group.mode === "any" ? `one of ${joined}` : `all of ${joined}`;
+  });
+  if (groups.length === 0) return "";
+  return `Waits for ${groups.join(" and ")}.`;
 }
 
 function nodeCard(item) {
