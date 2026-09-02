@@ -6,7 +6,7 @@ import { topicOf } from "../topics.js";
 import { overallProgress } from "../progress.js";
 import { judge } from "../answer.js";
 
-/* The topbar counts the topic the learner is in, not all nineteen challenges.
+/* The topbar counts the topic the learner is in, not every challenge.
    The number it prints is the challenge's own — challenge 0 is "Challenge 0"
    here and on every other screen. */
 export function topbar(challenge) {
@@ -19,7 +19,7 @@ export function topbar(challenge) {
   bar.append(mark);
 
   if (where) {
-    bar.append(el("span", "crumb", `Challenge ${where.num} of ${where.last}`));
+    bar.append(el("span", "crumb", `Challenge ${where.displayNum} of ${where.last}`));
     bar.append(el("span", "branchchip", where.topic.name));
   } else {
     const p = overallProgress();
@@ -52,8 +52,8 @@ export function challengeHeading(challenge) {
   h.append(el("span", "headrule wide"));
   const chips = (challenge.commands || []).map(c => `<code>${c}</code>`).join(" ");
   const lead = where
-    ? `${where.topic.name} · Challenge ${where.num} of ${where.last}`
-    : `Challenge ${challenge.num}`;
+    ? `${where.topic.name} · Challenge ${where.displayNum} of ${where.last}`
+    : `Challenge ${challenge.displayNum ?? challenge.num}`;
   h.append(el("div", "cnum", lead + (chips ? " · " + chips : "")));
   h.append(el("h1", "ctitle", challenge.title));
   return h;
@@ -145,7 +145,7 @@ export function hintLadder(challenge) {
   return wrap;
 }
 
-export function answerBlock(challenge, ladder, onCorrect) {
+export function answerBlock(challenge, ladder, onCorrect, onAttempt) {
   const wrap = el("div", "answer");
   wrap.setAttribute("role", "group");
   wrap.setAttribute("aria-label", "Answer");
@@ -174,6 +174,7 @@ export function answerBlock(challenge, ladder, onCorrect) {
     if (settled) return;
     const r = await judge(challenge, input.value);
     if (r.state === "empty") { verdict.className = "verdict"; return; }
+    if (onAttempt) onAttempt();
 
     if (r.state === "right") {
       settled = true;

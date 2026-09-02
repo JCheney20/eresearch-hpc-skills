@@ -1,6 +1,6 @@
 # UWC_HPC
 
-A browser trainer that takes a UWC postgraduate from never having opened a
+A browser trainer that takes a university student from never having opened a
 terminal to running work on the cluster. No install, no account, no backend:
 the whole thing is static files and a simulated Linux that runs in the tab.
 
@@ -46,11 +46,12 @@ Whether it is retired is not decided yet, which is why it is still here.
       challenges/         one file per challenge, plus the shared worlds
       commands.js         scp, rsync, ll, tldr, df, watch, git
       session.js          a challenge, wired to the shell engine
-      progress.js         what is solved, and therefore what is open
+      progress.js         revision-aware browser progress and unlocking
       answer.js           normalising and judging an answer
       ui/                 the three screens
     tools/                the checks
     vendor/               xterm.js
+    admin_backend/        private Django content service (not yet deployed)
 
 The two tracks share `js/shell.js`, `js/vfs.js` and `js/commands/`. The
 beginner track adds its commands as per-challenge hooks, which the shell
@@ -114,7 +115,8 @@ real file behind where a real copy would have. Then run
 `node tools/check.mjs` — the two invariants above will tell you immediately if
 the challenge is unsolvable or the examples are wrong.
 
-All nineteen are written. The prose is a first pass and expects to be edited;
+All twenty-two are written, including four reading introductions. The prose is
+a first pass and expects to be edited;
 the worlds, answers and examples behind it are checked, so editing the words
 will not quietly break a challenge.
 

@@ -2,8 +2,8 @@
 //
 // Core at the top, the three routes across the middle, the finale at the
 // foot. The individual challenges are not on this screen — a beginner opening
-// the map wants to know how much of a topic is behind them, not to read
-// nineteen cards — so each topic is one bubble carrying its name, an
+// the map wants to know how much of a topic is behind them, not to read every
+// challenge card — so each topic is one bubble carrying its name, an
 // "x out of y", and a pip per challenge. The challenges live one click in.
 //
 // A three-column grid places the bubbles; an SVG overlay measured from where
@@ -73,7 +73,7 @@ function waitsHTML(item) {
     const names = group.sources
       .map(source => ALL_NODES.find(node => node.number === source))
       .filter(Boolean)
-      .map(node => `<strong>${node.title}</strong> (challenge ${node.num})`);
+      .map(node => `<strong>${node.title}</strong> (challenge ${node.displayNum})`);
     if (names.length === 1) return names[0];
     const joined = `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
     return group.mode === "any" ? `one of ${joined}` : `all of ${joined}`;
@@ -95,7 +95,7 @@ function nodeCard(item) {
   }
 
   const head = el("div", "nhead");
-  head.append(el("span", "nnum", "Challenge " + pad(item.num)));
+  head.append(el("span", "nnum", "Challenge " + pad(item.displayNum)));
   const st = el("span", "nstate");
   st.innerHTML = stateLabel(state);
   head.append(st);
@@ -337,10 +337,6 @@ export function renderMap(mount) {
   page.append(head);
 
   page.append(buildGraph());
-
-  page.append(el("p", "demonote",
-    "Open a topic to see its challenges. Four of the nineteen are written; the rest " +
-    "show their place on the map and will not open yet."));
 
   const actions = el("div", "mapactions");
   const why = el("button", "btn ghost small", "Why three routes?");

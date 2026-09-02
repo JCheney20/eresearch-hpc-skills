@@ -168,11 +168,13 @@ function makeStorage() {
    the shell actually printed. */
 export function recordingTerminal() {
   const out = [];
+  let onInput = null;
   return {
     written: out,
     text: () => out.join(""),
+    input(s) { if (onInput) onInput(s); },
     write(s) { out.push(s); },
-    onData() {},
+    onData(fn) { onInput = fn; },
     open() {},
     focus() {},
     reset() { out.length = 0; },

@@ -16,7 +16,7 @@ export function renderReading(challenge, mount) {
   const head = el("div", "rhead");
   head.append(el("span", "headrule wide"));
   head.append(el("div", "cnum", where
-    ? `${where.topic.name} · Challenge ${where.num} of ${where.last} · read this one`
+    ? `${where.topic.name} · Challenge ${where.displayNum} of ${where.last} · read this one`
     : "Read this one"));
   head.append(el("h1", "ctitle", challenge.title));
   if (challenge.lede) head.append(el("p", "lede", challenge.lede));
