@@ -41,7 +41,8 @@ Whether it is retired is not decided yet, which is why it is still here.
     js/commands/          coreutils and the scenario commands
     js/levels/            the original wargame's 25 levels
     js/track/             the beginner track
-      topics.js           the curriculum, and what unlocks what
+      content.js          stable IDs, topics and explicit prerequisites
+      topics.js           runtime projection of the authored curriculum
       challenges/         one file per challenge, plus the shared worlds
       commands.js         scp, rsync, ll, tldr, df, watch, git
       session.js          a challenge, wired to the shell engine
@@ -80,13 +81,20 @@ Runs three suites, none of which needs a browser:
 The original wargame keeps its own checks: `node tools/validate.mjs` and
 `node tools/smoke.mjs`.
 
+## Deployment
+
+Nginx configuration is in `deploy/nginx/uwc-hpc-skills.conf`; the release layout,
+installation checks and rollback procedure are in `docs/deployment-plan.md`.
+
 ## Writing a challenge
 
-Add the challenge to `js/track/topics.js` if it is not already on the map —
-that file *is* the curriculum, and it derives what unlocks what from the shape,
-so there are no dependency lists to keep in sync. Then write
-`js/track/challenges/<slug>.js` and import it in
-`js/track/challenges/index.js`.
+Add the challenge's stable number, initial revision, topic and explicit
+prerequisite groups to `js/track/content.js`. Topics control presentation only;
+prerequisites are authored as `all` or `any` groups of challenge numbers. Then
+write `js/track/challenges/<slug>.js` and import it in
+`js/track/challenges/index.js`. These challenge modules are the compatibility
+source for prose and worlds while that content is migrated to the declarative
+format.
 
 A challenge declares its prose (`scenario`, `task`), its worked `example`s,
 three `hints`, the `answer` with its `alternatives` and its named `failures`,
