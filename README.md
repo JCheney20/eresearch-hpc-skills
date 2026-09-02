@@ -84,10 +84,12 @@ The original wargame keeps its own checks: `node tools/validate.mjs` and
 
 ## Home navigation prototype
 
-This branch contains throwaway A/B navigation work. Run `python3 -m http.server
-8000`, then compare `home-prototype.html?variant=A` and
-`home-prototype.html?variant=B`. Arrow keys or the floating switcher change the
-variant; Topic and challenge nodes are clickable.
+This branch contains throwaway A/B/C navigation work. Run `python3 -m
+http.server 8000`, then compare `home-prototype.html?variant=A`,
+`home-prototype.html?variant=B`, and `home-prototype.html?variant=C`. Variant C
+adds focused Topic trees and a complete open-access `view=journey`. Arrow keys
+or the floating switcher change the variant; Topic and challenge nodes are
+clickable.
 
 ## Deployment
 

@@ -1,8 +1,9 @@
-// THROWAWAY PROTOTYPE: two home-navigation structures, switchable with ?variant=A|B.
+// THROWAWAY PROTOTYPE: three home-navigation structures, switchable with ?variant=A|B|C.
 
 const VARIANTS = [
   { key: "A", name: "Expanded curriculum graph" },
   { key: "B", name: "Topics, then graph" },
+  { key: "C", name: "Topics + Your Journey" },
 ];
 
 const icons = {
@@ -84,6 +85,39 @@ const topics = [
   },
 ];
 
+const journey = {
+  height: 1700,
+  nodes: [
+    { id: "start", title: "Start your journey", label: "Introduction", x: 410, y: 20, state: "done" },
+    { id: "terminal", title: "Meet the terminal", label: "Linux", x: 410, y: 165, state: "done" },
+    { id: "where", title: "Find your place", label: "pwd · cd", x: 205, y: 330, state: "done" },
+    { id: "files", title: "Work with files", label: "ls · mkdir · touch", x: 615, y: 330, state: "here" },
+    { id: "combine", title: "Combine commands", label: "pipes · search", x: 410, y: 515, state: "open" },
+    { id: "git-intro", title: "What Git records", label: "Git", x: 155, y: 710, state: "open" },
+    { id: "hpc-intro", title: "What a cluster is", label: "HPC", x: 665, y: 710, state: "open" },
+    { id: "status", title: "See what changed", label: "git status · diff", x: 35, y: 900, state: "open" },
+    { id: "history", title: "Read the history", label: "git log", x: 275, y: 900, state: "open" },
+    { id: "storage", title: "Use cluster storage", label: "Filesystems", x: 545, y: 900, state: "open" },
+    { id: "scheduler", title: "Meet the scheduler", label: "Slurm", x: 785, y: 900, state: "open" },
+    { id: "record", title: "Record and share work", label: "commit · clone · pull", x: 155, y: 1110, state: "open" },
+    { id: "resources", title: "Choose resources", label: "CPU · memory · time", x: 665, y: 1110, state: "open" },
+    { id: "transfer", title: "Move research data", label: "Transfer", x: 155, y: 1305, state: "open" },
+    { id: "submit", title: "Submit and watch a job", label: "sbatch · squeue", x: 665, y: 1305, state: "open" },
+    { id: "finish", title: "Put it together", label: "Research workflow", x: 410, y: 1515, state: "open" },
+  ],
+  edges: [
+    ["start", "terminal"], ["terminal", "where"], ["terminal", "files"],
+    ["where", "combine"], ["files", "combine"],
+    ["combine", "git-intro"], ["combine", "hpc-intro"],
+    ["git-intro", "status"], ["git-intro", "history"],
+    ["hpc-intro", "storage"], ["hpc-intro", "scheduler"],
+    ["status", "record"], ["history", "record"],
+    ["storage", "resources"], ["scheduler", "resources"],
+    ["record", "transfer"], ["resources", "submit"],
+    ["transfer", "finish"], ["submit", "finish"],
+  ],
+};
+
 const main = document.getElementById("prototype");
 const stateLine = document.getElementById("prototype-state");
 const variantLabel = document.getElementById("variant-label");
@@ -102,34 +136,35 @@ function updateURL(changes) {
   render();
 }
 
-function setVariant(key) { updateURL({ variant: key, topic: null }); }
+function setVariant(key) { updateURL({ variant: key, topic: null, view: null }); }
 function cycle(direction) {
   const current = VARIANTS.findIndex(item => item.key === variantFromURL());
   setVariant(VARIANTS[(current + direction + VARIANTS.length) % VARIANTS.length].key);
 }
 
 function stateText(state) {
-  return state === "done" ? "Complete" : state === "here" ? "Continue" : state === "open" ? "Available" : "Locked";
+  return state === "done" ? "Complete" : state === "here" ? "Recommended next" : state === "locked" ? "Locked" : "Available";
 }
 
-function graphPath(graph, edge) {
+function graphPath(graph, edge, openAccess) {
   const from = graph.nodes.find(node => node.id === edge[0]);
   const to = graph.nodes.find(node => node.id === edge[1]);
   const x1 = from.x + 90, y1 = from.y + 112, x2 = to.x + 90, y2 = to.y;
   const bend = Math.max(42, (y2 - y1) * 0.48);
-  return `<path class="graph-wire${to.state === "locked" ? " is-locked" : ""}" d="M${x1},${y1} C${x1},${y1 + bend} ${x2},${y2 - bend} ${x2},${y2}" marker-end="url(#graph-arrow)"/>`;
+  return `<path class="graph-wire${!openAccess && to.state === "locked" ? " is-locked" : ""}" d="M${x1},${y1} C${x1},${y1 + bend} ${x2},${y2 - bend} ${x2},${y2}" marker-end="url(#graph-arrow)"/>`;
 }
 
-function graphMarkup(graph, name) {
-  return `<div class="curriculum-graph" style="--graph-ratio:${graph.height / 1000}" aria-label="${name} learning graph">
+function graphMarkup(graph, name, openAccess = false) {
+  return `<div class="curriculum-graph${openAccess ? " is-open-access" : ""}" style="--graph-ratio:${graph.height / 1000}" aria-label="${name} learning graph">
     <svg viewBox="0 0 1000 ${graph.height}" preserveAspectRatio="none" aria-hidden="true">
       <defs><marker id="graph-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="graph-arrow" d="M.5 .8 7 4 .5 7.2"/></marker></defs>
-      ${graph.edges.map(edge => graphPath(graph, edge)).join("")}
+      ${graph.edges.map(edge => graphPath(graph, edge, openAccess)).join("")}
     </svg>
     ${graph.nodes.map(node => {
-      const progress = node.progress || [node.state === "done" ? 1 : 0, 1];
-      return `<button type="button" class="graph-node is-${node.state}" style="--node-x:${node.x / 10}%;--node-y:${node.y / graph.height * 100}%" data-node="${node.id}" ${node.state === "locked" ? "disabled" : ""}>
-        <span class="graph-state">${stateText(node.state)}</span><strong>${node.title}</strong><small>${node.label}</small>
+      const state = openAccess && node.state === "locked" ? "open" : node.state;
+      const progress = node.progress || [state === "done" ? 1 : 0, 1];
+      return `<button type="button" class="graph-node is-${state}" style="--node-x:${node.x / 10}%;--node-y:${node.y / graph.height * 100}%" data-node="${node.id}" ${!openAccess && state === "locked" ? "disabled" : ""}>
+        <span class="graph-state">${stateText(state)}</span><strong>${node.title}</strong><small>${node.label}</small>
         <span class="graph-pips" aria-hidden="true">${Array.from({ length: progress[1] }, (_, index) => `<i class="${index < progress[0] ? "done" : ""}"></i>`).join("")}</span>
       </button>`;
     }).join("")}
@@ -196,12 +231,68 @@ function renderTopicGraph(topic) {
   stateLine.textContent = `Prototype state · Variant B · ${topic.name} graph`;
 }
 
+function journeyButton(label, changes) {
+  return `<button type="button" class="journey-button" id="journey-toggle" data-view="${changes.view || ""}">${label}</button>`;
+}
+
+function bindJourneyButton(changes) {
+  document.getElementById("journey-toggle").addEventListener("click", () => updateURL(changes));
+}
+
+function renderCombinedIndex() {
+  main.innerHTML = `<section aria-labelledby="combined-title">
+    <div class="view-toolbar"><span>Browse one Topic or view the whole path.</span>${journeyButton("Your Journey →", { view: "journey" })}</div>
+    <header class="prototype-intro compact">
+      <div><p class="plain-label">Variant C · open curriculum</p><h1 id="combined-title">Choose a Topic.</h1></div>
+      <p>Every challenge is available from the start. The trees suggest a useful order without preventing learners from jumping directly to what they need.</p>
+    </header>
+    ${topicCards()}
+    <aside class="map-note"><strong>Variant C</strong><p>Topics support focused learning. “Your Journey” reveals how Linux, Git, data movement, and HPC fit together as one recommended route.</p></aside>
+  </section>`;
+  bindJourneyButton({ view: "journey", topic: null });
+  main.querySelectorAll("[data-topic]").forEach(button => button.addEventListener("click", () => updateURL({ topic: button.dataset.topic, view: null })));
+  stateLine.textContent = "Prototype state · Variant C · Topic selection";
+}
+
+function renderCombinedTopic(topic) {
+  main.innerHTML = `<section aria-labelledby="combined-topic-title">
+    <div class="view-toolbar"><button type="button" class="back-button" id="back-to-topics">← All Topics</button>${journeyButton("Your Journey →", { view: "journey" })}</div>
+    <header class="topic-graph-head">
+      <span class="topic-icon">${icons[topic.key]}</span>
+      <div><p class="plain-label">Variant C · focused Topic</p><h1 id="combined-topic-title">${topic.name}</h1><p>${topic.summary}</p></div>
+    </header>
+    <p class="graph-guidance">Lines show the recommended order. Every challenge can be opened now.</p>
+    ${graphMarkup(topic.graph, `${topic.name} Topic`, true)}
+  </section>`;
+  document.getElementById("back-to-topics").addEventListener("click", () => updateURL({ topic: null, view: null }));
+  bindJourneyButton({ view: "journey", topic: null });
+  bindGraph(topic.graph, `Variant C · ${topic.name}`);
+  stateLine.textContent = `Prototype state · Variant C · ${topic.name} graph · open access`;
+}
+
+function renderJourney() {
+  main.innerHTML = `<section aria-labelledby="journey-title">
+    <div class="view-toolbar"><span>All Topics shown as one connected route.</span>${journeyButton("Topics", { view: null })}</div>
+    <header class="prototype-intro compact">
+      <div><p class="plain-label">Variant C · Your Journey</p><h1 id="journey-title">See the whole picture.</h1></div>
+      <p>Start at the beginning and follow the branches, or jump directly to any challenge. Connections recommend a logical path; they do not lock content.</p>
+    </header>
+    <p class="graph-guidance">Recommended path · every node is available</p>
+    ${graphMarkup(journey, "Your complete journey", true)}
+  </section>`;
+  bindJourneyButton({ view: null, topic: null });
+  bindGraph(journey, "Variant C · Your Journey");
+  stateLine.textContent = "Prototype state · Variant C · complete open journey";
+}
+
 function render() {
   const variant = variantFromURL();
   variantLabel.textContent = `${variant} · ${VARIANTS.find(item => item.key === variant).name}`;
   if (variant === "A") return renderMap();
   const topic = topicFromURL();
-  topic ? renderTopicGraph(topic) : renderTopicIndex();
+  if (variant === "B") return topic ? renderTopicGraph(topic) : renderTopicIndex();
+  if (params().get("view") === "journey") return renderJourney();
+  topic ? renderCombinedTopic(topic) : renderCombinedIndex();
 }
 
 document.getElementById("previous-variant").addEventListener("click", () => cycle(-1));

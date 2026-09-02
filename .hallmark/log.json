@@ -1,12 +1,12 @@
 [
   {
     "date": "2026-09-02",
-    "macrostructure": "map-diagram + index-first",
+    "macrostructure": "map-diagram + index-first + combined journey toggle",
     "theme": "existing UWC custom",
     "theme_axes": "near-white navy-tinted paper / heavy institutional sans / restrained warm gold accent",
-    "vibe": "soft technical, spatial route versus Topic index",
-    "enrichment": "custom SVG graph and Topic marks",
-    "brief": "Throwaway A/B home navigation prototype for university learners with no assumed computing background."
+    "vibe": "soft technical, open Topic trees and a connected journey",
+    "enrichment": "custom SVG graphs and Topic marks",
+    "brief": "Throwaway A/B/C home navigation prototype for university learners with no assumed computing background."
   },
   {
     "date": "2026-08-23",
