@@ -199,12 +199,12 @@ for (const slug of ["reading-files", "bringing-files-back", "when-the-link-drops
   resetProgress();
   for (const n of ALL_NODES.filter(n => n.num <= 8)) markSolved(n.slug);
   const eight = nextAfter("getting-on-the-cluster", isBuilt);
-  check("finishing the core points at the leftmost route",
-    eight && eight.slug === "bringing-files-back", eight && eight.slug);
+  check("finishing the core points at the leftmost topic introduction",
+    eight && eight.slug === "moving-files-introduction", eight && eight.slug);
 
   const ten = nextAfter("when-the-link-drops", isBuilt);
-  check("the end of a route carries on into the next one",
-    ten && ten.slug === "what-changed", ten && ten.slug);
+  check("the end of a route carries on into the next topic introduction",
+    ten && ten.slug === "keeping-a-record-introduction", ten && ten.slug);
 
   for (const n of ALL_NODES) markSolved(n.slug);
   check("the last challenge has nowhere further to go",

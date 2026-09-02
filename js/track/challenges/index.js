@@ -1,6 +1,6 @@
 // The challenge registry.
 //
-// All nineteen are written. js/track/content.js owns their stable identities,
+// All twenty-two are written. js/track/content.js owns their stable identities,
 // topic membership and explicit prerequisite graph. This compatibility registry
 // supplies the existing prose and worlds while those modules are migrated to
 // the declarative content format.
@@ -14,11 +14,14 @@ import readingFiles from "./reading-files.js";
 import findingTheLine from "./finding-the-line.js";
 import findingTheFile from "./finding-the-file.js";
 import gettingOnTheCluster from "./getting-on-the-cluster.js";
+import movingFilesIntroduction from "./moving-files-introduction.js";
 import bringingFilesBack from "./bringing-files-back.js";
 import whenTheLinkDrops from "./when-the-link-drops.js";
+import keepingARecordIntroduction from "./keeping-a-record-introduction.js";
 import whatChanged from "./what-changed.js";
 import savingYourWork from "./saving-your-work.js";
 import gettingTheLatest from "./getting-the-latest.js";
+import runningWorkIntroduction from "./running-work-introduction.js";
 import isThereRoom from "./is-there-room.js";
 import whatsRunning from "./whats-running.js";
 import submittingAJob from "./submitting-a-job.js";
@@ -30,9 +33,9 @@ import { topicOf } from "../topics.js";
 const LIST = [
   whatIsATerminal, whereAmI, movingAround, sameCommandMoreQuestions, askTheMachine,
   readingFiles, findingTheLine, findingTheFile, gettingOnTheCluster,
-  bringingFilesBack, whenTheLinkDrops,
-  whatChanged, savingYourWork, gettingTheLatest,
-  isThereRoom, whatsRunning, submittingAJob, watchingItChange,
+  movingFilesIntroduction, bringingFilesBack, whenTheLinkDrops,
+  keepingARecordIntroduction, whatChanged, savingYourWork, gettingTheLatest,
+  runningWorkIntroduction, isThereRoom, whatsRunning, submittingAJob, watchingItChange,
   puttingItTogether,
 ];
 
@@ -42,6 +45,7 @@ for (const c of LIST) {
   if (!where) throw new Error(`challenge "${c.slug}" is not placed in js/track/topics.js`);
   c.topicKey = where.topic.key;
   c.number = where.node.number;
+  c.displayNum = where.node.displayNum;
   c.revision = where.node.revision;
   c.kind = where.node.kind;
   c.revisionId = where.node.id;

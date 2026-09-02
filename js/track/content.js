@@ -29,9 +29,14 @@ export const CONTENT_RELEASE = {
       blurb: "Copying a result off the cluster, and finishing a copy that keeps dropping.",
       challenges: [
         {
+          number: "013", revision: "001", id: "013001", kind: "reading", slug: "moving-files-introduction", title: "How files move between computers", commands: [],
+          line: "Local files, remote files, and why the direction matters.",
+          prerequisiteGroups: [{ mode: "all", sources: ["008"] }],
+        },
+        {
           number: "009", revision: "001", id: "009001", kind: "interactive", slug: "bringing-files-back", title: "Bringing files back", commands: ["scp"],
           line: "Which direction does a copy go, and what does a remote path look like?",
-          prerequisiteGroups: [{ mode: "all", sources: ["008"] }],
+          prerequisiteGroups: [{ mode: "all", sources: ["013"] }],
         },
         {
           number: "00A", revision: "001", id: "00A001", kind: "interactive", slug: "when-the-link-drops", title: "When the link drops", commands: ["rsync"],
@@ -46,9 +51,14 @@ export const CONTENT_RELEASE = {
       blurb: "Reading what changed, saving your work in steps, and picking up someone else's.",
       challenges: [
         {
+          number: "014", revision: "001", id: "014001", kind: "reading", slug: "keeping-a-record-introduction", title: "What Git keeps for you", commands: [],
+          line: "A record of changes that lets work move forward without losing what came before.",
+          prerequisiteGroups: [{ mode: "all", sources: ["008"] }],
+        },
+        {
           number: "00B", revision: "001", id: "00B001", kind: "interactive", slug: "what-changed", title: "What changed", commands: ["git status", "git log"],
           line: "What changed in this project, and when?",
-          prerequisiteGroups: [{ mode: "all", sources: ["008"] }],
+          prerequisiteGroups: [{ mode: "all", sources: ["014"] }],
         },
         {
           number: "00C", revision: "001", id: "00C001", kind: "interactive", slug: "saving-your-work", title: "Saving your work", commands: ["git add", "git commit"],
@@ -68,9 +78,14 @@ export const CONTENT_RELEASE = {
       blurb: "Checking what is free, reading the queue, sending a job, and watching it move.",
       challenges: [
         {
+          number: "015", revision: "001", id: "015001", kind: "reading", slug: "running-work-introduction", title: "What an HPC cluster is", commands: [],
+          line: "Why shared computing separates login, scheduling, and running work.",
+          prerequisiteGroups: [{ mode: "all", sources: ["008"] }],
+        },
+        {
           number: "00E", revision: "001", id: "00E001", kind: "interactive", slug: "is-there-room", title: "Is there room", commands: ["df -h", "free -h"],
           line: "Is there disk space, and is there memory?",
-          prerequisiteGroups: [{ mode: "all", sources: ["008"] }],
+          prerequisiteGroups: [{ mode: "all", sources: ["015"] }],
         },
         {
           number: "00F", revision: "001", id: "00F001", kind: "interactive", slug: "whats-running", title: "What is running", commands: ["sinfo", "squeue"],

@@ -3,8 +3,10 @@
 Private Django service for challenge drafts, immutable revisions, curriculum
 releases and audit records. It is not part of the public learner path.
 
-Do not expose this service through Nginx until university SSO and the Admin-group
-mapping are configured. Django's local login is for development only.
+The first deployment uses Django's database-backed admin login at `/admin/` on
+the existing hostname, restricted to the university VPN. Passwords are hashed by
+Django and must never be placed in configuration. University SSO and a possible
+separate admin hostname are later migrations.
 
 ## Development
 
@@ -25,5 +27,5 @@ DJANGO_DEBUG=1 .venv/bin/python admin_backend/manage.py test curriculum
 
 Production will use `/var/lib/uwc-hpc-admin/content.db` through
 `DJANGO_DATABASE_PATH`, a root-owned `DJANGO_SECRET_KEY`, Gunicorn bound only to
-loopback, and systemd. Those deployment files are deferred until SSO details are
-known.
+loopback, and systemd. Publication and optimistic-concurrency work must be
+completed before editors rely on it.

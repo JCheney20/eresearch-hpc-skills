@@ -17,6 +17,7 @@ function sourceSlugs(groups) {
     .map(challenge => challenge.slug);
 }
 
+let displayNumber = 0;
 export const TOPICS = CONTENT_RELEASE.topics.map(topic => ({
   key: topic.key,
   name: topic.name,
@@ -24,6 +25,7 @@ export const TOPICS = CONTENT_RELEASE.topics.map(topic => ({
   nodes: topic.challenges.map(challenge => ({
     ...challenge,
     num: Number.parseInt(challenge.number, 16),
+    displayNum: displayNumber++,
     topicKey: topic.key,
     // Compatibility for existing display code. Unlocking uses prerequisiteGroups.
     requires: sourceSlugs(challenge.prerequisiteGroups),
@@ -59,8 +61,9 @@ export function topicOf(slugOrChallenge) {
     index,
     count: topic.nodes.length,
     num: node.num,
-    first: topic.nodes[0].num,
-    last: topic.nodes[topic.nodes.length - 1].num,
+    displayNum: node.displayNum,
+    first: topic.nodes[0].displayNum,
+    last: topic.nodes[topic.nodes.length - 1].displayNum,
   };
 }
 

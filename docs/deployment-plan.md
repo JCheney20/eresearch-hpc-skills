@@ -8,7 +8,8 @@ This plan covers the current static trainer, its future authenticated content-ad
 |---|---|
 | Current hosting | Ubuntu Nginx package, supervised by its existing systemd service. No Docker/Compose. |
 | Public site | Static, anonymous, and served by Nginx. |
-| Admin site | Separate `admin.<domain>` hostname, university-VPN restricted, university SSO protected. |
+| Admin site | Same hostname at `/admin/`, restricted to the university VPN. A separate hostname remains a later option. |
+| Admin identity | Temporary Django database account with a securely hashed password; replace with university SSO later. |
 | Admin role | One `Admin` role may draft and publish. |
 | Content source | SQLite on the VM; it generates immutable static learner content. |
 | Published content | Static content releases, served by Nginx rather than queried from SQLite. |
@@ -92,7 +93,7 @@ CCCRRR
 - `RRR` is the three-hex-digit published revision number.
 - `00F001` means challenge `00F` (decimal 15), revision `001`.
 
-Challenge number `000` represents the present reading challenge 0. The current nineteen challenges migrate once to `000001` through `012001`. Challenge numbers are allocated monotonically and never reused, including after archival.
+Challenge number `000` represents the original terminal introduction. The original nineteen challenges use `000001` through `012001`; the three later Topic introductions use `013001` through `015001`. Challenge numbers are allocated monotonically and never reused, including after archival.
 
 Draft saves are mutable and do not consume revision numbers. Successful publication creates new revision numbers only for challenges whose authored content/world changed.
 
@@ -108,6 +109,17 @@ The challenge graph is a directed acyclic graph of explicit prerequisite groups.
 This represents, for example, completion of `D`, `E`, and one of `{A, B, C}`. Topics are presentation groups only and no longer derive prerequisites.
 
 Publication is blocked unless the candidate release validates all schema rules, challenge worlds, answers, worked examples, graph references, acyclicity, and learner rendering. The Admin also gets a learner-equivalent preview before publishing.
+
+### Home navigation prototype
+
+Two deliberately different home structures will be evaluated before replacing the current map:
+
+- **A — interconnected map:** one larger challenge graph with a visible required route and optional topic branches. Optional branches may reconnect to later points but are not required for overall completion.
+- **B — Topic index:** large Linux, Git, and HPC Topic entries with progress. Opening a Topic reveals its own directed acyclic challenge graph; individual points may expand into more detailed nodes.
+
+Linux, Git, and HPC remain **Topics**, not a separate Concept catalog. The throwaway comparison belongs on branch `prototype/home-navigation-ab`; only the selected structure returns to `beginner-track`.
+
+Every major Topic begins with a reading challenge written for a learner who has never encountered it. Core already introduces the terminal; Moving files, Keeping a record, and Running work receive new reading introductions before their first interactive challenge.
 
 ## Phase 3: learner progress and revision policy
 
@@ -133,15 +145,16 @@ When learner SSO is introduced later, offer a one-time confirmed import of brows
 
 ## Phase 4: admin backend and publication pipeline
 
-The private Django scaffold in `admin_backend/` now defines drafts, immutable challenge revisions, curriculum drafts, content releases, release membership, and audit records. It remains undeployed: university SSO, optimistic-concurrency forms, publication validation/static generation, and export are still required before Nginx may expose it.
+The private Django scaffold in `admin_backend/` now defines drafts, immutable challenge revisions, curriculum drafts, content releases, release membership, and audit records. Its first deployment will use Django's database-backed admin account at `/admin/`; university SSO and a separate admin hostname are deferred. Optimistic-concurrency forms, publication validation/static generation, and export are still required before content editing is production-ready.
 
 ### Service boundary
 
 - Run one backend as a dedicated non-root `uwc-hpc-admin` account.
 - Bind it only to `127.0.0.1:<port>` or a Unix socket.
-- Reverse proxy it through Nginx at `admin.<domain>`; never expose its backend port through VPC ACLs, security groups, or the load balancer.
+- Reverse proxy `/admin/` through the existing `linux101.eresearch.uwc.ac.za` Nginx host; never expose the backend port through VPC ACLs, security groups, or the load balancer.
 - Use a systemd unit with `Restart=on-failure`, `RestartSec=5s`, `WantedBy=multi-user.target`, and a root-readable environment file for secrets.
-- Use university OIDC/SAML, MFA, server-side authorization, secure HttpOnly cookies, CSRF protection, login rate limiting, and deny-by-default authorization.
+- Initially use Django's database-backed authentication and password hashing for one administrator. Never store a plaintext password in configuration or the database.
+- Keep server-side authorization, secure HttpOnly cookies, CSRF protection, login rate limiting, and deny-by-default authorization. Replace local login with university OIDC/SAML and MFA when those details become available; a separate admin hostname may be introduced then.
 
 Use optimistic concurrency: a save based on an old draft version is rejected and the Admin must reload/reconcile. Do not build live collaborative editing.
 
@@ -194,8 +207,8 @@ A future SSO-backed terminal that connects to an actual HPC node is a separate s
 
 ## Remaining implementation inputs
 
-- Public/admin DNS names.
-- University OIDC/SAML provider details and Admin-group mapping.
+- Whether the later SSO deployment keeps `/admin/` or moves to a separate admin hostname.
+- University OIDC/SAML provider details and Admin-group mapping for that later migration.
 - Platform load-balancer health check, source CIDRs, and forwarded-header contract.
 - Backend language/framework.
 - Restricted Markdown renderer and declarative world schema.

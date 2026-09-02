@@ -1,6 +1,6 @@
 # UWC_HPC
 
-An in-browser Linux trainer for UWC postgraduate students who have never used a
+An in-browser Linux trainer for university students who may never have used a
 terminal. A learner reads a scenario, works in a simulated shell beside it, and
 types an answer to move on.
 
@@ -12,9 +12,9 @@ and one answer. Numbered from 0.
 _Avoid_: Level, exercise, lesson, puzzle
 
 **Learner**:
-The person working through the trainer. A UWC postgraduate with a computer
-science background and no Linux experience.
-_Avoid_: User, player, student
+A university student working through the trainer, with no assumed computing or
+Linux background.
+_Avoid_: User, player
 
 **Answer**:
 What the learner types into the answer field to complete a challenge. Either a

@@ -60,6 +60,6 @@ export default {
     },
   ],
 
-  footnote: `Reading challenges count as done once you have opened them. There are
-    two in the whole trainer.`,
+  footnote: `Reading challenges count as done once you have opened them. Each
+    major topic starts by explaining what it is before asking you to use it.`,
 };

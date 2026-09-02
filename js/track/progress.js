@@ -148,16 +148,15 @@ export function unlockedBy(slug) {
 }
 
 export function nextOpen() {
-  return ALL_NODES.filter(node => stateOf(node.slug) === "open")
-    .sort((a, b) => a.num - b.num)[0] || null;
+  return ALL_NODES.find(node => stateOf(node.slug) === "open") || null;
 }
 
 export function nextAfter(slug, isBuiltFn = () => true) {
   const here = nodeBySlug(slug);
   if (!here) return null;
   return ALL_NODES
-    .filter(node => node.num > here.num && stateOf(node.slug) !== "locked" && isBuiltFn(node.slug))
-    .sort((a, b) => a.num - b.num)[0] || null;
+    .filter(node => node.displayNum > here.displayNum && stateOf(node.slug) !== "locked" && isBuiltFn(node.slug))
+    .sort((a, b) => a.displayNum - b.displayNum)[0] || null;
 }
 
 export function overallProgress() {
