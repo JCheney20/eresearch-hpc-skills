@@ -82,6 +82,13 @@ Runs three suites, none of which needs a browser:
 The original wargame keeps its own checks: `node tools/validate.mjs` and
 `node tools/smoke.mjs`.
 
+## Home navigation prototype
+
+This branch contains throwaway A/B navigation work. Run `python3 -m http.server
+8000`, then compare `home-prototype.html?variant=A` and
+`home-prototype.html?variant=B`. Arrow keys or the floating switcher change the
+variant; Topic and challenge nodes are clickable.
+
 ## Deployment
 
 Nginx configuration is in `deploy/nginx/uwc-hpc-skills.conf`; the release layout,

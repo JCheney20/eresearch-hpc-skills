@@ -1,0 +1,9 @@
+{
+  "date": "2026-09-02",
+  "framework": "vanilla-html",
+  "fonts": ["Open Sans", "JetBrains Mono"],
+  "palette": "UWC navy and gold OKLCH tokens in css/tokens.css",
+  "spacing": "4px custom-property scale",
+  "motion": "CSS transitions only",
+  "preserve": ["fonts", "palette", "spacing", "plain-spoken institutional voice"]
+}

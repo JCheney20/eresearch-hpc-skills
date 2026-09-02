@@ -1,5 +1,14 @@
 [
   {
+    "date": "2026-09-02",
+    "macrostructure": "map-diagram + index-first",
+    "theme": "existing UWC custom",
+    "theme_axes": "near-white navy-tinted paper / heavy institutional sans / restrained warm gold accent",
+    "vibe": "soft technical, spatial route versus Topic index",
+    "enrichment": "custom SVG graph and Topic marks",
+    "brief": "Throwaway A/B home navigation prototype for university learners with no assumed computing background."
+  },
+  {
     "date": "2026-08-23",
     "macrostructure": "two-pane-workbench",
     "theme": "custom",

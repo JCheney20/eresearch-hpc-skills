@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Home navigation prototype · UWC HPC</title>
+  <link rel="icon" href="favicon.svg">
+  <link rel="stylesheet" href="css/fonts.css">
+  <link rel="stylesheet" href="css/tokens.css">
+  <link rel="stylesheet" href="css/home-prototype.css">
+</head>
+<body>
+  <a class="skip" href="#prototype">Skip to prototype</a>
+  <header class="prototype-head">
+    <a class="brand" href="index.html">UWC <span>HPC Skills</span></a>
+    <span class="prototype-mark">Home prototype · not production</span>
+  </header>
+  <main id="prototype" tabindex="-1"></main>
+  <p id="prototype-state" class="prototype-state" aria-live="polite"></p>
+  <nav class="variant-switcher" aria-label="Prototype variants">
+    <button id="previous-variant" type="button" aria-label="Previous variant">←</button>
+    <span id="variant-label"></span>
+    <button id="next-variant" type="button" aria-label="Next variant">→</button>
+  </nav>
+  <script type="module" src="js/home-prototype.js"></script>
+</body>
+</html>
