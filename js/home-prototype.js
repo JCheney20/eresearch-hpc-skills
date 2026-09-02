@@ -1,8 +1,8 @@
 // THROWAWAY PROTOTYPE: two home-navigation structures, switchable with ?variant=A|B.
 
 const VARIANTS = [
-  { key: "A", name: "One interconnected map" },
-  { key: "B", name: "Topic index" },
+  { key: "A", name: "Expanded curriculum graph" },
+  { key: "B", name: "Topics, then graph" },
 ];
 
 const icons = {
@@ -11,180 +11,204 @@ const icons = {
   hpc: `<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="5" width="22" height="7" rx="1"/><rect x="5" y="20" width="22" height="7" rx="1"/><path d="M9 8.5h.01M13 8.5h9M9 23.5h.01M13 23.5h9M16 12v8"/></svg>`,
 };
 
-const mapNodes = [
-  { id: "terminal", title: "Meet the terminal", topic: "Linux", x: 40, y: 35, state: "done" },
-  { id: "files", title: "Files and directories", topic: "Linux", x: 235, y: 35, state: "done" },
-  { id: "remote", title: "Connect remotely", topic: "Linux", x: 430, y: 35, state: "here" },
-  { id: "cluster", title: "Meet the cluster", topic: "HPC", x: 625, y: 35, state: "open" },
-  { id: "queue", title: "Read the queue", topic: "HPC", x: 790, y: 145, state: "locked" },
-  { id: "submit", title: "Submit a job", topic: "HPC", x: 790, y: 315, state: "locked" },
-  { id: "finish", title: "Research workflow", topic: "HPC", x: 790, y: 500, state: "locked" },
-  { id: "copy", title: "Copy one result", topic: "Moving files", x: 470, y: 205, state: "open", optional: true },
-  { id: "sync", title: "Resume a transfer", topic: "Moving files", x: 585, y: 355, state: "locked", optional: true },
-  { id: "history", title: "Read project history", topic: "Git", x: 245, y: 230, state: "open", optional: true },
-  { id: "commit", title: "Record a change", topic: "Git", x: 300, y: 410, state: "locked", optional: true },
-  { id: "share", title: "Get shared work", topic: "Git", x: 505, y: 500, state: "locked", optional: true },
-  { id: "pipes", title: "Combine commands", topic: "Linux", x: 55, y: 250, state: "open", optional: true },
-  { id: "search", title: "Search many files", topic: "Linux", x: 65, y: 440, state: "locked", optional: true },
-];
-
-const mapEdges = [
-  ["terminal", "files"], ["files", "remote"], ["remote", "cluster"],
-  ["cluster", "queue"], ["queue", "submit"], ["submit", "finish"],
-  ["remote", "copy", true], ["copy", "sync", true], ["sync", "submit", true],
-  ["files", "history", true], ["history", "commit", true], ["commit", "share", true], ["share", "finish", true],
-  ["files", "pipes", true], ["pipes", "search", true], ["search", "commit", true],
-];
+const curriculum = {
+  height: 1040,
+  nodes: [
+    { id: "start", title: "Start here", label: "Introduction", x: 410, y: 20, state: "done", progress: [1, 1] },
+    { id: "linux", title: "Linux foundations", label: "Linux", x: 205, y: 175, state: "done", progress: [4, 4] },
+    { id: "git", title: "Keeping a record", label: "Git", x: 615, y: 175, state: "open", progress: [1, 4] },
+    { id: "files", title: "Moving files", label: "Optional branch", x: 40, y: 365, state: "open", progress: [0, 3] },
+    { id: "remote", title: "Working remotely", label: "Shared foundation", x: 410, y: 350, state: "here", progress: [2, 5] },
+    { id: "history", title: "Read project history", label: "Optional branch", x: 780, y: 365, state: "locked", progress: [0, 2] },
+    { id: "transfer", title: "Prepare research data", label: "Workflow", x: 205, y: 620, state: "locked", progress: [0, 3] },
+    { id: "scheduler", title: "Run work on HPC", label: "HPC", x: 615, y: 620, state: "locked", progress: [0, 5] },
+    { id: "finish", title: "Put it together", label: "Final workflow", x: 410, y: 875, state: "locked", progress: [0, 1] },
+  ],
+  edges: [
+    ["start", "linux"], ["start", "git"],
+    ["linux", "files"], ["linux", "remote"], ["git", "remote"], ["git", "history"],
+    ["remote", "transfer"], ["remote", "scheduler"],
+    ["transfer", "finish"], ["scheduler", "finish"],
+  ],
+};
 
 const topics = [
   {
-    key: "linux", name: "Linux", progress: [5, 8], summary: "Find your way around, work with files, and connect to another computer.",
-    nodes: [
-      { name: "Meet the terminal", state: "done" },
-      { name: "Files and directories", state: "done", children: ["Paths", "Hidden files", "Permissions"] },
-      { name: "Search and combine", state: "open", children: ["grep", "find", "pipes"] },
-      { name: "Remote access", state: "locked", children: ["SSH", "remote paths"] },
-    ],
+    key: "linux", name: "Linux", progress: [5, 8],
+    summary: "Find your way around, work with files, and connect to another computer.",
+    graph: {
+      height: 840,
+      nodes: [
+        { id: "intro", title: "Meet the terminal", label: "Introduction", x: 410, y: 20, state: "done" },
+        { id: "where", title: "Where am I?", label: "pwd", x: 205, y: 190, state: "done" },
+        { id: "look", title: "Look around", label: "ls", x: 615, y: 190, state: "done" },
+        { id: "move", title: "Move between folders", label: "cd", x: 205, y: 390, state: "here" },
+        { id: "make", title: "Make files and folders", label: "mkdir · touch", x: 615, y: 390, state: "open" },
+        { id: "combine", title: "Combine commands", label: "pipes", x: 410, y: 640, state: "locked" },
+      ],
+      edges: [["intro", "where"], ["intro", "look"], ["where", "move"], ["look", "make"], ["move", "combine"], ["make", "combine"]],
+    },
   },
   {
-    key: "git", name: "Git", progress: [1, 4], summary: "See what changed, make a checkpoint, and pick up shared work.",
-    nodes: [
-      { name: "What Git records", state: "done" },
-      { name: "Read the history", state: "open", children: ["status", "log", "diff"] },
-      { name: "Save a change", state: "locked", children: ["add", "commit"] },
-      { name: "Share the record", state: "locked", children: ["clone", "pull"] },
-    ],
+    key: "git", name: "Git", progress: [1, 4],
+    summary: "See what changed, make a checkpoint, and pick up shared work.",
+    graph: {
+      height: 840,
+      nodes: [
+        { id: "intro", title: "What Git records", label: "Introduction", x: 410, y: 20, state: "done" },
+        { id: "status", title: "Check the project", label: "git status", x: 205, y: 190, state: "open" },
+        { id: "history", title: "Read the history", label: "git log", x: 615, y: 190, state: "open" },
+        { id: "compare", title: "See what changed", label: "git diff", x: 205, y: 390, state: "locked" },
+        { id: "record", title: "Record a change", label: "git commit", x: 615, y: 390, state: "locked" },
+        { id: "share", title: "Pick up shared work", label: "clone · pull", x: 410, y: 640, state: "locked" },
+      ],
+      edges: [["intro", "status"], ["intro", "history"], ["status", "compare"], ["history", "record"], ["compare", "share"], ["record", "share"]],
+    },
   },
   {
-    key: "hpc", name: "HPC", progress: [0, 5], summary: "Understand shared compute, ask for resources, and follow a job through the queue.",
-    nodes: [
-      { name: "What a cluster is", state: "open" },
-      { name: "Storage and memory", state: "locked", children: ["df", "free"] },
-      { name: "The scheduler", state: "locked", children: ["partitions", "queue states"] },
-      { name: "Submit work", state: "locked", children: ["job script", "sbatch"] },
-      { name: "Watch a job", state: "locked", children: ["squeue", "output files"] },
-    ],
+    key: "hpc", name: "HPC", progress: [0, 5],
+    summary: "Understand shared compute, ask for resources, and follow a job through the queue.",
+    graph: {
+      height: 880,
+      nodes: [
+        { id: "intro", title: "What a cluster is", label: "Introduction", x: 410, y: 20, state: "open" },
+        { id: "storage", title: "Storage on the cluster", label: "Filesystems", x: 205, y: 190, state: "locked" },
+        { id: "scheduler", title: "Meet the scheduler", label: "Slurm", x: 615, y: 190, state: "locked" },
+        { id: "space", title: "Check available space", label: "df · quota", x: 40, y: 400, state: "locked" },
+        { id: "resources", title: "Ask for resources", label: "CPU · memory · time", x: 410, y: 400, state: "locked" },
+        { id: "queue", title: "Read the queue", label: "squeue", x: 780, y: 400, state: "locked" },
+        { id: "submit", title: "Submit and watch a job", label: "sbatch", x: 410, y: 665, state: "locked" },
+      ],
+      edges: [["intro", "storage"], ["intro", "scheduler"], ["storage", "space"], ["storage", "resources"], ["scheduler", "resources"], ["scheduler", "queue"], ["space", "submit"], ["resources", "submit"], ["queue", "submit"]],
+    },
   },
 ];
 
 const main = document.getElementById("prototype");
 const stateLine = document.getElementById("prototype-state");
-const label = document.getElementById("variant-label");
-let selectedTopic = "linux";
-let selectedNode = null;
+const variantLabel = document.getElementById("variant-label");
 
+function params() { return new URLSearchParams(location.search); }
 function variantFromURL() {
-  const key = new URLSearchParams(location.search).get("variant")?.toUpperCase();
+  const key = params().get("variant")?.toUpperCase();
   return VARIANTS.some(item => item.key === key) ? key : "A";
 }
+function topicFromURL() { return topics.find(topic => topic.key === params().get("topic")) || null; }
 
-function setVariant(key) {
+function updateURL(changes) {
   const url = new URL(location.href);
-  url.searchParams.set("variant", key);
-  history.replaceState({}, "", url);
-  selectedNode = null;
+  Object.entries(changes).forEach(([key, value]) => value ? url.searchParams.set(key, value) : url.searchParams.delete(key));
+  history.pushState({}, "", url);
   render();
 }
 
+function setVariant(key) { updateURL({ variant: key, topic: null }); }
 function cycle(direction) {
   const current = VARIANTS.findIndex(item => item.key === variantFromURL());
   setVariant(VARIANTS[(current + direction + VARIANTS.length) % VARIANTS.length].key);
 }
 
-function line(edge) {
-  const from = mapNodes.find(node => node.id === edge[0]);
-  const to = mapNodes.find(node => node.id === edge[1]);
-  const x1 = from.x + 75, y1 = from.y + 33, x2 = to.x + 75, y2 = to.y + 33;
-  const bend = Math.max(30, Math.abs(x2 - x1) * 0.35);
-  return `<path class="map-edge${edge[2] ? " optional" : ""}" d="M${x1},${y1} C${x1 + bend},${y1} ${x2 - bend},${y2} ${x2},${y2}"/>`;
+function stateText(state) {
+  return state === "done" ? "Complete" : state === "here" ? "Continue" : state === "open" ? "Available" : "Locked";
 }
 
-function renderMap() {
-  main.innerHTML = `
-    <section class="map-prototype" aria-labelledby="map-title">
-      <header class="prototype-intro">
-        <div><p class="plain-label">Variant A · one interconnected map</p><h1 id="map-title">Choose a route through the same landscape.</h1></div>
-        <p>The solid line is enough to reach the final workflow. Dashed branches teach useful topics without blocking that route.</p>
-      </header>
-      <div class="map-legend" aria-label="Map legend"><span><i class="required-line"></i>Required route</span><span><i class="optional-line"></i>Optional branch</span><span><i class="current-dot"></i>Current challenge</span></div>
-      <div class="learning-map">
-        <svg viewBox="0 0 1000 620" preserveAspectRatio="none" aria-hidden="true">${mapEdges.map(line).join("")}</svg>
-        ${mapNodes.map(node => `<button class="map-node is-${node.state}${node.optional ? " is-optional" : ""}" style="--node-x:${node.x / 10}%;--node-y:${node.y / 6.2}%" data-map-node="${node.id}" type="button" ${node.state === "locked" ? "disabled" : ""}><small>${node.topic}</small><strong>${node.title}</strong><span>${node.state === "done" ? "Complete" : node.state === "here" ? "Continue" : node.state === "open" ? "Available" : "Locked"}</span></button>`).join("")}
-      </div>
-      <aside class="map-note"><strong>What this tests</strong><p>Can learners see both the shortest route and the broader curriculum without mistaking optional work for unfinished required work?</p></aside>
-    </section>`;
-
-  main.querySelectorAll("[data-map-node]").forEach(button => button.addEventListener("click", () => {
-    const node = mapNodes.find(item => item.id === button.dataset.mapNode);
-    stateLine.textContent = `Prototype state · Variant A · selected node: ${node.title} · ${node.optional ? "optional branch" : "required route"}`;
-  }));
-  stateLine.textContent = "Prototype state · Variant A · no node selected";
+function graphPath(graph, edge) {
+  const from = graph.nodes.find(node => node.id === edge[0]);
+  const to = graph.nodes.find(node => node.id === edge[1]);
+  const x1 = from.x + 90, y1 = from.y + 112, x2 = to.x + 90, y2 = to.y;
+  const bend = Math.max(42, (y2 - y1) * 0.48);
+  return `<path class="graph-wire${to.state === "locked" ? " is-locked" : ""}" d="M${x1},${y1} C${x1},${y1 + bend} ${x2},${y2 - bend} ${x2},${y2}" marker-end="url(#graph-arrow)"/>`;
 }
 
-function topicGraph(topic) {
-  return `<div class="topic-graph" aria-label="${topic.name} challenge graph">
-    ${topic.nodes.map((node, index) => `
-      <button type="button" class="topic-node is-${node.state}" data-topic-node="${index}" ${node.state === "locked" ? "disabled" : ""}>
-        <span class="topic-node-index">${String(index + 1).padStart(2, "0")}</span>
-        <strong>${node.name}</strong><small>${node.state}</small>
-      </button>${index < topic.nodes.length - 1 ? '<span class="topic-connector" aria-hidden="true">→</span>' : ""}
-    `).join("")}
-  </div>
-  <div class="node-expansion" ${selectedNode === null ? "hidden" : ""}>
-    ${selectedNode === null ? "" : (() => {
-      const node = topic.nodes[selectedNode];
-      return `<p><strong>${node.name}</strong> expands into:</p><div>${(node.children || ["Introduction"]).map(child => `<span>${child}</span>`).join("")}</div>`;
-    })()}
+function graphMarkup(graph, name) {
+  return `<div class="curriculum-graph" style="--graph-ratio:${graph.height / 1000}" aria-label="${name} learning graph">
+    <svg viewBox="0 0 1000 ${graph.height}" preserveAspectRatio="none" aria-hidden="true">
+      <defs><marker id="graph-arrow" viewBox="0 0 8 8" refX="7" refY="4" markerWidth="7" markerHeight="7" orient="auto"><path class="graph-arrow" d="M.5 .8 7 4 .5 7.2"/></marker></defs>
+      ${graph.edges.map(edge => graphPath(graph, edge)).join("")}
+    </svg>
+    ${graph.nodes.map(node => {
+      const progress = node.progress || [node.state === "done" ? 1 : 0, 1];
+      return `<button type="button" class="graph-node is-${node.state}" style="--node-x:${node.x / 10}%;--node-y:${node.y / graph.height * 100}%" data-node="${node.id}" ${node.state === "locked" ? "disabled" : ""}>
+        <span class="graph-state">${stateText(node.state)}</span><strong>${node.title}</strong><small>${node.label}</small>
+        <span class="graph-pips" aria-hidden="true">${Array.from({ length: progress[1] }, (_, index) => `<i class="${index < progress[0] ? "done" : ""}"></i>`).join("")}</span>
+      </button>`;
+    }).join("")}
   </div>`;
 }
 
-function renderTopics() {
-  const active = topics.find(topic => topic.key === selectedTopic);
-  main.innerHTML = `
-    <section class="topics-prototype" aria-labelledby="topics-title">
-      <header class="prototype-intro compact">
-        <div><p class="plain-label">Variant B · Topic index</p><h1 id="topics-title">Start with the subject you need.</h1></div>
-        <p>Each Topic keeps its own progress and opens into a focused challenge graph.</p>
-      </header>
-      <div class="topic-index">
-        ${topics.map(topic => {
-          const [done, total] = topic.progress;
-          return `<button type="button" class="topic-entry${topic.key === selectedTopic ? " is-selected" : ""}" data-topic="${topic.key}" aria-pressed="${topic.key === selectedTopic}">
-            <span class="topic-icon">${icons[topic.key]}</span>
-            <span class="topic-copy"><strong>${topic.name}</strong><small>${topic.summary}</small></span>
-            <span class="topic-progress"><span><b>${done}</b> of ${total}</span><i><i style="--topic-progress:${done / total}"></i></i></span>
-          </button>`;
-        }).join("")}
-      </div>
-      <section class="topic-detail" aria-labelledby="active-topic"><header><span class="topic-icon">${icons[active.key]}</span><div><p>Selected Topic</p><h2 id="active-topic">${active.name}</h2></div></header>${topicGraph(active)}</section>
-      <aside class="map-note"><strong>What this tests</strong><p>Does reducing the first choice to three Topics make the curriculum easier to enter, even though the learner sees less of the whole route?</p></aside>
-    </section>`;
+function bindGraph(graph, context) {
+  main.querySelectorAll("[data-node]").forEach(button => button.addEventListener("click", () => {
+    const node = graph.nodes.find(item => item.id === button.dataset.node);
+    stateLine.textContent = `Prototype state · ${context} · selected: ${node.title}`;
+  }));
+}
 
-  main.querySelectorAll("[data-topic]").forEach(button => button.addEventListener("click", () => {
-    selectedTopic = button.dataset.topic;
-    selectedNode = null;
-    render();
-  }));
-  main.querySelectorAll("[data-topic-node]").forEach(button => button.addEventListener("click", () => {
-    selectedNode = Number(button.dataset.topicNode);
-    render();
-  }));
-  stateLine.textContent = `Prototype state · Variant B · selected Topic: ${active.name}${selectedNode === null ? " · no expanded node" : ` · expanded node: ${active.nodes[selectedNode].name}`}`;
+function renderMap() {
+  main.innerHTML = `<section aria-labelledby="map-title">
+    <header class="prototype-intro">
+      <div><p class="plain-label">Variant A · expanded curriculum graph</p><h1 id="map-title">See how the routes split and meet again.</h1></div>
+      <p>This keeps the current map language, but gives the curriculum enough vertical space to show prerequisites, optional branches, and joining points.</p>
+    </header>
+    <div class="graph-key" aria-label="Graph key"><span><i class="is-complete"></i>Complete</span><span><i class="is-current"></i>Current</span><span><i class="is-locked"></i>Locked</span></div>
+    ${graphMarkup(curriculum, "Complete curriculum")}
+    <aside class="map-note"><strong>Variant A</strong><p>One large graph presents the complete curriculum on the home screen. Learners can follow a central route while seeing where side routes split and reconnect.</p></aside>
+  </section>`;
+  bindGraph(curriculum, "Variant A");
+  stateLine.textContent = "Prototype state · Variant A · complete curriculum graph";
+}
+
+function topicCards() {
+  return `<div class="topic-grid">${topics.map(topic => {
+    const [done, total] = topic.progress;
+    return `<button type="button" class="topic-card" data-topic="${topic.key}">
+      <span class="topic-icon">${icons[topic.key]}</span>
+      <span class="topic-copy"><strong>${topic.name}</strong><small>${topic.summary}</small></span>
+      <span class="topic-progress"><span><b>${done}</b> of ${total}</span><i><i style="--topic-progress:${done / total}"></i></i></span>
+      <span class="topic-open" aria-hidden="true">Open graph →</span>
+    </button>`;
+  }).join("")}</div>`;
+}
+
+function renderTopicIndex() {
+  main.innerHTML = `<section aria-labelledby="topics-title">
+    <header class="prototype-intro compact">
+      <div><p class="plain-label">Variant B · choose a Topic first</p><h1 id="topics-title">What do you want to learn?</h1></div>
+      <p>The home screen stops here. Selecting a Topic opens its full learning graph on a separate view.</p>
+    </header>
+    ${topicCards()}
+    <aside class="map-note"><strong>Variant B</strong><p>The first decision is only Linux, Git, or HPC. The detailed graph stays out of sight until a learner chooses one.</p></aside>
+  </section>`;
+  main.querySelectorAll("[data-topic]").forEach(button => button.addEventListener("click", () => updateURL({ topic: button.dataset.topic })));
+  stateLine.textContent = "Prototype state · Variant B · Topic selection";
+}
+
+function renderTopicGraph(topic) {
+  main.innerHTML = `<section aria-labelledby="topic-title">
+    <button type="button" class="back-button" id="back-to-topics">← All Topics</button>
+    <header class="topic-graph-head">
+      <span class="topic-icon">${icons[topic.key]}</span>
+      <div><p class="plain-label">Variant B · ${topic.name} graph</p><h1 id="topic-title">${topic.name}</h1><p>${topic.summary}</p></div>
+    </header>
+    ${graphMarkup(topic.graph, `${topic.name} Topic`)}
+  </section>`;
+  document.getElementById("back-to-topics").addEventListener("click", () => updateURL({ topic: null }));
+  bindGraph(topic.graph, `Variant B · ${topic.name}`);
+  stateLine.textContent = `Prototype state · Variant B · ${topic.name} graph`;
 }
 
 function render() {
   const variant = variantFromURL();
-  const current = VARIANTS.find(item => item.key === variant);
-  label.textContent = `${current.key} · ${current.name}`;
-  variant === "A" ? renderMap() : renderTopics();
+  variantLabel.textContent = `${variant} · ${VARIANTS.find(item => item.key === variant).name}`;
+  if (variant === "A") return renderMap();
+  const topic = topicFromURL();
+  topic ? renderTopicGraph(topic) : renderTopicIndex();
 }
 
 document.getElementById("previous-variant").addEventListener("click", () => cycle(-1));
 document.getElementById("next-variant").addEventListener("click", () => cycle(1));
 window.addEventListener("popstate", render);
 window.addEventListener("keydown", event => {
-  const tag = event.target.tagName;
-  if (["INPUT", "TEXTAREA"].includes(tag) || event.target.isContentEditable) return;
+  if (["INPUT", "TEXTAREA"].includes(event.target.tagName) || event.target.isContentEditable) return;
   if (event.key === "ArrowLeft") cycle(-1);
   if (event.key === "ArrowRight") cycle(1);
 });
