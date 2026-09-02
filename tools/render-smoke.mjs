@@ -20,7 +20,7 @@ const { renderChallenge } = await import("../js/track/ui/challenge.js");
 const { renderReading } = await import("../js/track/ui/reading.js");
 const { CHALLENGES, isBuilt } = await import("../js/track/challenges/index.js");
 const { TOPICS, ALL_NODES } = await import("../js/track/topics.js");
-const { markSolved, resetProgress, stateOf, nextOpen, nextAfter } = await import("../js/track/progress.js");
+const { attemptFor, markSolved, resetProgress, stateOf, nextOpen, nextAfter } = await import("../js/track/progress.js");
 const { makeSession } = await import("../js/track/session.js");
 
 let total = 0, failed = 0;
@@ -37,6 +37,19 @@ function tryRender(desc, fn) {
   try { const n = fn(); console.log(`ok   - ${desc}`); return n; }
   catch (e) { failed++; console.log(`FAIL - ${desc}\n       ${e && e.stack || e}`); return null; }
 }
+
+/* ---- legacy progress migration ------------------------------------------ */
+
+resetProgress();
+localStorage.setItem("uwc_hpc_track", JSON.stringify({
+  solved: ["reading-files", "removed-challenge"],
+}));
+const migrated = attemptFor("reading-files");
+check("legacy slug progress migrates to a stable challenge revision",
+  migrated && migrated.revision === "001" && migrated.completedAt);
+const migratedStorage = JSON.parse(localStorage.getItem("uwc_hpc_track"));
+check("legacy progress migration preserves unknown slugs for recovery",
+  migratedStorage.version === 2 && migratedStorage.legacyUnknown[0] === "removed-challenge");
 
 /* ---- the map, from a standing start ------------------------------------- */
 
@@ -149,7 +162,11 @@ for (const slug of ["reading-files", "bringing-files-back", "when-the-link-drops
   async function guess(v) { input.value = v; btn.dispatch("click"); await new Promise(r => setTimeout(r, 0)); }
   const openRungs = () => hints.querySelectorAll(".rung").filter(r => !r.hidden).length;
 
-  await guess("nope"); await guess("nope");
+  await guess("nope");
+  const started = attemptFor(c.slug);
+  check("submitting an answer pins the challenge revision and variant",
+    started && started.revision === c.revision && started.variant === 0 && !started.completedAt);
+  await guess("nope");
   check("two wrong answers reveal no hint", hints.hidden === true && openRungs() === 0);
   await guess("nope");
   check("the third wrong answer opens the first hint", hints.hidden === false && openRungs() === 1);
@@ -248,6 +265,17 @@ for (const slug of ["reading-files", "bringing-files-back", "when-the-link-drops
     typeof shell.complete === "function" && Array.isArray(shell.ctx.history));
   check("the track's extra commands are wired in",
     ["scp", "rsync", "ssh", "ll", "tldr", "df", "watch", "git"].every(k => k in shell.ctx.hooks));
+}
+
+/* A browser terminal command starts an attempt; headless validator calls do not. */
+{
+  resetProgress();
+  renderChallenge(CHALLENGES["where-am-i"], mount);
+  globalThis.__terminals.at(-1).input("pwd\r");
+  const attempt = attemptFor("where-am-i");
+  check("running a terminal command starts and pins an attempt",
+    attempt && attempt.revision === "001" && attempt.variant === 0);
+  resetProgress();
 }
 
 console.log(`\n${total - failed}/${total} checks passed`);

@@ -6,7 +6,7 @@
 import { el } from "./dom.js";
 import { makeTerminal } from "./terminal.js";
 import { topbar, challengeHeading, block, labelled, exampleBlock, hintLadder, answerBlock } from "./parts.js";
-import { markSolved, unlockedBy, nextAfter } from "../progress.js";
+import { markSolved, markStarted, unlockedBy, nextAfter } from "../progress.js";
 import { isBuilt } from "../challenges/index.js";
 
 export function renderChallenge(challenge, mount) {
@@ -27,7 +27,12 @@ export function renderChallenge(challenge, mount) {
     labelled("Worked example", exampleBlock(challenge)),
     block("Your task", challenge.task, "task"),
     ladder,
-    answerBlock(challenge, ladder, verdict => onCorrect(challenge, verdict, after)),
+    answerBlock(
+      challenge,
+      ladder,
+      verdict => onCorrect(challenge, verdict, after),
+      () => markStarted(challenge.slug, term.variantIndex),
+    ),
     after,
   );
 

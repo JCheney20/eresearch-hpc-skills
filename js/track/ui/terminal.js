@@ -2,6 +2,7 @@
 
 import { el, token } from "./dom.js";
 import { makeSession } from "../session.js";
+import { markStarted, selectedVariant } from "../progress.js";
 
 export function makeTerminal(challenge) {
   const wrap = el("div", "termwrap");
@@ -43,9 +44,11 @@ export function makeTerminal(challenge) {
   term.loadAddon(fit);
 
   let session = null;
+  const variantIndex = selectedVariant(challenge.slug, (challenge.variants || [{ i: 0 }]).length);
 
   function start() {
-    session = makeSession(challenge, term);
+    session = makeSession(challenge, term, variantIndex,
+      () => markStarted(challenge.slug, variantIndex));
     host.textContent = `${session.shell.ctx.env.USER}@${session.shell.ctx.env.HOSTNAME}`;
     // The banner is the OS line and the help line. Nothing else: a beginner
     // reading four lines of chrome before their first command learns that
@@ -73,6 +76,7 @@ export function makeTerminal(challenge) {
 
   return {
     node: wrap,
+    variantIndex,
     mount,
     focus: () => term.focus(),
     dispose() {

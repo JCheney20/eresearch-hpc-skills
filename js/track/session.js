@@ -15,6 +15,16 @@ import { topicOf } from "./topics.js";
    Challenges set on the learner's own laptop say so, because scp and rsync
    are run from the laptop and the whole lesson is which machine you are on. */
 class TrackShell extends Shell {
+  constructor(term, challenge, built, onCommand) {
+    super(term, challenge, built);
+    this.onCommand = onCommand;
+  }
+
+  exec(line) {
+    if (line.trim() && this.onCommand) this.onCommand();
+    super.exec(line);
+  }
+
   promptStr() {
     const home = "/home/student";
     const where = topicOf(this.level.slug);
@@ -26,7 +36,7 @@ class TrackShell extends Shell {
   }
 }
 
-export function makeSession(challenge, term, variantIndex = 0) {
+export function makeSession(challenge, term, variantIndex = 0, onCommand) {
   const variant = (challenge.variants || [{ i: 0 }])[variantIndex] || { i: 0 };
   const built = challenge.build ? challenge.build(variant) : { fs: {} };
 
@@ -38,7 +48,7 @@ export function makeSession(challenge, term, variantIndex = 0) {
     built.env || {}
   );
 
-  const shell = new TrackShell(term, challenge, built);
+  const shell = new TrackShell(term, challenge, built, onCommand);
   if (challenge.cwd) shell.ctx.cwd = challenge.cwd;
   shell.ctx.tldr = TLDR;
   return { shell, built, variant };

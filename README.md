@@ -46,7 +46,7 @@ Whether it is retired is not decided yet, which is why it is still here.
       challenges/         one file per challenge, plus the shared worlds
       commands.js         scp, rsync, ll, tldr, df, watch, git
       session.js          a challenge, wired to the shell engine
-      progress.js         what is solved, and therefore what is open
+      progress.js         revision-aware browser progress and unlocking
       answer.js           normalising and judging an answer
       ui/                 the three screens
     tools/                the checks

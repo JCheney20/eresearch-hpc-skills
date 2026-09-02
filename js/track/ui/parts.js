@@ -145,7 +145,7 @@ export function hintLadder(challenge) {
   return wrap;
 }
 
-export function answerBlock(challenge, ladder, onCorrect) {
+export function answerBlock(challenge, ladder, onCorrect, onAttempt) {
   const wrap = el("div", "answer");
   wrap.setAttribute("role", "group");
   wrap.setAttribute("aria-label", "Answer");
@@ -174,6 +174,7 @@ export function answerBlock(challenge, ladder, onCorrect) {
     if (settled) return;
     const r = await judge(challenge, input.value);
     if (r.state === "empty") { verdict.className = "verdict"; return; }
+    if (onAttempt) onAttempt();
 
     if (r.state === "right") {
       settled = true;

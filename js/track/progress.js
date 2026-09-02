@@ -1,46 +1,106 @@
-// Progress: which challenges are solved, and therefore which are open.
-//
-// The old game chained passwords: level N's answer was level N+1's key. This
-// track uses explicit prerequisite groups, so a challenge can require all or
-// any of a set of earlier challenges.
-//
-// Everything lives in localStorage under one key. There are no accounts.
+// Browser-local learner progress. Stable challenge numbers survive slug/title
+// changes; revision and variant pin an attempt to the content it started with.
 
 import { ALL_NODES, nodeBySlug, requirementsMet, TOPICS } from "./topics.js";
 
 const KEY = "uwc_hpc_track";
+const VERSION = 2;
+
+function emptyProgress() {
+  return { version: VERSION, challenges: {} };
+}
+
+function write(progress) {
+  try {
+    localStorage.setItem(KEY, JSON.stringify(progress));
+  } catch {
+    /* Private browsing or full storage must not stop the trainer working. */
+  }
+}
+
+function migrateLegacy(value) {
+  const progress = emptyProgress();
+  const unknown = [];
+  const completedAt = new Date().toISOString();
+  for (const slug of Array.isArray(value.solved) ? value.solved : []) {
+    const node = nodeBySlug(slug);
+    if (!node) { unknown.push(slug); continue; }
+    progress.challenges[node.number] = {
+      revision: node.revision,
+      variant: 0,
+      startedAt: completedAt,
+      completedAt,
+    };
+  }
+  if (unknown.length) progress.legacyUnknown = unknown;
+  write(progress);
+  return progress;
+}
 
 function read() {
   try {
-    const p = JSON.parse(localStorage.getItem(KEY)) || {};
-    return { solved: Array.isArray(p.solved) ? p.solved : [] };
+    const value = JSON.parse(localStorage.getItem(KEY)) || {};
+    if (value.version === VERSION && value.challenges && typeof value.challenges === "object") {
+      return value;
+    }
+    return migrateLegacy(value);
   } catch {
-    return { solved: [] };
+    return emptyProgress();
   }
 }
 
-function write(p) {
-  try {
-    localStorage.setItem(KEY, JSON.stringify(p));
-  } catch {
-    /* private browsing, storage full: the session still works, it just will
-       not be remembered. Nothing here is worth failing a render over. */
-  }
+export function attemptFor(slug) {
+  const node = nodeBySlug(slug);
+  return node ? read().challenges[node.number] || null : null;
+}
+
+export function selectedVariant(slug, count) {
+  const attempt = attemptFor(slug);
+  if (attempt && Number.isInteger(attempt.variant) && attempt.variant < count) return attempt.variant;
+  return count > 1 ? Math.floor(Math.random() * count) : 0;
 }
 
 export function solvedSlugs() {
-  return read().solved;
+  const progress = read();
+  return ALL_NODES
+    .filter(node => progress.challenges[node.number]?.completedAt)
+    .map(node => node.slug);
 }
 
 export function isSolved(slug) {
-  return read().solved.includes(slug);
+  return !!attemptFor(slug)?.completedAt;
 }
 
-export function markSolved(slug) {
-  const p = read();
-  if (!p.solved.includes(slug)) {
-    p.solved.push(slug);
-    write(p);
+export function markStarted(slug, variant = 0) {
+  const node = nodeBySlug(slug);
+  if (!node) return;
+  const progress = read();
+  if (!progress.challenges[node.number]) {
+    progress.challenges[node.number] = {
+      revision: node.revision,
+      variant,
+      startedAt: new Date().toISOString(),
+      completedAt: null,
+    };
+    write(progress);
+  }
+}
+
+export function markSolved(slug, variant = 0) {
+  const node = nodeBySlug(slug);
+  if (!node) return;
+  const progress = read();
+  const now = new Date().toISOString();
+  const attempt = progress.challenges[node.number] || {
+    revision: node.revision,
+    variant,
+    startedAt: now,
+    completedAt: null,
+  };
+  if (!attempt.completedAt) {
+    attempt.completedAt = now;
+    progress.challenges[node.number] = attempt;
+    write(progress);
   }
 }
 
@@ -48,16 +108,19 @@ export function resetProgress() {
   try { localStorage.removeItem(KEY); } catch { /* see write() */ }
 }
 
-/* "done" | "open" | "locked" — the one rule, applied everywhere. */
-function completedNumbers(solved) {
-  return new Set(solved.map(nodeBySlug).filter(Boolean).map(node => node.number));
+function completedNumbers() {
+  const progress = read();
+  return new Set(Object.entries(progress.challenges)
+    .filter(([, attempt]) => attempt && attempt.completedAt)
+    .map(([number]) => number));
 }
 
+/* "done" | "open" | "locked" — the one rule, applied everywhere. */
 export function stateOf(slug) {
   const node = nodeBySlug(slug);
   if (!node) return "locked";
   if (isSolved(slug)) return "done";
-  return requirementsMet(node, completedNumbers(read().solved)) ? "open" : "locked";
+  return requirementsMet(node, completedNumbers()) ? "open" : "locked";
 }
 
 export function topicProgress(topic) {
@@ -67,53 +130,40 @@ export function topicProgress(topic) {
 }
 
 export function topicState(topic) {
-  const prog = topicProgress(topic);
-  if (prog.done === prog.total) return "done";
-  return topic.nodes.some(n => stateOf(n.slug) === "open") ? "open" : "locked";
+  const progress = topicProgress(topic);
+  if (progress.done === progress.total) return "done";
+  return topic.nodes.some(node => stateOf(node.slug) === "open") ? "open" : "locked";
 }
 
-/* What did solving this open up? Used for the line after a correct answer. */
 export function unlockedBy(slug) {
-  const solved = read().solved;
   const source = nodeBySlug(slug);
   if (!source) return [];
-  const completed = completedNumbers([...solved, slug]);
+  const completed = completedNumbers();
+  completed.add(source.number);
   return ALL_NODES.filter(node =>
-    !solved.includes(node.slug) &&
+    !isSolved(node.slug) &&
     node.prerequisiteGroups.some(group => group.sources.includes(source.number)) &&
     requirementsMet(node, completed)
   );
 }
 
-/* The next thing worth doing: the open challenge with the lowest number. */
 export function nextOpen() {
-  return ALL_NODES.filter(n => stateOf(n.slug) === "open").sort((a, b) => a.num - b.num)[0] || null;
+  return ALL_NODES.filter(node => stateOf(node.slug) === "open")
+    .sort((a, b) => a.num - b.num)[0] || null;
 }
 
-/* Where "next challenge" goes after finishing one.
- *
- * The lowest-numbered challenge after this one that is not locked. At the
- * branch — finishing the core opens all three routes at once — that rule
- * picks the leftmost route on the map, because the map is laid out in number
- * order and the leftmost route's head is the lowest number of the three. So
- * the button is always "carry straight on", and the map is there for anyone
- * who would rather take a different route.
- *
- * `built` is asked as well as `stateOf`, so the button can never point at a
- * challenge that has a place on the map but no content yet.
- */
 export function nextAfter(slug, isBuiltFn = () => true) {
   const here = nodeBySlug(slug);
   if (!here) return null;
   return ALL_NODES
-    .filter(n => n.num > here.num && stateOf(n.slug) !== "locked" && isBuiltFn(n.slug))
+    .filter(node => node.num > here.num && stateOf(node.slug) !== "locked" && isBuiltFn(node.slug))
     .sort((a, b) => a.num - b.num)[0] || null;
 }
 
 export function overallProgress() {
-  const solved = read().solved;
+  const solved = new Set(solvedSlugs());
   return {
-    done: ALL_NODES.filter(n => solved.includes(n.slug)).length,
+    done: ALL_NODES.filter(node => solved.has(node.slug)).length,
     total: ALL_NODES.length,
     topics: TOPICS.length,
   };
