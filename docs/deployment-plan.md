@@ -224,6 +224,16 @@ Do not finalise HTTPS redirects, HSTS, secure-cookie logic, client-IP rate limit
 
 A future SSO-backed terminal that connects to an actual HPC node is a separate system. It needs its own architecture for per-user authorization, SSH/WebSocket gatewaying, session isolation, restricted homes, resource limits, audit policy, and HPC approval. It must not reuse this static-content VM as a credential or terminal proxy.
 
+## Next implementation wave
+
+The following work was deliberately deferred from the open-curriculum checkpoint:
+
+1. **Content and accessibility cleanup** — add or verify image alternative text; repair malformed converted CHPC markup; turn imported exercises and solutions into proper callouts or challenges; verify heading hierarchy, tables, code blocks, links, keyboard navigation, mobile layouts, and screen-reader output.
+2. **Admin-format alignment** — update the Django model from the old reading/interactive card format to text/code revisions with ordered Typst, callout, and Bash blocks; add author, source, licence, adaptation, and timer metadata; replace prerequisite validation with recommended-tree validation; add migrations, tests, editing forms, and static publication.
+3. **UWC content licensing** — decide and record the licence for original UWC-authored material, then review the learner-visible attribution and licence wording for both local and imported content.
+4. **Real-browser acceptance** — test every route class in Firefox and Chromium, including representative imported and code challenges, keyboard-only use, responsive widths, timer and progress persistence, direct links, failed-content handling, and locally served images.
+5. **Production release** — review the final diff, back up the current site, deploy all static assets including `content/`, validate over HTTPS, exercise rollback, promote the release, and remove the temporary `/prototype/` route only after production verification.
+
 ## Remaining implementation inputs
 
 - Whether the later SSO deployment keeps `/admin/` or moves to a separate admin hostname.
