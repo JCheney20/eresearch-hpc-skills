@@ -10,6 +10,9 @@ import { installFakeDom, recordingTerminal } from "./fakedom.mjs";
 
 const { document } = installFakeDom(globalThis);
 globalThis.window = globalThis;
+// Imported block documents are exercised by browser checks; the fake DOM has
+// no URL base or template parser, so keep this render suite synchronous.
+globalThis.fetch = undefined;
 
 const root = document.createElement("div");
 root.id = "app";
@@ -30,7 +33,13 @@ function check(desc, cond, detail) {
   else { failed++; console.log(`FAIL - ${desc}${detail ? `\n       ${detail}` : ""}`); }
 }
 
-function mount(node) { root.replaceChildren(node); return node; }
+let disposeMounted = null;
+function mount(node, dispose) {
+  if (disposeMounted) disposeMounted();
+  disposeMounted = dispose || null;
+  root.replaceChildren(node);
+  return node;
+}
 function find(node, cls) { return node.querySelectorAll("." + cls); }
 function tryRender(desc, fn) {
   total++;
@@ -51,81 +60,62 @@ const migratedStorage = JSON.parse(localStorage.getItem("uwc_hpc_track"));
 check("legacy progress migration preserves unknown slugs for recovery",
   migratedStorage.version === 2 && migratedStorage.legacyUnknown[0] === "removed-challenge");
 
-/* ---- the map, from a standing start ------------------------------------- */
+/* ---- open curriculum navigation ----------------------------------------- */
 
 resetProgress();
-let map = tryRender("the map renders with no progress", () => renderMap(mount));
+let map = tryRender("the Topic home renders with no progress", () => renderMap(mount));
 if (map) {
-  check("the map draws one bubble per topic", find(map, "bubble").length === TOPICS.length);
-  check("each bubble has one pip per challenge in its topic",
-    TOPICS.every((t, i) => find(find(map, "bubble")[i], "bpip").length === t.nodes.length));
-  check("each bubble states an x-out-of-y",
-    find(map, "bubble").every(b => /^\d+ out of \d+$/.test(find(b, "bcount")[0].textContent)));
-  check("the graph places core, three routes and the finale",
-    find(map, "gcell-core").length === 1 &&
-    find(map, "gcell-route").length === 3 &&
-    find(map, "gcell-finale").length === 1);
-  check("the wires are drawn once there is a box to measure",
-    find(map, "wire").length === 6, `got ${find(map, "wire").length}`);
-  check("only the core is unlocked at the start",
-    find(map, "bubble").filter(b => b.classList.contains("is-locked")).length === TOPICS.length - 1);
-  check("no individual challenge cards are on the map", find(map, "node").length === 0);
+  check("the home draws one card per Topic", find(map, "topiccard").length === TOPICS.length);
+  check("the home links to Your Journey", find(map, "journeytools")[0].querySelectorAll("a").some(link => link.getAttribute("href") === "#/journey"));
+  check("the home does not expose challenge nodes before a Topic is selected", find(map, "pathnode").length === 0);
 }
 
-/* ---- opening a topic panel ---------------------------------------------- */
+check("SSH and its file-transfer branch belong to HPC",
+  ["getting-on-the-cluster", "moving-files-introduction", "bringing-files-back", "when-the-link-drops"]
+    .every(slug => ALL_NODES.find(node => node.slug === slug)?.topicKey === "hpc"));
 
-if (map) {
-  const core = find(map, "bubble")[0];
-  tryRender("clicking the core bubble opens its topic panel", () => { core.click(); return true; });
-  const modal = document.body.querySelector(".modal");
-  check("the topic panel exists", !!modal);
-  if (modal) {
-    check("the panel lists every challenge in the topic",
-      find(modal, "node").length === TOPICS[0].nodes.length);
-    check("the first core challenge is open, the rest wait",
-      find(modal, "is-open").length === 1);
-    check("every locked challenge says what it is waiting for",
-      find(modal, "is-locked").every(n => find(n, "nwaits").length === 1));
-    document.body.querySelector(".modalclose").click();
-  }
-  check("closing the panel removes it", !document.body.querySelector(".modal"));
+const focused = tryRender("a focused Topic tree renders", () => renderMap(mount, { topicKey: "linux" }));
+if (focused) {
+  check("the focused tree contains every challenge in its Topic",
+    find(focused, "pathnode").length === TOPICS[0].nodes.length);
+  check("every built challenge node is a direct link",
+    find(focused, "pathnode").every(node => node.tagName === "A"));
+  check("no challenge node is locked", find(focused, "is-locked").length === 0);
 }
 
-/* Every challenge on the map must be playable, or say plainly that it is not.
-   A card that is neither is a dead link, which is the one thing a map may not
-   contain. */
-{
-  markSolved("what-is-a-terminal");
-  const m2 = renderMap(mount);
-  find(m2, "bubble")[0].click();
-  const panel = document.body.querySelector(".modal");
-  const cards = find(panel, "node");
-  check("no card on the map is a dead link",
-    cards.every(c =>
-      c.tagName === "A" ||                                   // playable
-      c.classList.contains("is-locked") ||                   // says what it waits for
-      find(c, "nstub").length === 1));                       // says it is unwritten
-  check("every challenge in the curriculum has content",
-    ALL_NODES.every(n => isBuilt(n.slug)),
-    ALL_NODES.filter(n => !isBuilt(n.slug)).map(n => n.slug).join(", "));
-  document.body.querySelector(".modalclose").click();
-  resetProgress();
+const journey = tryRender("Your Journey renders", () => renderMap(mount, { journey: true }));
+if (journey) {
+  check("Your Journey contains every challenge", find(journey, "pathnode").length === ALL_NODES.length);
+  check("Your Journey draws recommendation wires", find(journey, "wire").length > 0);
+  const byTitle = new Map(ALL_NODES.map(node => [node.title, node]));
+  const rowsPlaceTerminalNodesOutside = find(journey, "journeyrow").every(row => {
+    const rowNodes = find(row, "pathnode").map(card => byTitle.get(card.querySelector("strong").textContent));
+    const terminal = rowNodes.map(node => !ALL_NODES.some(next => next.recommendedAfter.includes(node.number)));
+    const count = terminal.filter(Boolean).length;
+    if (!count || count === terminal.length) return true;
+    return count > 1 ? terminal[0] && terminal.at(-1) : terminal[0] || terminal.at(-1);
+  });
+  check("terminal graph nodes sit at the outside edges of their rows", rowsPlaceTerminalNodesOutside);
+  const journeyTools = find(journey, "journeytools")[0];
+  check("Your Journey returns to Topics instead of linking to itself",
+    journeyTools.querySelectorAll("a").length === 1 &&
+    journeyTools.querySelectorAll("a")[0].getAttribute("href") === "#/");
 }
+check("every challenge in the curriculum has content",
+  ALL_NODES.every(node => isBuilt(node.slug)),
+  ALL_NODES.filter(node => !isBuilt(node.slug)).map(node => node.slug).join(", "));
 
-/* ---- the reading challenge ---------------------------------------------- */
+/* ---- a timed reading challenge ------------------------------------------ */
 
 const zero = CHALLENGES["what-is-a-terminal"];
 const reading = tryRender("challenge 0 renders", () => renderReading(zero, mount));
 if (reading) {
   check("challenge 0 has no terminal pane", find(reading, "termwrap").length === 0);
-  check("challenge 0 lays its sections out as cards",
-    find(reading, "rcard").length === zero.cards.length);
-  check('challenge 0\'s topbar reads "Challenge 0 of 8"',
-    find(reading, "crumb")[0].textContent === "Challenge 0 of 8",
-    JSON.stringify(find(reading, "crumb")[0].textContent));
-  check("opening a reading challenge completes it", stateOf(zero.slug) === "done");
-  check("finishing challenge 0 opens challenge 1",
-    stateOf("where-am-i") === "open");
+  check("challenge 0 shows its author/source/update line", find(reading, "byline").length === 1);
+  check("imported text challenges show the work-in-progress warning", find(reading, "importwarning").length === 1);
+  check("challenge 0 has a completion timer", find(reading, "readtimer").length === 1);
+  check("opening a reading challenge starts but does not complete it", stateOf(zero.slug) === "open");
+  check("every known challenge is open without prerequisites", ALL_NODES.every(node => stateOf(node.slug) === "open"));
 }
 
 /* ---- a full challenge screen -------------------------------------------- */
@@ -187,7 +177,7 @@ for (const slug of ["reading-files", "bringing-files-back", "when-the-link-drops
   const actions = find(screen, "doneactions")[0];
   check("finishing a challenge offers two ways on", !!actions && actions.childNodes.length === 2);
   check("the first is the next challenge",
-    actions && actions.childNodes[0].getAttribute("href") === "#/c/finding-the-line",
+    actions && actions.childNodes[0].getAttribute("href") === "#/c/shell-scripts",
     actions && actions.childNodes[0].getAttribute("href"));
   check("the second is the map",
     actions && actions.childNodes[1].getAttribute("href") === "#/");
@@ -203,8 +193,8 @@ for (const slug of ["reading-files", "bringing-files-back", "when-the-link-drops
     eight && eight.slug === "moving-files-introduction", eight && eight.slug);
 
   const ten = nextAfter("when-the-link-drops", isBuilt);
-  check("the end of a route carries on into the next topic introduction",
-    ten && ten.slug === "keeping-a-record-introduction", ten && ten.slug);
+  check("the end of a route follows its authored recommendation",
+    ten && ten.slug === "putting-it-together", ten && ten.slug);
 
   for (const n of ALL_NODES) markSolved(n.slug);
   check("the last challenge has nowhere further to go",
@@ -224,14 +214,15 @@ for (const slug of ["reading-files", "bringing-files-back", "when-the-link-drops
   resetProgress();
 }
 
-/* A reading challenge ends the same way every other one does. */
+/* A completed reading challenge ends the same way every other one does. */
 {
+  markSolved("what-is-a-terminal");
   const r = renderReading(CHALLENGES["what-is-a-terminal"], mount);
   const actions = find(r, "doneactions")[0];
-  check("a reading challenge offers the same two ways on",
+  check("a completed reading challenge offers the same two ways on",
     !!actions && actions.querySelectorAll("a").length === 2);
-  check("its next challenge is the one after it",
-    actions && actions.querySelectorAll("a")[0].getAttribute("href") === "#/c/where-am-i");
+  check("its next challenge follows the authored recommendation",
+    actions && actions.querySelectorAll("a")[0].getAttribute("href") === "#/c/navigating-files");
   resetProgress();
 }
 
@@ -240,12 +231,12 @@ for (const slug of ["reading-files", "bringing-files-back", "when-the-link-drops
 {
   resetProgress();
   for (const n of ALL_NODES) markSolved(n.slug);
-  const done = tryRender("the map renders with everything solved", () => renderMap(mount));
+  const done = tryRender("Your Journey renders with everything solved", () => renderMap(mount, { journey: true }));
   if (done) {
-    check("every bubble reads as done",
-      find(done, "bubble").every(b => b.classList.contains("is-done")));
-    check("no wire is dashed once nothing is locked",
-      find(done, "wire").every(w => !w.classList.contains("is-locked")));
+    check("every journey node reads as done",
+      find(done, "pathnode").every(node => node.classList.contains("is-done")));
+    check("recommendation wires never imply locking",
+      find(done, "wire").every(wire => !wire.classList.contains("is-locked")));
   }
   check("nothing is left open when everything is solved", nextOpen() === null);
   resetProgress();
@@ -256,11 +247,11 @@ for (const slug of ["reading-files", "bringing-files-back", "when-the-link-drops
 {
   const c = CHALLENGES["when-the-link-drops"];
   const { shell } = makeSession(c, recordingTerminal());
-  check("the prompt names the topic, not the home directory",
-    /^you@laptop ~\/Moving-files/.test(shell.promptStr()), shell.promptStr());
+  check("the prompt names the Topic, not the home directory",
+    /^you@laptop ~\/HPC/.test(shell.promptStr()), shell.promptStr());
   const cluster = makeSession(CHALLENGES["reading-files"], recordingTerminal()).shell;
-  check("a cluster challenge prompts as hpc@uwc",
-    /^hpc@uwc ~\/Core/.test(cluster.promptStr()), cluster.promptStr());
+  check("an HPC-hosted shell challenge prompts as hpc@uwc",
+    /^hpc@uwc ~\/Linux/.test(cluster.promptStr()), cluster.promptStr());
   check("tab completion and history survive the subclass",
     typeof shell.complete === "function" && Array.isArray(shell.ctx.history));
   check("the track's extra commands are wired in",

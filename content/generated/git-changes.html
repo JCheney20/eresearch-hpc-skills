@@ -1,0 +1,463 @@
+<ul>
+<li><p>Go through the modify-add-commit cycle for one or more files.</p></li>
+<li><p>Explain where information is stored at each stage of that cycle.</p></li>
+<li><p>Distinguish between descriptive and non-descriptive commit messages.</p></li>
+</ul>
+<ul>
+<li><p>How do I record changes in Git?</p></li>
+<li><p>How do I check the status of my version control repository?</p></li>
+<li><p>How do I record notes about what changes I made and why?</p></li>
+</ul>
+<p>First let’s make sure we’re still in the right directory. You should be in the <code>recipes</code> directory.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ~/Desktop/recipes</span></code></pre></div>
+<p>Let’s create a file called <code>guacamole.md</code> that contains the basic structure of our first recipe. A file editor is a command that opens a specified file in the current shell and allows you to edit it; the file is created if it does not exist.</p>
+<p>In this lesson, we’ll use <code>nano</code> as a file editor, but you can use whatever editor you like. In particular, this does not have to be the <code>core.editor</code> you set globally earlier during <a href="https://swcarpentry.github.io/git-novice/02-setup.html">“Setting Up Git”</a>. For a refresher on text editors, check out <a href="https://swcarpentry.github.io/shell-novice/03-create.html#which-editor">“Which Editor?”</a> in <a href="https://swcarpentry.github.io/shell-novice/">The Unix Shell</a> lesson.</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano guacamole.md</span></code></pre></div>
+<p>Type the text below into the <code>guacamole.md</code> file:</p>
+<pre class="output"><code># Guacamole
+## Ingredients
+## Instructions
+</code></pre>
+<p>Now we need to save the file and exit the editor. In the case of <code>nano</code>, many shortcuts are available via the <code>^</code> (symbolizing <code>Ctrl</code>) key. For example, to save and exit the editor you should use the sequence: <code>Ctrl+X</code> to exit, <code>Y</code> to save, and finally <code>Enter</code> to validate.</p>
+<h2 id="markdown">Markdown</h2>
+<p>Jimmy and Alfredo are using <a href="https://en.wikipedia.org/wiki/Markdown">Markdown</a> to write their recipes. It is a simple plain-text format for writing lists, links and other things that might go into a web page.</p>
+<figure>
+<div data-align="center">
+<table>
+<thead>
+<tr>
+<th><p>Markdown code</p></th>
+<th><p>Rendered output</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><pre><code>*   Use asterisks
+    *   to create
+    *   bullet lists.
+    </code></pre></td>
+<td><pre><code>|
+    </code></pre>
+<ul>
+<li><p>Use asterisks</p></li>
+<li><p>to create</p></li>
+<li><p>bullet lists.</p></li>
+</ul></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><pre><code>1.   Use numbers
+    1.   to create
+    1.   numbered lists.
+    </code></pre></td>
+<td><pre><code>|
+    </code></pre>
+<ol>
+<li><p>Use numbers</p></li>
+<li><p>to create</p></li>
+<li><p>numbered lists.</p></li>
+</ol></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><pre><code>*  You can use indents
+      *  To create sublists
+      *  of the same type
+    *  Or sublists
+      1. Of different
+      1. types
+    </code></pre></td>
+<td><pre><code>|
+    </code></pre>
+<ul>
+<li><p>You can use indents</p>
+<ul>
+<li><p>To create sublists</p></li>
+<li><p>of the same type</p></li>
+</ul></li>
+<li><p>Or sublists</p>
+<ol>
+<li><p>Of different</p></li>
+<li><p>types</p></li>
+</ol></li>
+</ul></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><pre><code># A Level-1 Heading
+    </code></pre></td>
+<td><pre><code>|
+    </code></pre>
+<h2 id="a-level-1-heading">A Level-1 Heading</h2></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><pre><code>## A Level-2 Heading (etc.)
+    </code></pre></td>
+<td><pre><code>|
+    </code></pre>
+<h3 id="a-level-2-heading-etc.">A Level-2 Heading (etc.)</h3></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+<p>Let’s verify that the file was properly created by running the list command (<code>ls</code>):</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls</span></code></pre></div>
+<pre class="output"><code>guacamole.md
+</code></pre>
+<p>The <code>cat</code> command prints the content of a file in the shell. We can use it to visualize the 3 lines we added to <code>guacamole.md</code>:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+## Instructions
+</code></pre>
+<p>If we check the status of our project again, Git tells us that it’s noticed the new file:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<pre class="output"><code>On branch main
+
+No commits yet
+
+Untracked files:
+   (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+
+    guacamole.md
+
+nothing added to commit but untracked files present (use &quot;git add&quot; to track)
+</code></pre>
+<p>The “untracked files” message means that there’s a file in the directory that Git isn’t keeping track of. We can tell Git to track a file using <code>git add</code>:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.md</span></code></pre></div>
+<p>and then check that the right thing happened:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<pre class="output"><code>On branch main
+
+No commits yet
+
+Changes to be committed:
+  (use &quot;git rm --cached &lt;file&gt;...&quot; to unstage)
+
+    new file:   guacamole.md
+</code></pre>
+<p>Git now knows that it’s supposed to keep track of <code>guacamole.md</code>, but it hasn’t recorded these changes as a commit yet. To get it to do that, we need to run one more command:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Create initial structure for a Guacamole recipe&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main (root-commit) f22b25e] Create initial structure for a Guacamole recipe
+ 1 file changed, 1 insertion(+)
+ create mode 100644 guacamole.md
+</code></pre>
+<p>When we run <code>git commit</code>, Git takes everything we have told it to save by using <code>git add</code> and stores a copy permanently inside the special <code>.git</code> directory. This permanent copy is called a <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/learners/reference.md#commit">commit</a> (or <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/learners/reference.md#revision">revision</a>) and its short identifier is <code>f22b25e</code>. Your commit may have another identifier.</p>
+<p>We use the <code>-m</code> flag (for “message”) to record a short, descriptive, and specific comment that will help us remember later on what we did and why. If we just run <code>git commit</code> without the <code>-m</code> option, Git will launch <code>nano</code> (or whatever other editor we configured as <code>core.editor</code>) so that we can write a longer message.</p>
+<p><a href="https://chris.beams.io/posts/git-commit/">Good commit messages</a> start with a brief (&lt;50 characters) statement about the changes made in the commit. Generally, the message should complete the sentence “If applied, this commit will” . If you want to go into more detail, add a blank line between the summary line and your additional notes. Use this additional space to explain why you made changes and/or what their impact will be.</p>
+<p>If we run <code>git status</code> now:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<pre class="output"><code>On branch main
+nothing to commit, working tree clean
+</code></pre>
+<p>it tells us everything is up to date. If we want to know what we’ve done recently, we can ask Git to show us the project’s history using <code>git log</code>:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git log</span></code></pre></div>
+<pre class="output"><code>commit f22b25e3233b4645dabd0d81e651fe074bd8e73b
+Author: Alfredo Linguini &lt;a.linguini@ratatouille.fr&gt;
+Date:   Thu Aug 22 09:51:46 2013 -0400
+
+    Create initial structure for a Guacamole recipe
+</code></pre>
+<p><code>git log</code> lists all commits made to a repository in reverse chronological order. The listing for each commit includes the commit’s full identifier (which starts with the same characters as the short identifier printed by the <code>git commit</code> command earlier), the commit’s author, when it was created, and the log message Git was given when the commit was created.</p>
+<h2 id="where-are-my-changes">Where Are My Changes?</h2>
+<p>If we run <code>ls</code> at this point, we will still see just one file called <code>guacamole.md</code>. That’s because Git saves information about files” history in the special <code>.git</code> directory mentioned earlier so that our filesystem doesn’t become cluttered (and so that we can’t accidentally edit or delete an old version).</p>
+<p>Now suppose Alfredo adds more information to the file. (Again, we’ll edit with <code>nano</code> and then <code>cat</code> the file to show its contents; you may use a different editor, and don’t need to <code>cat</code>.)</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano guacamole.md</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+* avocado
+* lemon
+* salt
+## Instructions
+</code></pre>
+<p>When we run <code>git status</code> now, it tells us that a file it already knows about has been modified:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<pre class="output"><code>On branch main
+Changes not staged for commit:
+  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
+  (use &quot;git restore &lt;file&gt;...&quot; to discard changes in working directory)
+
+    modified:   guacamole.md
+
+no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)
+</code></pre>
+<p>The last line is the key phrase: “no changes added to commit”. We have changed this file, but we haven’t told Git we will want to save those changes (which we do with <code>git add</code>) nor have we saved them (which we do with <code>git commit</code>). So let’s do that now. It is good practice to always review our changes before saving them. We do this using <code>git diff</code>.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git diff</span></code></pre></div>
+<pre class="output"><code>diff --git a/guacamole.md b/guacamole.md
+index df0654a..315bf3a 100644
+--- a/guacamole.md
++++ b/guacamole.md
+@@ -1,3 +1,6 @@
+ # Guacamole
+ ## Ingredients
++* avocado
++* lemon
++* salt
+ ## Instructions
+</code></pre>
+<p>The output is cryptic because it is actually a series of commands for tools like editors and <code>patch</code> telling them how to reconstruct one file given the other. If we break it down into pieces:</p>
+<ol>
+<li><p>The first line tells us that Git is producing output similar to the Unix <code>diff</code> command comparing the old and new versions of the file.</p></li>
+<li><p>The second line tells exactly which versions of the file Git is comparing; <code>df0654a</code> and <code>315bf3a</code> are unique computer-generated labels for those versions.</p></li>
+<li><p>The third and fourth lines once again show the name of the file being changed.</p></li>
+<li><p>The remaining lines are the most interesting, they show us the actual differences and the lines on which they occur. In particular, the <code>+</code> marker in the first column shows where we added a line.</p></li>
+</ol>
+<p>After reviewing our change, it’s time to commit it:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Add ingredients for basic guacamole&quot;</span></span></code></pre></div>
+<pre class="output"><code>On branch main
+Changes not staged for commit:
+  (use &quot;git add &lt;file&gt;...&quot; to update what will be committed)
+  (use &quot;git restore &lt;file&gt;...&quot; to discard changes in working directory)
+
+    modified:   guacamole.md
+
+no changes added to commit (use &quot;git add&quot; and/or &quot;git commit -a&quot;)
+</code></pre>
+<p>Whoops: Git won’t commit because we didn’t use <code>git add</code> first. Let’s fix that:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.md</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Add ingredients for basic guacamole&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main 34961b1] Add ingredients for basic guacamole
+ 1 file changed, 3 insertions(+)
+</code></pre>
+<p>Git insists that we add files to the set we want to commit before actually committing anything. This allows us to commit our changes in stages and capture changes in logical portions rather than only large batches. For example, suppose we’re adding a few citations to relevant research to our thesis. We might want to commit those additions, and the corresponding bibliography entries, but <em>not</em> commit some of our work drafting the conclusion (which we haven’t finished yet).</p>
+<p>To allow for this, Git has a special <em>staging area</em> where it keeps track of things that have been added to the current <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/learners/reference.md#changeset">changeset</a> but not yet committed.</p>
+<h2 id="staging-area">Staging Area</h2>
+<p>If you think of Git as taking snapshots of changes over the life of a project, <code>git add</code> specifies <em>what</em> will go in a snapshot (putting things in the staging area), and <code>git commit</code> then <em>actually takes</em> the snapshot, and makes a permanent record of it (as a commit). If you don’t have anything staged when you type <code>git commit</code>, Git will prompt you to use <code>git commit -a</code> or <code>git commit --all</code>, which is kind of like gathering <em>everyone</em> to take a group photo! However, it’s almost always better to explicitly add things to the staging area, because you might commit changes you forgot you made. (Going back to the group photo simile, you might get an extra with incomplete makeup walking on the stage for the picture because you used <code>-a</code>!) Try to stage things manually, or you might find yourself searching for “git undo commit” more than you would like!</p>
+<p><span class="box"><img src="/content/assets/git-changes/001-git-staging-area.svg" /></span></p>
+<p>Let’s watch as our changes to a file move from our editor to the staging area and into long-term storage. First, we’ll improve our recipe by changing ‘lemon” to ‘lime’:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano guacamole.md</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+* avocado
+* lime
+* salt
+## Instructions
+</code></pre>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git diff</span></code></pre></div>
+<pre class="output"><code>diff --git a/guacamole.md b/guacamole.md
+index 315bf3a..b36abfd 100644
+--- a/guacamole.md
++++ b/guacamole.md
+@@ -1,6 +1,6 @@
+ # Guacamole
+ ## Ingredients
+ * avocado
+-* lemon
++* lime
+ * salt
+ ## Instructions
+</code></pre>
+<p>So far, so good: we’ve replaced one line (shown with a <code>-</code> in the first column) with a new line (shown with a <code>+</code> in the first column). Now let’s put that change in the staging area and see what <code>git diff</code> reports:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.md</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git diff</span></code></pre></div>
+<p>There is no output. Without any arguments, <code>git diff</code> compares the working directory and the staging area. After <code>git add</code>, the two versions are identical and there is nothing to show.</p>
+<p>However, if we do this:</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git diff <span class="at">--staged</span></span></code></pre></div>
+<pre class="output"><code>diff --git a/guacamole.md b/guacamole.md
+index 315bf3a..b36abfd 100644
+--- a/guacamole.md
++++ b/guacamole.md
+@@ -1,6 +1,6 @@
+ # Guacamole
+ ## Ingredients
+ * avocado
+-* lemon
++* lime
+ * salt
+ ## Instructions
+</code></pre>
+<p>we can see that by adding the <code>--staged</code> argument to the command we are now comparing what’s in the staged area to the last committed change.</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Modify guacamole to the traditional recipe&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main 005937f] Modify guacamole to the traditional recipe
+ 1 file changed, 1 insertion(+)
+</code></pre>
+<p>check our status:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<pre class="output"><code>On branch main
+nothing to commit, working tree clean
+</code></pre>
+<p>and look at the history of what we’ve done so far:</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git log</span></code></pre></div>
+<pre class="output"><code>commit 005937fbe2a98fb83f0ade869025dc2636b4dad5 (HEAD -&gt; main)
+Author: Alfredo Linguini &lt;a.linguini@ratatouille.fr&gt;
+Date:   Thu Aug 22 10:14:07 2013 -0400
+
+    Modify guacamole to the traditional recipe
+
+commit 34961b159c27df3b475cfe4415d94a6d1fcd064d
+Author: Alfredo Linguini &lt;a.linguini@ratatouille.fr&gt;
+Date:   Thu Aug 22 10:07:21 2013 -0400
+
+    Add ingredients for basic guacamole
+
+commit f22b25e3233b4645dabd0d81e651fe074bd8e73b
+Author: Alfredo Linguini &lt;a.linguini@ratatouille.fr&gt;
+Date:   Thu Aug 22 09:51:46 2013 -0400
+
+    Create initial structure for a Guacamole recipe
+</code></pre>
+<h2 id="word-based-diffing">Word-based diffing</h2>
+<p>Sometimes, e.g. in the case of the text documents a line-wise diff is too coarse. That is where the <code>--color-words</code> option of <code>git diff</code> comes in very useful as it highlights the changed words using colors.</p>
+<h2 id="paging-the-log">Paging the Log</h2>
+<p>When the output of <code>git log</code> is too long to fit in your screen, <code>git</code> uses a program to split it into pages of the size of your screen. When this “pager” is called, you will notice that the last line in your screen is a <code>:</code>, instead of your usual prompt.</p>
+<ul>
+<li><p>To get out of the pager, press Q.</p></li>
+<li><p>To move to the next page, press Spacebar.</p></li>
+<li><p>To search for <code>some_word</code> in all pages, press / and type <code>some_word</code>. Navigate through matches pressing N.</p></li>
+</ul>
+<h2 id="limit-log-size">Limit Log Size</h2>
+<p>To avoid having <code>git log</code> cover your entire terminal screen, you can limit the number of commits that Git lists by using <code>-N</code>, where <code>N</code> is the number of commits that you want to view. For example, if you only want information from the last commit you can use:</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git log <span class="at">-1</span></span></code></pre></div>
+<pre class="output"><code>commit 005937fbe2a98fb83f0ade869025dc2636b4dad5 (HEAD -&gt; main)
+Author: Alfredo Linguini &lt;a.linguini@ratatouille.fr&gt;
+Date:   Thu Aug 22 10:14:07 2013 -0400
+
+   Modify guacamole to the traditional recipe
+</code></pre>
+<p>You can also reduce the quantity of information using the <code>--oneline</code> option:</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git log <span class="at">--oneline</span></span></code></pre></div>
+<pre class="output"><code>005937f (HEAD -&gt; main) Modify guacamole to the traditional recipe
+34961b1 Add ingredients for basic guacamole
+f22b25e Create initial structure for a Guacamole recipe
+</code></pre>
+<p>You can also combine the <code>--oneline</code> option with others. One useful combination adds <code>--graph</code> to display the commit history as a text-based graph and to indicate which commits are associated with the current <code>HEAD</code>, the current branch <code>main</code>, or <a href="https://git-scm.com/book/en/v2/Git-Internals-Git-References">other Git references</a>:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git log <span class="at">--oneline</span> <span class="at">--graph</span></span></code></pre></div>
+<pre class="output"><code>* 005937f (HEAD -&gt; main) Modify guacamole to the traditional recipe
+* 34961b1 Add ingredients for basic guacamole
+* f22b25e Create initial structure for a Guacamole recipe
+</code></pre>
+<h2 id="directories">Directories</h2>
+<p>Two important facts you should know about directories in Git.</p>
+<ol>
+<li><p>Git does not track directories on their own, only files within them. Try it for yourself:</p></li>
+</ol>
+<div class="sourceCode" id="cb58"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir cakes</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add cakes</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<p>Note, our newly created empty directory <code>cakes</code> does not appear in the list of untracked files even if we explicitly add it (<em>via</em> <code>git add</code>) to our repository. This is the reason why you will sometimes see <code>.gitkeep</code> files in otherwise empty directories. The sole purpose of <code>.gitkeep</code> files is to populate a directory so that Git adds it to the repository. The name <code>.gitkeep</code> is just a convention, and in fact, you can name these files anything you like.</p>
+<ol start="2" type="1">
+<li><p>If you create a directory in your Git repository and populate it with files, you can add all the files in the directory at once by referring to the directory in your <code>git add</code> command. Try it for yourself:</p></li>
+</ol>
+<div class="sourceCode" id="cb59"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> touch cakes/brownie cakes/lemon_drizzle</span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add cakes</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<p>Before moving on, we will commit these changes.</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Add some initial cakes&quot;</span></span></code></pre></div>
+<p>To recap, when we want to add changes to our repository, we first need to add the changed files to the staging area (<code>git add</code>) and then commit the staged changes to the repository (<code>git commit</code>):</p>
+<p><span class="box"><img src="/content/assets/git-changes/002-git-committing.svg" /></span></p>
+<h2 id="choosing-a-commit-message">Choosing a Commit Message</h2>
+<p>Which of the following commit messages would be most appropriate for the last commit made to <code>guacamole.md</code>?</p>
+<ol start="2" type="1">
+<li><p>“Changes”</p></li>
+<li><p>“Change lemon for lime”</p></li>
+<li><p>“Modify guacamole to the traditional recipe”</p></li>
+</ol>
+<h2 id="solution">Solution</h2>
+<p>Answer 1 is not descriptive enough, and the purpose of the commit is unclear; and answer 2 is redundant to using “git diff” to see what changed in this commit; but answer 3 is good: short, descriptive, and imperative.</p>
+<h2 id="committing-changes-to-git">Committing Changes to Git</h2>
+<p>Which command(s) below would save the changes of <code>myfile.txt</code> to my local Git repository?</p>
+<ol start="2" type="1">
+<li><div class="sourceCode" id="cb61"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;my recent changes&quot;</span></span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><div class="sourceCode" id="cb62"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git init myfile.txt</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;my recent changes&quot;</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><div class="sourceCode" id="cb63"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add myfile.txt</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;my recent changes&quot;</span></span>
+<span id="cb63-3"><a href="#cb63-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><div class="sourceCode" id="cb64"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> myfile.txt <span class="st">&quot;my recent changes&quot;</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<h2 id="solution-1">Solution</h2>
+<ol start="2" type="1">
+<li><p>Would only create a commit if files have already been staged.</p></li>
+<li><p>Would try to create a new repository.</p></li>
+<li><p>Is correct: first add the file to the staging area, then commit.</p></li>
+<li><p>Would try to commit a file “my recent changes” with the message myfile.txt.</p></li>
+</ol>
+<h2 id="committing-multiple-files">Committing Multiple Files</h2>
+<p>When you make changes, they often belong together as one logical improvement. Git lets you group related edits into a single commit so your project stays consistent. This is something word processors can’t easily do—each suggestion is separate, even if they depend on each other.</p>
+<p>The staging area can hold changes from any number of files that you want to commit as a single snapshot.</p>
+<ol start="2" type="1">
+<li><p>Add some text to <code>guacamole.md</code> noting the rough price of the ingredients.</p></li>
+<li><p>Create a new file <code>groceries.md</code> with a list of products and their prices for different markets.</p></li>
+<li><p>Add changes from both files to the staging area, and commit those changes.</p></li>
+</ol>
+<h2 id="solution-2">Solution</h2>
+<p>First we make our changes to the <code>guacamole.md</code> and <code>groceries.md</code> files:</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano guacamole.md</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+* avocado (1.35)
+* lime (0.64)
+* salt (2)
+</code></pre>
+<div class="sourceCode" id="cb67"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano groceries.md</span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat groceries.md</span></code></pre></div>
+<pre class="output"><code># Market A
+* avocado: 1.35 per unit.
+* lime: 0.64 per unit
+* salt: 2 per kg
+</code></pre>
+<p>Now you can add both files to the staging area. We can do that in one line:</p>
+<div class="sourceCode" id="cb69"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.md groceries.md</span></code></pre></div>
+<p>Or with multiple commands:</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.md</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add groceries.md</span></code></pre></div>
+<p>Now the files are ready to commit. You can check that using <code>git status</code>. If you are ready to commit use:</p>
+<div class="sourceCode" id="cb71"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Write prices for ingredients and their source&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main cc127c2]
+ Write prices for ingredients and their source
+ 2 files changed, 7 insertions(+)
+ create mode 100644 groceries.md
+</code></pre>
+<h2 id="bio-repository"><code>bio</code> Repository</h2>
+<ul>
+<li><p>Create a new Git repository on your computer called <code>bio</code>.</p></li>
+<li><p>Write a three-line biography for yourself in a file called <code>me.txt</code>, commit your changes</p></li>
+<li><p>Modify one line, add a fourth line</p></li>
+<li><p>Display the differences between its updated state and its original state.</p></li>
+</ul>
+<h2 id="solution-3">Solution</h2>
+<p>If needed, move out of the <code>recipes</code> folder:</p>
+<div class="sourceCode" id="cb73"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ..</span></code></pre></div>
+<p>Create a new folder called <code>bio</code> and ‘move” into it:</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir bio</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd bio</span></code></pre></div>
+<p>Initialise git:</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git init</span></code></pre></div>
+<p>Create your biography file <code>me.txt</code> using <code>nano</code> or another text editor. Once in place, add and commit it to the repository:</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add me.txt</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Add biography file&quot;</span></span></code></pre></div>
+<p>Modify the file as described (modify one line, add a fourth line). To display the differences between its updated state and its original state, use <code>git diff</code>:</p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git diff me.txt</span></code></pre></div>
+<ul>
+<li><p><code>git status</code> shows the status of a repository.</p></li>
+<li><p>Files can be stored in a project’s working directory (which users see), the staging area (where the next commit is being built up) and the local repository (where commits are permanently recorded).</p></li>
+<li><p><code>git add</code> puts files in the staging area.</p></li>
+<li><p><code>git commit</code> saves the staged content as a new commit in the local repository.</p></li>
+<li><p>Write a commit message that accurately describes your changes.</p></li>
+</ul>

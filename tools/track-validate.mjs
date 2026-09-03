@@ -11,13 +11,14 @@
 //      about what they are about to see.
 //
 // Plus the shape checks: every challenge is placed in the curriculum, every
-// dependency it declares exists, and the required fields are present.
+// recommendation it declares exists, and the required fields are present.
 
 import { CHALLENGES } from "../js/track/challenges/index.js";
 import { makeSession, silentTerm } from "../js/track/session.js";
-import { ALL_NODES, TOPICS, topicOf, nodeByNumber, requirementsMet } from "../js/track/topics.js";
+import { ALL_NODES, TOPICS, topicOf, nodeByNumber } from "../js/track/topics.js";
 import { CONTENT_RELEASE } from "../js/track/content.js";
 import { judge, normalise } from "../js/track/answer.js";
+import { existsSync, readFileSync } from "node:fs";
 
 let total = 0, failed = 0;
 
@@ -58,44 +59,31 @@ for (const node of ALL_NODES) {
   check(`${node.slug}: has a known challenge kind`,
     node.kind === "reading" || node.kind === "interactive", node.kind);
 
-  for (const group of node.prerequisiteGroups) {
-    check(`${node.slug}: prerequisite group has a known mode`,
-      group.mode === "all" || group.mode === "any", group.mode);
-    check(`${node.slug}: prerequisite group is not empty`, group.sources.length > 0);
-    check(`${node.slug}: prerequisite sources are unique`,
-      new Set(group.sources).size === group.sources.length);
-    check(`${node.slug}: every prerequisite source exists`,
-      group.sources.every(source => nodeByNumber(source) !== null),
-      JSON.stringify(group.sources));
-    check(`${node.slug}: does not require itself`, !group.sources.includes(node.number));
-  }
+  check(`${node.slug}: recommendations are unique`,
+    new Set(node.recommendedAfter).size === node.recommendedAfter.length);
+  check(`${node.slug}: every recommended source exists`,
+    node.recommendedAfter.every(source => nodeByNumber(source) !== null),
+    JSON.stringify(node.recommendedAfter));
+  check(`${node.slug}: does not recommend itself`, !node.recommendedAfter.includes(node.number));
 }
 
-/* No cycles: walking every edge from any node must terminate. */
+/* No cycles: walking every recommendation from any node must terminate. */
 for (const node of ALL_NODES) {
   const seen = new Set();
-  const stack = [node.number];
+  const stack = [...node.recommendedAfter];
   let cyclic = false;
   while (stack.length) {
     const number = stack.pop();
+    if (number === node.number) { cyclic = true; break; }
     if (seen.has(number)) continue;
     seen.add(number);
     const current = nodeByNumber(number);
-    const sources = current ? current.prerequisiteGroups.flatMap(group => group.sources) : [];
-    if (sources.includes(node.number)) { cyclic = true; break; }
-    stack.push(...sources);
+    if (current) stack.push(...current.recommendedAfter);
   }
-  check(`${node.slug}: its prerequisites do not form a cycle`, !cyclic);
+  check(`${node.slug}: its recommendations do not form a cycle`, !cyclic);
 }
 
-check("the core has no prerequisites at its head",
-  TOPICS[0].nodes[0].prerequisiteGroups.length === 0);
-check("all-of groups require every source",
-  !requirementsMet({ prerequisiteGroups: [{ mode: "all", sources: ["001", "002"] }] }, ["001"]) &&
-  requirementsMet({ prerequisiteGroups: [{ mode: "all", sources: ["001", "002"] }] }, ["001", "002"]));
-check("any-of groups require at least one source",
-  !requirementsMet({ prerequisiteGroups: [{ mode: "any", sources: ["001", "002"] }] }, []) &&
-  requirementsMet({ prerequisiteGroups: [{ mode: "any", sources: ["001", "002"] }] }, ["002"]));
+check("the journey starts without a recommendation", TOPICS[0].nodes[0].recommendedAfter.length === 0);
 
 /* ---- each written challenge --------------------------------------------- */
 
@@ -110,9 +98,38 @@ for (const slug of Object.keys(CHALLENGES)) {
     c.kind === topicOf(slug).node.kind);
 
   if (c.kind === "reading") {
-    check(`${slug} (reading): has cards with content`,
-      Array.isArray(c.cards) && c.cards.length > 0 &&
-      c.cards.every(card => typeof card.html === "string" && card.html.trim()));
+    check(`${slug} (reading): has local cards or an imported block document`,
+      (Array.isArray(c.cards) && c.cards.length > 0 &&
+        c.cards.every(card => typeof card.html === "string" && card.html.trim())) ||
+      typeof c.contentUrl === "string");
+    if (c.contentUrl) {
+      const documentPath = new URL(`../${c.contentUrl.replace(/^\//, "")}`, import.meta.url);
+      check(`${slug}: imported block document exists`, existsSync(documentPath));
+      if (existsSync(documentPath)) {
+        const data = JSON.parse(readFileSync(documentPath, "utf8"));
+        check(`${slug}: imported document has author, source and update date`,
+          !!data.author && !!data.source?.url && /^\d{4}-\d{2}-\d{2}$/.test(data.updated));
+        check(`${slug}: imported document has the fixed two-minute reading timer`,
+          data.minimumReadSeconds === 120);
+        check(`${slug}: imported document is marked as work in progress`,
+          data.workInProgress === true && c.workInProgress === true);
+        check(`${slug}: imported document contains ordered blocks`,
+          Array.isArray(data.blocks) && data.blocks.length > 0 &&
+          data.blocks.every(block => block.id && block.type && block.source && block.rendered));
+        check(`${slug}: every imported source and rendered block exists`,
+          data.blocks.every(block =>
+            existsSync(new URL(`../${block.source.replace(/^\//, "")}`, import.meta.url)) &&
+            existsSync(new URL(`../${block.rendered.replace(/^\//, "")}`, import.meta.url))));
+        const images = data.blocks.flatMap(block => {
+          const rendered = readFileSync(new URL(`../${block.rendered.replace(/^\//, "")}`, import.meta.url), "utf8");
+          return [...rendered.matchAll(/\bsrc=["']([^"']+)["']/g)].map(match => match[1]);
+        });
+        check(`${slug}: imported images are served from local release assets`,
+          images.every(image => image.startsWith("/content/assets/") &&
+            existsSync(new URL(`../${image.replace(/^\//, "")}`, import.meta.url))),
+          JSON.stringify(images.filter(image => !image.startsWith("/content/assets/"))));
+      }
+    }
     continue;
   }
 

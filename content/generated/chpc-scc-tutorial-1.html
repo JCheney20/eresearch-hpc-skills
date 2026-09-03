@@ -1,0 +1,779 @@
+<h1 id="tutorial-1-standing-up-your-head-node-and-running-hpl">Tutorial 1: Standing Up Your Head Node and Running HPL</h1>
+<p>This tutorial will help you become familiar with Cloud Computing and will also serve as an introduction to Linux. This tutorial will start with a network primer that will help you to understand the basics of public and private networks, ip addresses, ports and routing.</p>
+<p>You will then login into the CHPC’s Cloud Computing Platform and launch your own OpenStack virtual machine instances. Here you will need to make a decision on choice of Linux distribution that you will use as well as how your team will allocate your limited cloud computing resources.</p>
+<p>Once your team has successfully launched your instances you’ll login to your VM’s to do some basic Linux administration, such as navigating and configuring your hosts and network on the terminal. If you are new to Linux and need help getting more comfortable, please check out the resources tab on the learning system.</p>
+<p>This tutorial will conclude with you downloading, installing and running the High Performance LinPACK benchmark on your newly created VM’s.</p>
+<h1 id="table-of-contents">Table of Contents</h1>
+<ul>
+<li><p><a href="#tutorial-1-standing-up-your-head-node-and-running-hpl">Tutorial 1: Standing Up Your Head Node and Running HPL</a></p></li>
+<li><p><a href="#table-of-contents">Table of Contents</a></p></li>
+<li><p><a href="#checklist">Checklist</a></p></li>
+<li><p><a href="#network-primer">Network Primer</a></p>
+<ul>
+<li><p><a href="#basic-networking-example-whatismyipcom">Basic Networking Example (WhatIsMyIp.com)</a></p></li>
+<li><p><a href="#terminal-windows-mobaxterm-and-powershell-commands">Terminal, Windows MobaXTerm and PowerShell Commands</a></p></li>
+</ul></li>
+<li><p><a href="#launching-your-first-open-stack-virtual-machine-instance">Launching your First Open Stack Virtual Machine Instance</a></p>
+<ul>
+<li><p><a href="#accessing-the-nicis-cloud">Accessing the NICIS Cloud</a></p></li>
+<li><p><a href="#verify-your-teams-project-workspace-and-available-resources">Verify your Teams” Project Workspace and Available Resources</a></p></li>
+<li><p><a href="#generating-ssh-keys">Generating SSH Keys</a></p></li>
+<li><p><a href="#create-a-new-private-virtual-network">Create a New Private Virtual Network</a></p></li>
+<li><p><a href="#create-a-new-router">Create a New Router</a></p></li>
+<li><p><a href="#create-a-new-security-group">Create a New Security Group</a></p></li>
+<li><p><a href="#launch-a-new-instance">Launch a New Instance</a></p></li>
+<li><p><a href="#linux-flavors-and-distributions">Linux Flavors and Distributions</a></p>
+<ul>
+<li><p><a href="#summary-of-linux-distributions">Summary of Linux Distributions</a></p></li>
+</ul></li>
+<li><p><a href="#openstack-instance-flavors">OpenStack Instance Flavors</a></p></li>
+<li><p><a href="#networks-ports-services-and-security-groups">Networks, Ports, Services and Security Groups</a></p></li>
+<li><p><a href="#key-pair">Key Pair</a></p></li>
+<li><p><a href="#verify-that-your-instance-was-successfully-deployed-and-launched">Verify that your Instance was Successfully Deployed and Launched</a></p></li>
+<li><p><a href="#associating-an-externally-accessible-ip-address">Associating an Externally Accessible IP Address</a></p></li>
+<li><p><a href="#troubleshooting">Troubleshooting</a></p></li>
+</ul></li>
+<li><p><a href="#introduction-to-basic-linux-administration">Introduction to Basic Linux Administration</a></p>
+<ul>
+<li><p><a href="#accessing-your-vm-using-ssh-vs-the-openstack-web-console-vnc">Accessing your VM Using SSH vs the OpenStack Web Console (VNC)</a></p></li>
+<li><p><a href="#running-basic-linux-commands-and-services">Running Basic Linux Commands and Services</a></p></li>
+</ul></li>
+<li><p><a href="#linux-binaries-libraries-and-package-management">Linux Binaries, Libraries and Package Management</a></p>
+<ul>
+<li><p><a href="#user-environment-and-the-path-variable">User Environment and the <code>PATH</code> Variable</a></p></li>
+</ul></li>
+<li><p><a href="#install-compile-and-run-high-performance-linpack-hpl-benchmark">Install, Compile and Run High Performance LinPACK (HPL) Benchmark</a></p></li>
+</ul>
+<h1 id="checklist">Checklist</h1>
+<p>Use the following checklist to keep track of your team’s progress and to ensure that all members in your understand these concepts.</p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Understand IT concepts like cloud computing, virtualisation and remote connections:</label></p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Understand and be able to explain networking terms such as URL, DNS, IP Address, Port, Subnet, Gateway, Router, and</label></p></li>
+<li><p><label><input type="checkbox" />Understand the difference between a Local Private Network and an External Public Network.</label></p></li>
+</ul></li>
+<li><p><label><input type="checkbox" />Learn how to use the CHPC’s cloud computing environment:</label></p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Learn about different Linux Distributions and Flavors, and</label></p></li>
+<li><p><label><input type="checkbox" />Learn about Cloud Resource Management.</label></p></li>
+</ul></li>
+<li><p><label><input type="checkbox" />Learn about Basic Linux Administration:</label></p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Learn what SSH is and how to use it,</label></p></li>
+<li><p><label><input type="checkbox" />Learn about Linux password management,</label></p></li>
+<li><p><label><input type="checkbox" />Use a Linux Console / Terminal Based Text Editors,</label></p></li>
+<li><p><label><input type="checkbox" />Understand Linux Privileges and the Root user,</label></p></li>
+<li><p><label><input type="checkbox" />Learn how to Install Packages in your Linux Environment, and</label></p></li>
+<li><p><label><input type="checkbox" />Learn about Configuring system files.</label></p></li>
+</ul></li>
+<li><p><label><input type="checkbox" />Download, Configure, Install and Run HPL Benchmark:</label></p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Understand how to satisfy Linux Package Dependencies,</label></p></li>
+<li><p><label><input type="checkbox" />Download and unpack files using a terminal,</label></p></li>
+<li><p><label><input type="checkbox" />Editing Makefiles,</label></p></li>
+<li><p><label><input type="checkbox" />Compiling Sourcefiles to produce an Executable Binary, and</label></p></li>
+<li><p><label><input type="checkbox" />Understanding the basics of the Linux Shell Environment.</label></p></li>
+</ul></li>
+</ul>
+<h1 id="network-primer">Network Primer</h1>
+<p>At the core of High Performance Computing (HPC) is networking. Something as simple as browsing the internet from either your cell phone or the workstation in front of you, involves the transfer and exchange of information between many different networks. Each resource or service connected to the internet is made available through a unique address and network port. For example, <a href="https://www.google.co.za:443">https://www.google.co.za:443</a> is the <a href="https://en.wikipedia.org/wiki/URL">Uniform Resource Locator (URL)</a> used to uniquely identify Google’s search engine page on the South African [co.za]. <a href="https://en.wikipedia.org/wiki/Domain_name">domain</a>. The [443] is the <a href="https://en.wikipedia.org/wiki/Port_(computer_networking)">port number</a> which in this instance lets you know that you’re connecting to a secure <a href="https://en.wikipedia.org/wiki/HTTPS">https</a> server.</p>
+<p>When you enter this address into your browser, one of the first things that will happen is that a <a href="https://en.wikipedia.org/wiki/Domain_Name_System">Domain Name Service (DNS)</a> will translate the URL [google.co.za] into it’s corresponding <a href="https://en.wikipedia.org/wiki/IP_address">Internet Protocol (IP) Address</a> [142.251.216.67].</p>
+<p>A number of <a href="https://en.wikipedia.org/wiki/Router_(computing)">routing</a> lookup tables will be utilized to determine an available, <em>and preferably optimal</em> path to the resource that you’d requested, thereafter a number of routers or gateway devices will be used to exchange packets between your workstation, through all of the intermediary networks, and finally the target resource.</p>
+<p>At this point it is important to note that even though packets and network traffic are being exchanged between your local workstation and the Google servers, at no point is the private IP Address of your workstation exposed to the external Google Servers. Your workstation would have been assigned a private internal IP Address based on the computer laboratory. Traffic is then routed between the computer laboratory’s private internal network and the rest of the university’s networks through routers and gateway devices. All the internal computers and components across the campus will appear to the outside as though they have a single public IP address. This is accomplished through a process known as <a href="https://en.wikipedia.org/wiki/Network_address_translation">Network address Translation (NAT)</a>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/001-browsing_internet_light.png" /></p>
+<figcaption><p>Diagram loosely describing process behind browsing to Google.com. You have no information about the computers and servers behind 72.14.222.1, just as Google has no information about your workstation’s internal IP.</p></figcaption>
+</figure>
+<p>The process of browsing to <a href="https://www.google.co.za">https://www.google.co.za</a> on your workstation, can be simplified and depicted in the image above and summarized as follows: 1. You open a browser on your workspace and navigate to <a href="https://www.google.com">google.co.za</a>. 1. A DNS Server then translates the URL <a href="https://www.google.co.za">google.co.za</a> into it’s corresponding IP Address <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial1/142.251.216.67">142.251.216.67</a>. 1. With the relevant IP Address, a Routing Table is used to navigate a path between your workstation and the server housing the information / data that you’re after. Packets are exchanged between your workstation and all the networks between you and your desired data: 1. Data Packets are exchanged between your workstation and the computer laboratory’s internal networks (e.g. 192.168.0.1/24 and 10.0.0.1/24 networks), 1. Data Packets are exchanged between Universities” <em>internal</em> networks and <em>publicly</em> assigned IP Address Range (e.g. 192.96.15.90), 1. Data Packets are exchanged between Universities” <em>public</em> facing network interfaces, to the regional, national and international backbone networks and connections, and finally 1. Data Packets are exchanged between <em>Regional</em>, <em>National</em> and <em>International</em> networks and those of the target <a href="https://www.google.com">Google</a> domains (e.g.: <em>local <a href="https://www.google.co.za">Google.co.za</a>:</em> <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial1/142.251.216.67">142.251.216.67</a>, or <em>California</em> <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial1/72.14.222.1">72.14.222.1</a>)</p>
+<blockquote>
+<p>[!IMPORTANT] It is important to note that in the preceding examples, the specific IP Address and Routing Tables provided were merely an indicative oversimplification for the purposes of clarifying the related concepts.</p>
+</blockquote>
+<h2 id="basic-networking-example-whatismyip.com">Basic Networking Example (WhatIsMyIp.com)</h2>
+<p>In the following examples, you will be using your Android and/or Apple Cellular devices to complete the following tasks in your respective groups. Start by ensuring that your cell phone is connected to the local WiFi. Then navigate to the <em>“Network Details”</em> page of the WiFi connection.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/002-android_networking_info.jpeg" /></p>
+<figcaption><p>Typical information displayed from the WiFi Network Settings Options Section of an Android device.</p></figcaption>
+</figure>
+<p>From the <em>“Network Details”</em> section of your own device, you should see similar information and you will have the following details: * <em>Wi-Fi Type</em>: Your cellular device may have a WiFi radio card operating at either <a href="https://help.afrihost.com/entry/the-difference-between-2-4-ghz-and-5-ghz-wi-fi">2.4GHz or 5GHz</a> or two independent radios so that it operates at <em>both</em> frequencies, * <em>MAC Address</em>: <a href="https://en.wikipedia.org/wiki/MAC_address">Medium Access Control Address</a> which is a unique identifier that each physical network interface controller on any device will have, i.e. if your phone has both 2.4GHz and 5GHz radios, then each will have their own physical unique MAC addresses. * <em>IP Address</em>: <a href="https://en.wikipedia.org/wiki/IP_address">Internet Protocol Address</a> is the unique address assigned to a device connected to a network implementing the IP protocol for communication, <em>(i.e. you cell connected to the WiFi)</em>. * <em>Gateway</em>: <em>or</em> <a href="https://en.wikipedia.org/wiki/Gateway_(telecommunications)">Router</a> is a hardware or software device used to transmit data between different networks_or (subnets)_, <em>i.e. the same way that the WiFi Router, connects your cell phone to the rest of the university and to the internet</em>. * <em>Subnet Mask</em>: A <a href="https://en.wikipedia.org/wiki/Subnet">Subnet</a> corresponds to the logical subdivision of a network and serves as an indication of the number of hosts available on a particular network. I.e. for the subnet mask <em>255.255.224.0</em>, there are <em>8192</em> possible hosts over the subnets <em>10.31.[0-31].[1-254]</em>. * <em>DNS</em>: A <a href="https://en.wikipedia.org/wiki/Domain_Name_System">Domain Name System</a> is a lookup service that translates human readable domain names into the corresponding IP Addresses.</p>
+<blockquote>
+<p>[!IMPORTANT] The IP Addresses, Gateways, Subnet Masks, DNS Servers <em>may</em> not correspond to those on <em>YOUR</em> particular device. You must ensure that you are connected to the correct network when executing the next set of tasks. Each member of your team must record the <em>IP Address</em>, <em>Gateway</em>, <em>Subnet Mask</em>, and <em>DNS</em> settings from their connection when completing this short exercise.</p>
+</blockquote>
+<ol>
+<li><p>Testing the Local WiFi Connection Network</p>
+<p>On your cellular device, ensure that you are connected to the <em>computer laboratory’s WiFi network</em> and that all SIM card(s) are disabled. Navigate to <a href="https://WhatIsMyIp.com">https://WhatIsMyIp.com</a>, explore the website and record the IP Address indicated.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/003-whatismyip_wifi.png" /></p>
+<figcaption><p>WhatIsMyWiFi.com test while connected to university computer laboratory WiFi.</p></figcaption>
+</figure></li>
+<li><p>Testing the External Cellular Network</p>
+<p>On your cellular device, ensure that you are connected to your <em>SIM provider’s network</em> and that all WiFi radios are disabled. Navigate to <a href="https://www.whatismyip.com">https://www.whatismyip.com</a> and again record the IP Address indicated.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/004-whatismyip_cell.png" /></p>
+<figcaption><p>WhatIsMyWiFi.com test while connected to your SIM provider</p></figcaption>
+</figure></li>
+<li><p>WiFi Hotspot Example</p>
+<p>Team Captains are required to setup and establish a WiFi Hotspot for their team mates. The above experiments will be repeated for the university’s computer laboratory WiFi connections as well as the Team Captain’s Cellular SIM provider’s network.</p>
+<p>On your cellular device, ensure that you are connected to your Team Captain’s WiFi Hotspot network, <em>alternating for both</em> the <em>SIM provider’s network</em> as well as the <em>university’s computer laboratory’s WiFi network</em>. Navigate to <a href="https://www.whatismyip.com">https://www.whatismyip.com</a> and again record the IP Address indicated and this time you <em>MUST</em> also record your device’s <em>“Network Settings”</em>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/005-whatismyip_hotspot.png" /></p>
+<figcaption><p>WhatIsMyWiFi.com test while connected to your Team Captain</p></figcaption>
+</figure></li>
+</ol>
+<blockquote>
+<p>[!TIP] Pay careful attention to the IP Address reported by WhatIsMyIp.com. This is the unique identifier that <em>your</em> device will be identified and recognized by externally on the internet. Use this information to assist you to understand and describe <a href="https://en.wikipedia.org/wiki/Network_address_translation">NAT</a>.</p>
+</blockquote>
+<h2 id="terminal-windows-mobaxterm-and-powershell-commands">Terminal, Windows MobaXTerm and PowerShell Commands</h2>
+<p>You should familiarize yourself with a few basic networking commands that can be utilized on your local shell, as well as your compute nodes. These commands are useful as a first step in debugging network related connection issues.</p>
+<ul>
+<li><p><code>ip a</code> or <code>ipconfig</code>: The ip a command (short for ip addr) is used to display all IP addresses assigned to all network interfaces on a Linux system. It provides detailed information about the state of the network interfaces, including the IP address, broadcast address, subnet mask, and other relevant details.</p></li>
+<li><p><code>ping 8.8.8.8</code>: The ping command is used to test the reachability of a host on an IP network. The 8.8.8.8 is a well-known public DNS server provided by Google. By sending ICMP Echo Request messages to 8.8.8.8, you can determine if the server is reachable and measure the round-trip time of the packets.</p></li>
+<li><p><code>ip route</code> or <code>route print</code>: The ip route command is used to display or manipulate the routing table on a Linux system. It shows the kernel’s routing table, which dictates how packets should be routed through the network. This includes the default gateway, subnet routes, and any other custom routing rules.</p></li>
+<li><p><code>tracepath</code> or <code>tracert</code>: The tracepath command is used to trace the network path to a destination, showing the route that packets take to reach it. Unlike traceroute, tracepath does not require root privileges and is often easier to use. It provides details about each hop along the route, including the IP address and round-trip time.</p></li>
+</ul>
+<blockquote>
+<p>[!TIP] Refer to the <a href="https://github.com/chpc-tech-eval/scc/discussions/48">Q&amp;A Discussion on GitHub</a> for an example. Post a similar screenshot of your team executing these commands as a comment to that discussion.</p>
+</blockquote>
+<h1 id="launching-your-first-open-stack-virtual-machine-instance">Launching your First Open Stack Virtual Machine Instance</h1>
+<p>In this section you will be configuring and launching your first <a href="https://en.wikipedia.org/wiki/Virtual_machine">Virtual Machine</a> instance. This allows you to use a portion of another computer’s resources, to host another <a href="https://en.wikipedia.org/wiki/Operating_system">Operating System</a> as though it were running on its own dedicated hardware resources. For example, your laptops or workstations are running a Windows-based operating system, you <em>“could”</em> use a type of computer software <a href="https://en.wikipedia.org/wiki/Hypervisor">Hypervisor</a>, that runs and creates <em>virtual machines</em>, to run a Linux-based operating while your are in your Windows environment.</p>
+<p>The physical servers that you will use to spawn your VM’s are housed in Rosebank, Cape Town. We will verify this later using <a href="https://www.whatismyip.com">WhatIsMyIp</a>.</p>
+<h2 id="accessing-the-nicis-cloud">Accessing the NICIS Cloud</h2>
+<p>Open your web browser and navigate to the NICIS OpenStack Cloud platform <a href="https://pta.sebowa.nicis.ac.za/">https://pta.sebowa.nicis.ac.za/</a>, and use the credentials that your team has been provided with to login into your team’s project workspace.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/006-openstack_login.png" /></p>
+<figcaption><p>Sebowa.nicis.ac.za NICIS OpenStack Cloud.</p></figcaption>
+</figure>
+<h2 id="verify-your-teams-project-workspace-and-available-resources">Verify your Teams” Project Workspace and Available Resources</h2>
+<p>Once you’ve successfully logged in, navigate to <code>Computer -&gt; Overview</code> and verify that the Project Workspace corresponds to <em>YOUR TEAM</em> and that you’ve been allocated the correct number of resources.</p>
+<blockquote>
+<p>[!NOTE] The following screenshot is for illustration purposes only, your actual available resources <em>may</em> differ. <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/007-openstack_overview.png" /></span></p>
+</blockquote>
+<h2 id="generating-ssh-keys">Generating SSH Keys</h2>
+<p>Over the course of the lecture content and the tutorials, you will be making extensive use of <a href="https://en.wikipedia.org/wiki/Secure_Shell">Secure Shell (SSH)</a> which grants you a <a href="https://en.wikipedia.org/wiki/Command-line_interface">Command-Line Interface (CLI)</a> with which to access your VMs. SSH keys allows you to authenticate against a remote SSH server, without the use of a password.</p>
+<blockquote>
+<p>[!IMPORTANT] When you are presented with foldable code blocks, you must pick and implement only <strong>one</strong> of the options presented, which is suitable to your current configuration and/or circumstance.</p>
+</blockquote>
+<blockquote>
+<p>[!TIP] A number <a href="https://en.wikipedia.org/wiki/Public-key_cryptography">encryption algorithms</a> exist for securing your SSH connections. <a href="https://en.wikipedia.org/wiki/Elliptic_Curve_Digital_Signature_Algorithm">Elliptic Curve Digital Signature Algorithm (ECDSA)</a> is secure and simple enough should you need to copy the public key manually. Nonetheless, you are free to use whichever algorithm you choose to.</p>
+</blockquote>
+<p>From the <code>Start</code> menu, open the Windows <code>PowerShell</code> application: These commands are the same if you are commenting from a Linux, Unix or MacOS Terminal, and Moba XTerm. 1. Generate an SSH key pair: <code>bash    ssh-keygen -t ed25519</code> 1. When prompted to <em>“Enter file in which to save the key”</em>, press <code>Enter</code>, 1. When prompted to <em>“Enter a passphrase”</em>, press <code>Enter</code>, and <code>Enter</code> again to verify it.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/008-windows_powershell_sshkeygen.png" /></p>
+<figcaption><p>Windows Powershell SSH Keygen.</p></figcaption>
+</figure>
+<blockquote>
+<p>[!TIP] Below is an example using Windows PuTTY. It is hidden and you must click the heading to reveal it’s contents. You are strongly encourage to use either Windows PowerShell or Moba XTerm instead.</p>
+</blockquote>
+<p>Windows PuTTY <a href="https://putty.org/">PuTTY</a> is a Windows-based SSH and Telnet client. From the <code>Start</code> menu, open the <code>PuTTYgen</code> application. 1. Generate an SSH key pair using the <code>Ed25519</code> encryption algorithm. 1. Generate the necessary entropy by moving your mouse pointer over the <code>Key</code> section until the green bar is filled. <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/009-windows_puttygen_generate.png" /></span> 1. Proceed to <strong>Save</strong> both the <code>Private Key</code> and <code>Public Key</code>. <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/010-windows_puttygen_save.png" /></span> You <strong>MUST</strong> take note of the location and paths to <strong>BOTH</strong> your public and private keys. Your public key will be shared and distributed to the SSH servers you want to authenticate against. Your private key must be kept secure within your team, and must not be shared or distributed to anyone.</p>
+<p>Once you have successfully generated an SSH key pair, navigate to <code>Compute</code> → <code>Key Pairs</code> and import the <strong>public</strong> key <code>id_ed25519.pub</code> into your Team’s Project Workspace within OpenStack.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/011-openstack_import_public_key_highlight.png" /></p>
+<figcaption><p>Import id_25519.pub into OpenStack.</p></figcaption>
+</figure>
+<h2 id="create-a-new-private-virtual-network">Create a New Private Virtual Network</h2>
+<p>You will now be creating a new private Virtual Local Area Network (VLAN). Only your team has access to this private virtual network, and it must be created in order for your compute nodes to be able to communicate to each other, and have their traffic <em>‘routed’</em> through to the internet.</p>
+<ol>
+<li><p>From your Team’s OpenStack Project Workspace, navigate to <code>Network</code> → <code>Networks</code> and click <code>Create Network</code>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/012-openstack_create_private_network_01.png" /></p>
+<figcaption><p>OpenStack Create New Private Network.</p></figcaption>
+</figure></li>
+<li><p>Enter a network name for your new private VLAN. A sensible choice would be your <code>&lt;TEAMNAME&gt;-vlan</code>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/013-openstack_create_private_network_02.png" /></p>
+<figcaption><p>OpenStack Create New Private Network.</p></figcaption>
+</figure></li>
+<li><p>Enter a subnet name for your private VLAN. You can re-use your VLAN name, or alternatively specify <code>&lt;TEAMNAME&gt;-subnet</code>.</p></li>
+<li><p>You must also specify a valid <a href="https://en.wikipedia.org/wiki/Reserved_IP_addresses">private network</a> in <a href="https://whatismyipaddress.com/cidr">CIDR notation</a>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/014-openstack_create_private_network_03.png" /></p>
+<figcaption><p>OpenStack Create New Private Network.</p></figcaption>
+</figure></li>
+<li><p>Complete the configuration by click on <code>Next</code> and then <code>Create</code>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/015-openstack_create_private_network_04.png" /></p>
+<figcaption><p>OpenStack Create New Private Network.</p></figcaption>
+</figure></li>
+<li><p>Click on your newly created VLAN, navigate to <code>Ports</code> and create a port on your VLAN that will allow you to transmit traffic between your VLAN and the public internet.</p></li>
+</ol>
+<h2 id="create-a-new-router">Create a New Router</h2>
+<p>You will now create a new <code>router</code>, to route traffic between your <code>vlan</code> that you created in the previous step and your public facing interface, which wil give you cluster access to the internet.</p>
+<ol>
+<li><p>From your Team’s OpenStack Project Workspace, navigate to <code>Network</code> → <code>Routers</code> and click <code>Create Router</code>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/016-openstack_create_private_router_01.png" /></p>
+<figcaption><p>OpenStack Create New Private Network.</p></figcaption>
+</figure></li>
+<li><p>Enter a router name, a sensible choice would be <code>&lt;TEAMNAME&gt;-router</code>, make sure to select <em>‘Public Internet’</em> as the external network to route to, and then click <code>Create Router</code>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/017-openstack_create_private_router_02.png" /></p>
+<figcaption><p>OpenStack Create New Private Network.</p></figcaption>
+</figure></li>
+</ol>
+<h2 id="create-a-new-security-group">Create a New Security Group</h2>
+<p>You will now create a new <code>security group</code>, to control and restrict traffic between your external, public facing interface and the rest of the internet.</p>
+<ol>
+<li><p>From your Team’s OpenStack Project Workspace, navigate to <code>Network</code> → <code>Security Groups</code> and click <code>Create Security Group</code>. Enter a security group name, a sensible choice would be <code>&lt;TEAMNAME&gt;-sg</code> and then click <code>Create Security Group</code>. This will create an empty security group profile, that permits all outbound traffic.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/018-openstack_create_private_sg_01.png" /></p>
+<figcaption><p>OpenStack Create New Private Network.</p></figcaption>
+</figure></li>
+<li><p>You will now be allowing <strong>“inbound”</strong> SSH connections from the internet by opening TCP Port 22. Start by clicking on <code>Add Rule</code>. Enter a sensible description and the SSH port number.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/019-openstack_create_private_sg_02.png" /></p>
+<figcaption><p>OpenStack Create New Private Network.</p></figcaption>
+</figure></li>
+<li><p>Your security groups can be modified at any time, event after creation of an instance. Any time you are required to open a firewall port, remember to also open the corresponding port within your OpenStack workspace security group.</p></li>
+</ol>
+<blockquote>
+<p>[!TIP] A complete list of TCP and UDP ports required to be opened on your security groups is provided later on when you are spinning up your first VM and selecting a security group.</p>
+</blockquote>
+<h2 id="launch-a-new-instance">Launch a New Instance</h2>
+<p>From your Team’s OpenStack Project Workspace, navigate to <code>Compute</code> → <code>Instance</code> and click <code>Launch Instance</code>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/020-openstack_launch_instance_highlight.png" /></p>
+<figcaption><p>OpenStack Launch New Instance.</p></figcaption>
+</figure>
+<p>Within the popup window, enter an appropriate name for your instance that will describe what the VM’s intended purpose is meant to be and help you to remember it’s primary function. In this case, a suitable name for your instance would be <strong>head node</strong>.</p>
+<h2 id="linux-flavors-and-distributions">Linux Flavors and Distributions</h2>
+<p>After configuring your new VM name under instance details, you will need to select the template that will be used to create the instance from the <em>Source</em> menu. Before selection a <a href="https://en.wikipedia.org/wiki/Linux_distribution">Linux Operating System Distribution</a> for your new instance, ensure that the default <em>Source</em> options are correctly configured: 1. <em>Select Boot Source</em> is set to <code>Image</code>, 1. <em>Create New Volume</em> is <code>Yes</code>, 1. <em>Delete Volume on Instance Delete</em> is <code>No</code>, and 1. <em>Volume Size (GB)</em> will be set when you configure the instance flavor.</p>
+<p>There are a number of considerations that must be taken into account when selecting a Linux distribution that will be appropriate for your requirements and needs. <a href="https://www.top500.org/statistics/details/osfam/1/">Since June 2017</a> <strong>all</strong> of the systems on the Top500 list make use of a Linux-based Operating System. Familiarity and proficiency with Linux-based operating systems and their derivatives is a mandatory requirement for gaining expertise in Software Development, Systems Administration and Networking.</p>
+<p>An argument could be made, that the best way to acquire Linux systems administration skills, is to make daily use of a Linux Distribution by running it on your personal laptop, desktop or workstation at home / school.</p>
+<p>This is something for you and your team to investigate after the competition and will not be covered in these tutorials. If you feel that you are not comfortable completely migrating to a Linux-based environment, there are a number of methods that can be implemented to assist you in transitioning from Windows to a Linux (or macOS) based <em>‘Daily Driver’</em>: * Dual-boot Linux alongside your Windows environment, * Windows Subsystem for Linux <a href="https://learn.microsoft.com/en-us/linux/install">(WSL)</a>, * Running Linux VM’s locally within your Windows environment, * Running Linux VM’s through cloud-based solutions, and Virtual Private Servers <a href="https://en.wikipedia.org/wiki/Virtual_private_server">(VPS)</a>, as you are doing for the competition. There are many commercial and free-tier services available, e.g. <a href="https://aws.amazon.com/free/?all-free-tier.sort-by=item.additionalFields.SortRank&amp;all-free-tier.sort-order=asc&amp;awsf.Free%20Tier%20Types=*all&amp;awsf.Free%20Tier%20Categories=*all">Amazon AWS</a>, <a href="https://cloud.google.com/free">Google Cloud</a> and <a href="https://azure.microsoft.com/en-us/free">Microsoft Azure</a>.</p>
+<h3 id="summary-of-linux-distributions">Summary of Linux Distributions</h3>
+<p>A Linux distribution, is a collection of software that is at the very leased comprised of a <a href="https://en.wikipedia.org/wiki/Linux_kernel">Linux kernel</a> and a <a href="https://en.wikipedia.org/wiki/Package_manager">package manager</a>. A package manager is responsible for automating the process of installing, configuring, upgrading, downgrading and removing software programs and associated components from a computer’s operating system.</p>
+<p>A number of considerations must be taken into account when deciding on choice of Linux distro as a <em>‘daily driver’</em> and as well as a server. There are subtleties and nuances between the various Linux flavors. These vary from a number of factors, not least of which including: * Support - is the project well documented and do the developers respond to queries, * Community - is there a large and an active userbase, * Driver Compatibility - will the distro <em>‘natively’</em> run on your hardware without workarounds or custom compilation / installation of various device drivers, * Stability and Maturity - is the intended distro and version currently actively supported and maintained, not ‘End of Life” and verified to run across a number of different systems and environment configurations. Or do you intend to run a <em>‘bleeding-edge’</em> distro so that you may in the future, influence the direction of application development and assist developers in identifying bugs in their releases…</p>
+<p>You and your Team, together with input and advise from your mentors, must do some research and depending on the intended use case, decide which will be the best choice.</p>
+<p>The following list provides a few examples of Linux distros that <em>may</em> be available on the Sebowa OpenStack cloud for you to use, and that you <em>might</em> consider using as a <em>‘daily driver’</em>.</p>
+<blockquote>
+<p>[!TIP] You do not need to decide right now which Linux Flavor you and your team will be installing on you personal / school laptop and desktop computers. The list and corresponding links are provided for later reference, Rocky or Ubuntu make excellent choices for a distro. If you are already using or familiar with Linux, discuss this with the instructors who will advise you on how to proceed, i.e. if you are familiar with Arch linux, for example, you are more than welcome to complete using the tutorials using Arch, and it is <em>“fully-ish”</em>, tested and <em>supported</em> within the tutorials.</p>
+</blockquote>
+<ul>
+<li><p><strong>RPM</strong> or Red Hat Package Manager is a free and open-source package management system. The name RPM refers to the <code>.rpm</code> file format and the package manager program itself. Examples include <a href="https://www.redhat.com/en/technologies/linux-platforms/enterprise-linux">Red Hat Enterprise Linux</a>, <a href="https://rockylinux.org/">Rocky Linux</a>, <a href="https://almalinux.org/">Alma Linux</a>, <a href="https://www.centos.org/centos-stream/">CentOS Stream</a> and <a href="https://fedoraproject.org/">Fedora</a>. You can’t go wrong with choose of either Red Hat, Alma, <strong><em>Rocky</em></strong> or CentoS Stream for the competition. You manage packages through tools such at <code>yum</code> (Yellowdog Updater, Modified) and / or <code>dnf</code> (Dandified YUM).</p></li>
+<li><p><strong>Zypper</strong> is the package manager used by <a href="https://www.opensuse.org/">openSUSE</a>, <a href="https://www.suse.com/">SUSE Linux Enterprise (SLE)</a>, and related distributions. This is another good choice for beginners, however openSUSE is not available as an image for the competition.</p></li>
+<li><p><strong>APT</strong>: In Debian-based distributions, the installation and removal of software are generally managed through the package management system known as the Advanced Package Tool (APT). Examples include <a href="https://www.debian.org/">Debian</a>, <a href="https://ubuntu.com/">Ubuntu</a>, <a href="https://linuxmint.com/">Linux Mint</a>, <a href="https://pop.system76.com/">Pop! OS</a> and <a href="https://www.kali.org/">Kali Linux</a>. Debian or Ubuntu Based Linux distributions are fantastic options for beginners. If one of your team members are already using such a system, then you are advised to use the provided Ubuntu image for the competition.</p></li>
+<li><p><strong>PkgTool</strong> is a menu-driven package maintenance tool provided with the <a href="http://www.slackware.com/">Slackware Linux distribution</a>. Listed here for interest, not recommended for beginners.</p></li>
+<li><p><strong>Pacman</strong> is a package manager that is used in the <a href="https://archlinux.org/">Arch Linux</a> distribution and its derivatives such as <a href="https://manjaro.org/">Manjaro</a>. Not recommended for beginners.</p></li>
+<li><p><strong>Portage</strong> is a package management system originally created for and used by <a href="https://www.gentoo.org/">Gentoo Linux</a> and also by ChromeOS. Definitely not recommended for beginners.</p></li>
+<li><p><strong>Source-Based</strong>: <a href="https://www.linuxfromscratch.org/">Linux From Scratch (LFS)</a> is a project that teaches you how to create your own Linux system from source code, using another Linux system. Learn how to install, configure and customize LFS and BLFS, and use tools for automation and management. Once you are <strong>very</strong> familiar with Linux, LFS is an excellent medium term side project that you peruse in you own time. Only Linux experts need apply.</p></li>
+</ul>
+<p>Select the <strong>Linux Distribution</strong> cloud image of your choice as a boot source.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/021-openstack_source_image.png" /></p>
+<figcaption><p>OpenStack Select Source.</p></figcaption>
+</figure>
+<p>Alternatively, you may want to make use of a different cloud image or operating system. For example you can download the <a href="https://geo.mirror.pkgbuild.com/images/latest/">latest Arch Linux QCOW2 Cloud image</a>, and upload it to your OpenStack workspace on Sebowa.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/022-openstack_add_arch1.png" /></p>
+<figcaption><p>OpenStack Select Source.</p></figcaption>
+</figure>
+<p>After browsing to the image that you’d like to use, enter a sensible <code>Image Name</code>, and ensure that you use the correct format.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/023-openstack_add_arch2.png" /></p>
+<figcaption><p>OpenStack Select Source.</p></figcaption>
+</figure>
+<p>Please note that the login details for you <strong>own</strong> uploaded image may vary depending on the choice of operating system. <code>SSH keys</code> might also not load correctly.</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The most common login credentails:</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">user</span>     : <span class="op">&lt;</span>OS flavor<span class="op">&gt;</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">password</span> : <span class="op">&lt;</span>OS flavor<span class="op">&gt;</span></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-5"><a href="#cb1-5" aria-hidden="true" tabindex="-1"></a><span class="co"># For example on Arch</span></span>
+<span id="cb1-6"><a href="#cb1-6" aria-hidden="true" tabindex="-1"></a><span class="ex">user</span>     : arch</span>
+<span id="cb1-7"><a href="#cb1-7" aria-hidden="true" tabindex="-1"></a><span class="ex">password</span> : arch</span></code></pre></div>
+<h2 id="openstack-instance-flavors">OpenStack Instance Flavors</h2>
+<p>An important aspect of system administration is resource monitoring, management and utilization. Each Team will be required to manage their available resources and ensure that the resources of their clusters are utilized in such a way as to maximize system performance. You have been allocated a pool of resources which you will need to decide how you are going to allocate the sizing of the compute, memory and storage across your head node and compute node(s).</p>
+<ol>
+<li><p>Compute (vCPUs) You have been allocated a pool totaling <strong>18 vCPUs</strong>, which would permit the following configurations:</p>
+<ol>
+<li><p>Head Node (2 vCPUs) and 2 x Compute Nodes (8 vCPUs each),</p></li>
+<li><p>Head node (6 vCPUs) and 2 x Compute Nodes (6 vCPUs each),</p></li>
+<li><p>Head node (10 vCPUs) and 1 x Compute Node (8 vCPUs).</p></li>
+</ol></li>
+<li><p>Memory (RAM) You have been allocated a pool totaling <strong>36 GB</strong> of RAM, which would permit the following configurations:</p>
+<ol>
+<li><p>Head Node (4 GB RAM) and 2 x Compute Nodes (16 GB RAM each),</p></li>
+<li><p>Head node (12 GB RAM) and 2 x Compute Nodes (12 GB RAM each),</p></li>
+<li><p>Head node (20 GB RAM) and 1 x Compute Node (16 GB RAM).</p></li>
+</ol></li>
+<li><p>Storage (DISK) You have been allocated a pool of 100 GB of storage, which can be distributed in the following configurations:</p>
+<ol>
+<li><p>Head Node (60 GB of storage) and 2 x Compute Nodes (10 GB of storage each),</p></li>
+<li><p>Head Node (60 GB of storage) and 2 x Compute Nodes (10 GB of storage each), and</p></li>
+<li><p>Head Node (60 GB of storage) and 1 x Compute Node (10 GB of storage).</p></li>
+</ol></li>
+</ol>
+<p>The following table summarizes the various permutations and allocations that can be used for designing your clusters within your Team’s Project Workspace on Sebowa’s OpenStack cloud platform.</p>
+<figure>
+<div data-align="center">
+<table>
+<thead>
+<tr>
+<th><p>Cluster Configurations</p></th>
+<th style="text-align: center;"><p>Instance Flavor</p></th>
+<th style="text-align: center;"><p>Compute (vCPUS)</p></th>
+<th style="text-align: center;"><p>Memory (RAM)</p></th>
+<th style="text-align: center;"><p>Storage (Disk)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td><p>Dedicated Head Node</p></td>
+<td style="text-align: center;"><p>scc.C2.M4.S60</p></td>
+<td style="text-align: center;"><p>2</p></td>
+<td style="text-align: center;"><p>4 GB</p></td>
+<td style="text-align: center;"><p>60 GB</p></td>
+</tr>
+<tr>
+<td><p>Compute Node 01</p></td>
+<td style="text-align: center;"><p>scc.C8.M16.S10</p></td>
+<td style="text-align: center;"><p>8</p></td>
+<td style="text-align: center;"><p>16 GB</p></td>
+<td style="text-align: center;"><p>10 GB</p></td>
+</tr>
+<tr>
+<td><p>Compute Node 02</p></td>
+<td style="text-align: center;"><p>scc.C8.M16.S10</p></td>
+<td style="text-align: center;"><p>8</p></td>
+<td style="text-align: center;"><p>16 GB</p></td>
+<td style="text-align: center;"><p>10 GB</p></td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td><p>Hybrid Head / Compute Node</p></td>
+<td style="text-align: center;"><p>scc.C6.M12.S60</p></td>
+<td style="text-align: center;"><p>6</p></td>
+<td style="text-align: center;"><p>12 GB</p></td>
+<td style="text-align: center;"><p>60 GB</p></td>
+</tr>
+<tr>
+<td><p>Compute Node 01</p></td>
+<td style="text-align: center;"><p>scc.C6.M12.S10</p></td>
+<td style="text-align: center;"><p>6</p></td>
+<td style="text-align: center;"><p>12 GB</p></td>
+<td style="text-align: center;"><p>10 GB</p></td>
+</tr>
+<tr>
+<td><p>Compute Node 02</p></td>
+<td style="text-align: center;"><p>scc.C6.M12.S10</p></td>
+<td style="text-align: center;"><p>6</p></td>
+<td style="text-align: center;"><p>12 GB</p></td>
+<td style="text-align: center;"><p>10 GB</p></td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+<tr>
+<td><p>Hybrid Head / Compute Node</p></td>
+<td style="text-align: center;"><p>scc.C10.M20.S60</p></td>
+<td style="text-align: center;"><p>10</p></td>
+<td style="text-align: center;"><p>20 GB</p></td>
+<td style="text-align: center;"><p>60 GB</p></td>
+</tr>
+<tr>
+<td><p>Compute Node 01</p></td>
+<td style="text-align: center;"><p>scc.C8.M16.S10</p></td>
+<td style="text-align: center;"><p>8</p></td>
+<td style="text-align: center;"><p>16 GB</p></td>
+<td style="text-align: center;"><p>10 GB</p></td>
+</tr>
+<tr>
+<td></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+<td style="text-align: center;"></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+<p>Type <em>“scc”</em> in the search bar and select the <strong>instance flavor</strong> of your choice.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/024-openstack_instance_flavor.png" /></p>
+<figcaption><p>OpenStack Instance flavor.</p></figcaption>
+</figure>
+<blockquote>
+<p>[!TIP] When designing clusters, very generally speaking the <em>‘Golden Rule’</em> in terms of Memory is <strong>2 GB of RAM per CPU Core</strong>. The storage on your head node is typically ‘<em>shared</em>” to your compute nodes through some form of <a href="https://en.wikipedia.org/wiki/Network_File_System">Network File System (NFS)</a>. A selection of pregenerated instance flavors have been pre-configured for you. For the purposes of starting with this tutorial, unless you have very good reasons for doing otherwise, you are <strong>STRONGLY</strong> advised to make use of the <strong>scc.C2.M4.S60</strong> flavor with <em>2 vCPUs</em> and <em>4 GB RAM</em>.</p>
+</blockquote>
+<h2 id="networks-ports-services-and-security-groups">Networks, Ports, Services and Security Groups</h2>
+<p>Under the <em>Networks</em> settings, make sure to select the <code>vxlan</code> that corresponds to the one that <em>your</em> team previously created.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/025-openstack_networks.png" /></p>
+<figcaption><p>OpenStack Networks Selection.</p></figcaption>
+</figure>
+<p>No configurations are required for <em>Network Ports</em>, however you must ensure that you have selected the previously created Security Group, i.e. <code>&lt;TEAMNAME&gt;-sg</code> under <em>Security Groups</em>.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/026-openstack_security_groups.png" /></p>
+<figcaption><p>OpenStack Security Groups Selection.</p></figcaption>
+</figure>
+<h2 id="key-pair">Key Pair</h2>
+<blockquote>
+<p>[!CAUTION] You must ensure that you associate the SSH Key that you created earlier to your VM, otherwise you will not be able to log into your newly created instance <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/027-openstack_key_pair_select.png" /></span></p>
+</blockquote>
+<h2 id="verify-that-your-instance-was-successfully-deployed-and-launched">Verify that your Instance was Successfully Deployed and Launched</h2>
+<p>Congratulations! Once your VM instance has completed it’s building, block device mapping and deployment phase, and if your <em>Power State</em> indicates <code>Running</code>, then you have successfully launched your very first OpenStack instance.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/028-openstack_running.png" /></p>
+<figcaption><p>OpenStack Running State.</p></figcaption>
+</figure>
+<h2 id="associating-an-externally-accessible-ip-address">Associating an Externally Accessible IP Address</h2>
+<p>In order for you to be able to SSH into your newly created OpenStack instance, you’ll need to associate a publicly accessible <a href="https://kb.leaseweb.com/network/floating-ips/using-floating-ips">Floating IP</a> address. This allocates a <em>virtual IP</em> address to your <em>virtual machine</em>, so that you can access it directly from your laboratory workstation.</p>
+<p>Before you allocate an IP to your instance be sure that you have allocated a interface to the router you created in previous steps.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/029-allocate_router_interface.png" /></p>
+<figcaption><p>OpenStack Router Interface.</p></figcaption>
+</figure>
+<ol>
+<li><p>Select <strong><em>Associate Floating IP</em></strong> from the <em>Create Snapshot</em> dropdown menu, just below the <em>Actions</em> tab: <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/030-openstack_associate_floating_ip.png" /></span></p></li>
+<li><p>From the <em>Manage Floating IP Associations</em> dialog box, click the “➕” and select <em>Public Internet</em>: <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/031-openstack_public_net.png" /></span></p>
+<ol>
+<li><p>Select the <code>154.114.52.*</code> IP address allocated and click on the <em>Associate</em> button. <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/032-openstack_added_floating_ip.png" /></span></p></li>
+</ol></li>
+</ol>
+<h2 id="troubleshooting">Troubleshooting</h2>
+<blockquote>
+<p>[!CAUTION] The following section is strictly for debugging and troubleshooting purposes. You <strong>MUST</strong> discuss your circumstances with an instructor before proceeding with this section. If you have successfully launched your head node, proceed to the <a href="#introduction-to-basic-linux-administration">Intro on Basic Sys Admin</a>.</p>
+</blockquote>
+<ul>
+<li><p>Deleting Instances</p>
+<ul>
+<li><p>When all else fails and you would like to reattempt the creation of your nodes from a clean start, Select the VM you want to remove and click <code>Delete Instance</code> from the drop down menu.</p></li>
+<li><p>Occasionally you may find yourself accidentally deleting a VM instance. Do not despair, by default <code>no</code> is selected on <code>Delete Volume on Instance Delete</code> this will leave your storage <code>volume</code> intact and you can recover it by launching a new instance from the <code>volume</code>. Details will be provided later in <a href="#spinning-up-a-second-compute-node">Tutorial 3</a>. <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/033-openstack_troubleshooting_delete_instance.png" /></span></p></li>
+</ul></li>
+<li><p>Deleting Volumes</p>
+<p>When a VM’s storage <code>volume</code> lingers behind after intentionally deleting a VM, you will need to go to manually remove the volume from your work space. <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/034-openstack_troubleshooting_delete_volume.png" /></span></p></li>
+<li><p>Dissociating Floating IP</p></li>
+</ul>
+<p>If your VM is deleted then the floating IP associated with that deleted VM will stay in your project under <code>Networks -&gt; Floating IPs</code> for future use. Should you accidentally associate your floating IP to one of your compute nodes, dissociate it as per the diagram below, so that it may be allocated to your head node. Selecting the floating IP and clicking <code>Release Floating IPs</code> will send the floating IP back to the pool and you can call a tutor to help you get back your IP. <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/035-openstack_troubleshooting_dissociate_float_ip.png" /></span></p>
+<h1 id="introduction-to-basic-linux-administration">Introduction to Basic Linux Administration</h1>
+<p>If you’ve managed to successfully build and deploy your VM instance, and you managed to successfully associate and attach a floating IP bridged over your internal interface, you are finally ready to connect to your newly created instance.</p>
+<h2 id="accessing-your-vm-using-ssh-vs-the-openstack-web-console-vnc">Accessing your VM Using SSH vs the OpenStack Web Console (VNC)</h2>
+<p>The VMs are running minimalist, cloud-based operating systems that are not packaged with a graphical desktop environment. You are required to interact with the VM instance using text prompts, through a <a href="https://en.wikipedia.org/wiki/Command-line_interface">Command-Line Interface (CLI)</a>. By design for security reasons, the cloud images are only accessible via SSH after instantiating a VM. Once you have successfully logged into your instance, you may change the password so as to enable you to make use of the <a href="https://en.wikipedia.org/wiki/Virtual_Network_Computing">VNC Console</a>.</p>
+<blockquote>
+<p>[!NOTE] You will require the <strong>PATH</strong> to the private SSH key that you have previously <a href="#generating-ssh-keys">generated</a>, as well as the Floating IP address <a href="#associating-an-externally-Accessible-ip-address">associated</a> to your VM. Depending on the specific distribution your Team chose to implement for your Head Node, the *<strong>default username</strong> will vary accordingly.</p>
+</blockquote>
+<ul>
+<li><p>SSH Through a Linux Terminal, MobaXTerm or Windows PowerShell</p></li>
+</ul>
+<p>If your workstation or laptop is running a Linux-based or macOS operating system, or a version of Windows with MobaXTerm or Windows PowerShell, then you may proceed using a terminal. Most Linux and macOS distributions come preshipped with an SSH client included via <code>OpenSSH</code>.</p>
+<blockquote>
+<p>[!NOTE] In an Alma Linux cloud image, the default login account is <strong>alma</strong>.</p>
+</blockquote>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-i</span> ~/.ssh/id_ed25519 alma@154.114.52.<span class="op">&lt;</span>YOUR Head Node IP<span class="op">&gt;</span></span></code></pre></div>
+<blockquote>
+<p>[!NOTE] In an Arch Linux cloud image, the default login account is <strong>arch</strong>.</p>
+</blockquote>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-i</span> ~/.ssh/id_ed25519 arch@154.114.52.<span class="op">&lt;</span>YOUR Head Node IP<span class="op">&gt;</span></span></code></pre></div>
+<blockquote>
+<p>[!NOTE] In a CentOS Linux cloud image, the default login account is <strong>centos</strong>.</p>
+</blockquote>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-i</span> ~/.ssh/id_ed25519 centos@154.114.52.<span class="op">&lt;</span>YOUR Head Node IP<span class="op">&gt;</span></span></code></pre></div>
+<blockquote>
+<p>[!NOTE] In a Rocky Linux cloud image, the default login account is <strong>rocky</strong>.</p>
+</blockquote>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-i</span> ~/.ssh/id_ed25519 rocky@154.114.52.<span class="op">&lt;</span>YOUR Head Node IP<span class="op">&gt;</span></span></code></pre></div>
+<blockquote>
+<p>[!NOTE] In an Ubuntu Linux cloud image, the default login account is <strong>ubuntu</strong>.</p>
+</blockquote>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-i</span> ~/.ssh/id_ed25519 ubuntu@154.114.52.<span class="op">&lt;</span>YOUR Head Node IP<span class="op">&gt;</span></span></code></pre></div>
+<blockquote>
+<p>[!TIP] The “~” in <code>~/.ssh/id_ed25519</code> is a shortcut for <code>/home/&lt;username&gt;</code>. Secondly, the first time you connect to a new SSH server, you will be prompted to confirm the authenticity of the host. Type ‘yes” and hit ‘Enter’</p>
+</blockquote>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/036-windows_powershell_firsttime_ssh.png" /></p>
+<figcaption><p>OpenStack Running State.</p></figcaption>
+</figure>
+<p>Windows PuTTY If your workstation or laptop is running Windows, then you may proceed using either Windows PowerShell above <em>(preferred)</em> or PuTTY. Use PuTTY only if Windows PowerShell is not available on your current system.</p>
+<ol>
+<li><p>Launch the PuTTY application and from the <em>Session</em> category, enter your <code>&lt;head node's IP address&gt;</code> <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/037-windows_putty_enter_headnode_ip.png" /></span></p></li>
+<li><p>From the <em>Connection</em> → <em>Data</em> category, enter your <code>&lt;username&gt;</code> <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/038-windows_putty_username.png" /></span></p></li>
+<li><p>From the <em>Connection</em> → <em>SSH</em> → <em>Auth</em> → <em>Credentials</em> category, select <code>Browse</code> and navigate to the path where your private key is located: <span class="box"><img src="/content/assets/chpc-scc-tutorial-1/039-windows_putty_enter_private_key.png" /></span></p></li>
+</ol>
+<ul>
+<li><p>Username and Password</p>
+<p>Once you’ve successfully logged into your head node VM, you are encouraged to setup your password login as a fail safe in case your SSH keys are giving issue, you may also access your head node through the OpenStack VNC console interface.</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> passwd <span class="op">&lt;</span>username<span class="op">&gt;</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-1/040-openstack_vnc_access.png" /></p>
+<figcaption><p>OpenStack VNC.</p></figcaption>
+</figure></li>
+</ul>
+<blockquote>
+<p>[!CAUTION] Setting up a password for any user <em>- especially the default user -</em> may make your VM’s vulnerable to <a href="https://helpcenter.trendmicro.com/en-us/article/tmka-19689">Brute Force SSH Attacks</a> if you enable password SSH authentication.</p>
+</blockquote>
+<h2 id="running-basic-linux-commands-and-services">Running Basic Linux Commands and Services</h2>
+<p>Once logged into your head node, you can now make use of the <a href="#terminal-mobaxterm-and-windows-powershell-commands">previously discussed basic networking commands</a>: <code>ip a</code>, <code>ping</code>, <code>ip route</code> and <code>tracepath</code>, refer to <a href="https://github.com/chpc-tech-eval/scc/discussions/48">Discussion on GitHub</a> for example out, and to also post your screenshots as comments.</p>
+<p>Here is a list of further basic Linux / Unix commands that you must familiarize yourselves and become comfortable with in order to be successful in the competition.</p>
+<ul>
+<li><p>Manual Pages <code>man</code>: On Linux systems, information about commands can be found in a manual page. This document is accessible via a command called <code>man</code> short term for manual page. For example, try running <code>man sudo</code>, scroll up and down then press <code>q</code> to exit the page.</p></li>
+<li><p>The <code>-h</code> Switch: You can make use of the <code>--help or -h</code> flag to see which options are available for a specific command. Similarly, to the above, try running <code>sudo -h</code></p></li>
+<li><p>Piping and Console Redirection</p>
+<p><code>&gt;</code> replaces the content of an output file with all input content <code>&gt;&gt;</code> appends the input content to the end of the output file.</p>
+<p>For example to create a file called <code>students.txt</code> and add a name to the file, use:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># You can create new files using the `touch` command or the `&gt;` redirect.</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">touch</span> students.txt</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a> <span class="bu">echo</span> <span class="st">&quot;zama&quot;</span> <span class="op">&gt;&gt;</span> students.txt</span>
+<span id="cb8-4"><a href="#cb8-4" aria-hidden="true" tabindex="-1"></a> <span class="bu">echo</span> <span class="st">&quot;&lt;TEAM_CAPTAIN&gt;&quot;</span> <span class="op">&gt;&gt;</span> students.txt</span>
+<span id="cb8-5"><a href="#cb8-5" aria-hidden="true" tabindex="-1"></a> <span class="bu">echo</span> <span class="st">&quot;zama lecturer&quot;</span> <span class="op">&gt;&gt;</span> students.txt</span>
+<span id="cb8-6"><a href="#cb8-6" aria-hidden="true" tabindex="-1"></a> <span class="bu">echo</span> <span class="st">&quot;&lt;TEAM_MEMBERS&quot;</span> <span class="op">&gt;&gt;</span> students.txt</span>
+<span id="cb8-7"><a href="#cb8-7" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>Pipe <code>|</code> through <code>grep</code> can be used when searching the content of the file, if it exist it will be printed on the screen, if the search does not exist nothing will show on the screen.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> students.txt</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">cat</span> students.txt <span class="kw">|</span> <span class="fu">grep</span> <span class="st">&quot;zama&quot;</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Reading and Editing Documents: Linux systems administration essentially involves file manipulation. <a href="https://en.wikipedia.org/wiki/Everything_is_a_file">Everything in a Linux is a file</a>. Familiarize yourself with the basic use of <code>nano</code>.</p></li>
+<li><p>The GNU <code>history</code> command shows all commands you have executed so far, the feedback is numbered, use <code>!14</code> to rerun the 14th command.</p></li>
+</ul>
+<p>Make sure that you try some of these commands to familiarize yourself and become comfortable with the Linux terminal shell and command line. You can find sample outputs and are strongly encouraged to post your teams screenshots of at least one of the above commands on the <a href="https://github.com/chpc-tech-eval/scc/discussions/49">Discussion Page on GitHub</a>.</p>
+<ul>
+<li><p>Understanding <code>journalctl</code> and <code>systemctl</code></p>
+<p>Both <code>journalctl</code> and <code>systemctl</code> are two powerful command-line utilities used to manage and view system logs and services on Linux systems, respectively. Both are part of the systemd suite, which is used for system and service management.</p>
+<ul>
+<li><p><code>journalctl</code> is used to query and display logs from the journal, which is a component of systemd that provides a centralized location for logging messages generated by the <code>system</code> and services.</p></li>
+<li><p><code>systemctl</code> is used to examine and control the <code>systemd</code> system and service manager. It provides commands to start, stop, restart, enable, disable, and check the status of services, among other functionalities.</p></li>
+</ul>
+<p>For example to query the status of the <code>systemd-networkd</code> daemon / service, use:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl status systemd-networkd</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ul>
+<p>Verify some of your system’s configuration settings and post a screenshot as a comment to this <a href="https://github.com/chpc-tech-eval/scc/discussions/56">Discussion Page on GitHub</a>.</p>
+<blockquote>
+<p>[!CAUTION] It is <strong>CRITICAL</strong> that you are always aware and sure which node or server your are working on. As you can see in the examples above, you can run <em>similar</em> commands in a Linux terminal on your workstation, on the console prompt of your head node, and as you will see later, on the console prompt of your compute node.</p>
+</blockquote>
+<h1 id="linux-binaries-libraries-and-package-management">Linux Binaries, Libraries and Package Management</h1>
+<p>Understanding Linux binaries, libraries, and package managers is crucial for effective software development and system management on Linux systems.</p>
+<blockquote>
+<p>[!NOTE] The following discussion around the concepts of binaries and libraries does not need to be fully understood at this stage and will be covered in more detail in later tutorials and lectures.</p>
+</blockquote>
+<ul>
+<li><p><strong>Binaries</strong> are executable files created from source code, often written in languages like C or C++, through a process called compilation. These files contain machine code that the operating system can execute directly.</p>
+<ul>
+<li><p><strong>Executable Files</strong>: These are typically found in directories like <code>/bin</code>, <code>/sbin</code>, <code>/usr/bin</code>, and <code>/usr/sbin</code>.</p></li>
+<li><p><strong>Shared Libraries</strong>: These are files containing code that can be shared by multiple programs. They usually have extensions like <code>.so</code> (shared object) and are found in directories like <code>/lib</code> and <code>/usr/lib</code>.</p></li>
+</ul></li>
+<li><p><strong>Libraries</strong> provide a way to share code among multiple programs to avoid redundancy and ease maintenance. They come in two main types:</p>
+<ul>
+<li><p><strong>Static Libraries (<code>.a</code> files)</strong> are linked into the executable at compile time, resulting in a larger binary. Do not require the library to be present at runtime.</p></li>
+<li><p><strong>Shared (Dynamic) Libraries (.so files)</strong> are linked at runtime, reducing the binary size. The executable will need the shared library to be present on the system at runtime.</p></li>
+</ul></li>
+<li><p><strong>Package Managers</strong> are tools that automate the process of installing, updating, configuring, and removing software packages. They handle dependencies and ensure that software components are properly integrated into the system.</p>
+<ul>
+<li><p><strong>Repositories</strong> are online servers storing software packages. Package managers download packages from these repositories.</p></li>
+<li><p><strong>Dependencies</strong> are binaries, libraries or other packages that software depends on to function correctly. Package managers resolve, install and remove dependencies automatically.</p></li>
+</ul></li>
+</ul>
+<p>From this point onward, you’re going to need to pay extra attention to the commands that have been issued and you must ensure that they correspond to the distribution that you are using.</p>
+<blockquote>
+<p>[!WARNING] Do not try to type the following arbitrary commands into your head node’s terminal. They are merely included here for illustration purposes.</p>
+</blockquote>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-1/041-Rocky_Linux-10ABC7.svg" /></span></p>
+<p>DNF / YUM</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># RHEL, Alma, Rocky, Centos</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="co"># You are strongly recommended to use one of the distros mentioned above.</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a><span class="co"># This will always be the first example use case given for any scenario and</span></span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a><span class="co"># the recommended approach to follow</span></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf update</span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf install <span class="op">&lt;</span>PACKAGE_NAME<span class="op">&gt;</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf remove <span class="op">&lt;</span>PACKAGE_NAME<span class="op">&gt;</span></span></code></pre></div>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-1/042-Ubuntu_Server-E95420.svg" /></span></p>
+<p>APT-based systems</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Another really good choice and strong recommendation to adopt is Ubuntu.</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu has many users, and many first time Linux users, start their</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a><span class="co"># journeys into Linux through APT (or Ubuntu) based distros.</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Moreover Ubuntu has it&#39;s origins in South Africa...</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install <span class="op">&lt;</span>PACKAGE_NAME<span class="op">&gt;</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt remove <span class="op">&lt;</span>PACKAGE_NAME<span class="op">&gt;</span></span></code></pre></div>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-1/043-Arch_Linux-1793D1.svg" /></span></p>
+<p>Pacman-based systems</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch-Like Linux</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch Linux is one of the most &quot;flexible and succinct&quot; Linux distros</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a><span class="co"># available today. It popularity stems not only from the fact that is has</span></span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a><span class="co"># excellent documentation, but it&#39;s &quot;keep it straight and simple&quot; approach.</span></span>
+<span id="cb13-5"><a href="#cb13-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Not recommend for beginners, unless you have previous Linux expertise or</span></span>
+<span id="cb13-6"><a href="#cb13-6" aria-hidden="true" tabindex="-1"></a><span class="co"># unless you are looking for a challenge.</span></span>
+<span id="cb13-7"><a href="#cb13-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-8"><a href="#cb13-8" aria-hidden="true" tabindex="-1"></a><span class="co"># The image available on Sebowa has outdated packages and package database, and a corrupted keyring</span></span>
+<span id="cb13-9"><a href="#cb13-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the following two commands in this order to update the keyring and installed packages</span></span>
+<span id="cb13-10"><a href="#cb13-10" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pacman <span class="at">-Sy</span> archlinux-keyring</span>
+<span id="cb13-11"><a href="#cb13-11" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pacman <span class="at">-Syu</span></span>
+<span id="cb13-12"><a href="#cb13-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb13-13"><a href="#cb13-13" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pacman <span class="at">-S</span> <span class="op">&lt;</span>PACKAGE_NAME<span class="op">&gt;</span></span>
+<span id="cb13-14"><a href="#cb13-14" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pacman <span class="at">-R</span> <span class="op">&lt;</span>PACKAGE_NAME<span class="op">&gt;</span></span></code></pre></div>
+<h2 id="user-environment-and-the-path-variable">User Environment and the <code>PATH</code> Variable</h2>
+<p>Understanding the user environment and the <code>PATH</code> variable is crucial for effective command-line operations and software management on Linux systems. The user environment in Linux refers to the collection of settings and variables that define how the system behaves for a user. These settings include environment variables, configuration files, and shell settings.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For example, to view the `USER` and `HOME` variables</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$USER</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$HOME</span></span></code></pre></div>
+<p>The <code>PATH</code> variable is one of the most important environment variables. It specifies a list of directories that the shell searches to find executable files for commands. When you type a command in the terminal, the shell looks for an executable file with that name in the directories listed in <code>PATH</code>.</p>
+<pre><code># View the contents of your PATH variable
+echo $PATH
+
+# List the contents of your HOME directory
+ls $HOME
+
+# Find the location of the ls command
+which ls
+</code></pre>
+<h1 id="install-compile-and-run-high-performance-linpack-hpl-benchmark">Install, Compile and Run High Performance LinPACK (HPL) Benchmark</h1>
+<p>HPL is a crucial tool in the HPC community for benchmarking and comparing the performance of supercomputing systems. The benchmark is a software package designed to solve a dense system of linear equations using double-precision floating-point arithmetic. It is commonly used to measure the performance of supercomputers, providing a standardized way to assess their computational power.</p>
+<p>You will now install and run HPL on your <strong>head node</strong>.</p>
+<blockquote>
+<p>[!WARNING] You are advised to skip this section if you have fallen behind the pace recommended by the course coordinators. Skipping this section will <em>NOT</em> stop you from completing the remainder of the tutorials. You will be repeating this exercise during tutorial 3.</p>
+<p>However, familiarizing yourselves with this material now, will make things easier for you and your team in the subsequent tutorials and their respective sections.</p>
+</blockquote>
+<ol>
+<li><p>Update the system and install dependencies</p>
+<p>You are going to be installing tools that will allow you to compile applications using the <code>make</code> command. You will also be installing a maths library to compute matrix multiplications, and an <code>mpi</code> library for communication between processes, in this case mapped to CPU cores.</p></li>
+</ol>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-1/041-Rocky_Linux-10ABC7.svg" /></span></p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="co"># RHEL, Rocky, Alma, Centos Steam</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf update <span class="at">-y</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Enable CRB repository</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf config-manager <span class="at">--set-enabled</span> crb</span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Install build tools and MPI</span></span>
+<span id="cb16-8"><a href="#cb16-8" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf install <span class="at">-y</span> gcc gcc-c++ make openmpi openmpi-devel openblas openblas-devel wget nano</span></code></pre></div>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-1/042-Ubuntu_Server-E95420.svg" /></span></p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install build-essential openmpi-bin libopenmpi-dev libatlas-base-dev</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install wget nano</span></code></pre></div>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-1/043-Arch_Linux-1793D1.svg" /></span></p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pacman <span class="at">-Syu</span></span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pacman <span class="at">-S</span> base-devel openmpi openblas nano wget</span></code></pre></div>
+<ol start="2" type="1">
+<li><p>Fetch the HPL source files</p>
+<p>You will download the HPL source files. This is why you installed <code>wget</code> in the previous step.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download the source files</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">wget</span> http://www.netlib.org/benchmark/hpl/hpl-2.3.tar.gz</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Extract the files from the tarball</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">tar</span> <span class="at">-xzf</span> hpl-2.3.tar.gz</span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a> <span class="co"># Move and go into the newly extracted folder</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a> <span class="fu">mv</span> hpl-2.3 ~/hpl</span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> ~/hpl</span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a> <span class="co"># list the contents of the folder</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a> <span class="fu">ls</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Configure HPL</p>
+<p>Copy and edit your own <code>Make.&lt;TEAM_NAME&gt;</code> file in the <code>hpl</code> directory to suit your system configuration.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> setup/Make.Linux_PII_CBLAS_gm Make.<span class="op">&lt;</span>TEAM_NAME<span class="op">&gt;</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">nano</span> Make.<span class="op">&lt;</span>TEAM_NAME<span class="op">&gt;</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>You need to carefully edit your <code>Make.&lt;TEAM_NAME&gt;</code> file, ensuring that you make the following changes:</p></li>
+</ol>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-1/041-Rocky_Linux-10ABC7.svg" /></span></p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ARCH</span>               <span class="op">=</span> <span class="er">&lt;</span><span class="dt">TEAM_NAME</span><span class="er">&gt;</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a>   <span class="dt">MPdir</span>              <span class="op">=</span> <span class="er">/</span><span class="dt">usr</span><span class="er">/</span><span class="dt">lib64</span><span class="er">/</span><span class="dt">openmpi</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a>     <span class="dt">LAdir</span>              <span class="op">=</span> <span class="er">/</span><span class="dt">usr</span><span class="er">/</span><span class="dt">lib64</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a>     <span class="dt">LAlib</span>              <span class="op">=</span> <span class="dt">-lopenblas</span></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a>   <span class="dt">CC</span>                 <span class="op">=</span> <span class="dt">mpicc</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a>   <span class="dt">LINKER</span>             <span class="op">=</span> <span class="dt">mpicc</span></span></code></pre></div>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-1/042-Ubuntu_Server-E95420.svg" /></span></p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ARCH</span>               <span class="op">=</span> <span class="er">&lt;</span><span class="dt">TEAM_NAME</span><span class="er">&gt;</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a>   <span class="dt">MPdir</span>              <span class="op">=</span> <span class="er">/</span><span class="dt">usr</span><span class="er">/</span><span class="dt">lib</span><span class="er">/</span><span class="dt">x86_64-linux-gnu</span><span class="er">/</span><span class="dt">openmpi</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a>   <span class="dt">LAdir</span>              <span class="op">=</span> <span class="er">/</span><span class="dt">usr</span><span class="er">/</span><span class="dt">lib</span><span class="er">/</span><span class="dt">x86_64-linux-gnu</span><span class="er">/</span><span class="dt">atlas</span><span class="er">/</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a>   <span class="dt">LAlib</span>              <span class="op">=</span> <span class="er">$(</span><span class="dt">LAdir</span><span class="er">)/</span><span class="dt">libblas.so</span> <span class="er">$(</span><span class="dt">LAdir</span><span class="er">)/</span><span class="dt">liblapack.so</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a>   <span class="dt">CC</span>                 <span class="op">=</span> <span class="dt">mpicc</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a>   <span class="dt">LINKER</span>             <span class="op">=</span> <span class="dt">mpicc</span></span></code></pre></div>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-1/043-Arch_Linux-1793D1.svg" /></span></p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ARCH</span>               <span class="op">=</span> <span class="er">&lt;</span><span class="dt">TEAM_NAME</span><span class="er">&gt;</span></span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a>   <span class="dt">MPdir</span>              <span class="op">=</span> <span class="er">/</span><span class="dt">usr</span><span class="er">/</span><span class="dt">lib</span><span class="er">/</span><span class="dt">openmpi</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>   <span class="dt">LAdir</span>              <span class="op">=</span> <span class="er">/</span><span class="dt">usr</span><span class="er">/</span><span class="dt">lib</span></span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>   <span class="dt">LAlib</span>              <span class="op">=</span> <span class="dt">-lopenblas</span></span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>   <span class="dt">CC</span>                 <span class="op">=</span> <span class="dt">mpicc</span></span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-10"><a href="#cb23-10" aria-hidden="true" tabindex="-1"></a>   <span class="dt">LINKER</span>             <span class="op">=</span> <span class="dt">mpicc</span></span></code></pre></div>
+<ol start="4" type="1">
+<li><p>Temporarily edit your <code>PATH</code> variable</p>
+<p>You are almost ready to compile HPL, you will need to modify your path variable in order for your MPI C Compiler <code>mpicc</code> to be a recognized binary. Check to see if <code>mpicc</code> is currently detected:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The following command will return a command not found error.</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">which</span> mpicc</span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Temporarily append openmpi binary path to your PATH variable</span></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a> <span class="co"># These settings will reset after you logout and re-login again.</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a> <span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span>/usr/lib64/openmpi/bin:<span class="va">$PATH</span></span>
+<span id="cb24-7"><a href="#cb24-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-8"><a href="#cb24-8" aria-hidden="true" tabindex="-1"></a> <span class="co"># Rerun the which command to confirm that the `mpicc` binary is found</span></span>
+<span id="cb24-9"><a href="#cb24-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">which</span> mpicc</span>
+<span id="cb24-10"><a href="#cb24-10" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Compile HPL</p>
+<p>You are finally ready to compile HPL. Should you encounter any errors and need to make adjustments and changes, first run a <code>make clean arch=&lt;TEAM_NAME&gt;</code>.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> arch=<span class="op">&lt;</span>TEAM_NAME<span class="op">&gt;</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a> <span class="co"># Confirm that your `xhpl` binary has been successfully built</span></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">ls</span> bin/<span class="op">&lt;</span>TEAM_NAME<span class="op">&gt;</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Configure your <code>HPL.dat</code></p>
+<p>Make the following changes to your <code>HPL.dat</code> file:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> bin/<span class="op">&lt;</span>TEAM_NAME<span class="op">&gt;</span></span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">nano</span> HPL.dat</span>
+<span id="cb26-3"><a href="#cb26-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>Carefully edit you <code>HPL.dat</code> file and verify the following changes:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="dt">1</span>            <span class="co"># of process grids (P x Q)</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">1</span>            <span class="dt">Ps</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">1</span>            <span class="dt">Qs</span></span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Running HPL on a Single CPU</p>
+<p>For now, you will be running HPL on your head node, on a single CPU. Later you will learn how to run HPL over multiple CPUs, each with multiple cores, across multiple nodes…</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Excute the HPL binary</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">./xhpl</span></span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<blockquote>
+<p>[!TIP] Note that when you want to configure and recompile HPL for different architectures, compilers and systems, adapt and the <code>Make.&lt;NEW_CONFIG&gt;</code> and recompile that architecture or configuration.</p>
+<p>If you compile fails and you would like to try to fix your errors and recompile, you must ensure that you reset to a clean start with <code>make clean</code>.</p>
+</blockquote>
+<blockquote>
+<p>[!NOTE] 🎉 Congratulations! You have successfully completed your first HPL benchmark.</p>
+</blockquote>

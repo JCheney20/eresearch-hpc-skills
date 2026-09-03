@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "text",
+  "title": "Conflicts",
+  "author": "Justin Cheney",
+  "updated": "2026-09-03",
+  "minimumReadSeconds": 120,
+  "source": {
+    "label": "git-novice",
+    "url": "https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/episodes/09-conflict.md",
+    "repository": "https://github.com/swcarpentry/git-novice",
+    "commit": "967bc0b38826039f6554845248c8c294ebff1f56",
+    "license": "CC-BY-4.0",
+    "adaptation": "Formatting converted from upstream Markdown to Typst and HTML; wording retained for initial review."
+  },
+  "blocks": [
+    {
+      "id": "body",
+      "type": "typst",
+      "source": "/content/imports/git-conflicts.typ",
+      "rendered": "/content/generated/git-conflicts.html"
+    }
+  ],
+  "workInProgress": true
+}

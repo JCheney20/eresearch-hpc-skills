@@ -1,360 +1,216 @@
-// The map: the curriculum drawn as the graph it is.
-//
-// Core at the top, the three routes across the middle, the finale at the
-// foot. The individual challenges are not on this screen — a beginner opening
-// the map wants to know how much of a topic is behind them, not to read every
-// challenge card — so each topic is one bubble carrying its name, an
-// "x out of y", and a pip per challenge. The challenges live one click in.
-//
-// A three-column grid places the bubbles; an SVG overlay measured from where
-// they actually landed draws the wires. The grid is the structure: if the SVG
-// never renders, the shape still reads.
+// Open curriculum navigation: choose a Topic or view every recommended
+// connection in Your Journey. Lines guide; they never gate access.
 
 import { el, svg, clear, ICON } from "./dom.js";
 import { topbar } from "./parts.js";
-import { ALL_NODES, TOPICS, ROUTE_KEYS, topicByKey } from "../topics.js";
-import { stateOf, topicProgress, topicState, overallProgress, isSolved } from "../progress.js";
+import { ALL_NODES, TOPICS, topicByKey } from "../topics.js";
+import { isSolved, overallProgress, topicProgress } from "../progress.js";
 import { isBuilt } from "../challenges/index.js";
 
-/* ---- bubbles ------------------------------------------------------------ */
+const TOPIC_ICONS = {
+  linux: '<svg viewBox="0 0 32 32" aria-hidden="true"><path d="M6 8h20v16H6zM6 19h20M10 12l3 3-3 3M16 18h5"/></svg>',
+  git: '<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="9" cy="8" r="3"/><circle cx="23" cy="16" r="3"/><circle cx="9" cy="24" r="3"/><path d="M9 11v10M12 8h3a8 8 0 0 1 8 5"/></svg>',
+  hpc: '<svg viewBox="0 0 32 32" aria-hidden="true"><rect x="5" y="5" width="22" height="7" rx="1"/><rect x="5" y="20" width="22" height="7" rx="1"/><path d="M9 8.5h.01M13 8.5h9M9 23.5h.01M13 23.5h9M16 12v8"/></svg>',
+};
 
-function bubble(topic) {
-  const state = topicState(topic);
-  const prog = topicProgress(topic);
-  const clickable = state !== "locked";
+function heading(label, title, lede) {
+  const head = el("header", "journeyhead");
+  const copy = el("div");
+  copy.append(el("span", "headrule wide"), el("p", "cnum", label), el("h1", "ctitle", title), el("p", "lede", lede));
+  head.append(copy);
+  return head;
+}
 
-  const node = document.createElement(clickable ? "button" : "div");
-  node.className = "bubble is-" + state;
-  if (clickable) {
-    node.type = "button";
-    node.addEventListener("click", () => openTopicPanel(topic));
-  } else {
-    node.setAttribute("aria-disabled", "true");
+function topicCard(topic) {
+  const progress = topicProgress(topic);
+  const link = el("a", "topiccard");
+  link.href = `#/topic/${topic.key}`;
+
+  const icon = el("span", "topicicon", TOPIC_ICONS[topic.key] || "");
+  const copy = el("span", "topiccopy");
+  copy.append(el("strong", "", topic.name), el("small", "", topic.blurb));
+  const meter = el("span", "topicmeter");
+  meter.append(el("span", "", `<b>${progress.done}</b> of ${progress.total}`));
+  const bar = el("i");
+  const fill = el("i");
+  fill.setAttribute("style", `--topic-progress:${progress.total ? progress.done / progress.total : 0}`);
+  bar.append(fill);
+  meter.append(bar);
+  const open = el("span", "topicopen", "Open Topic →");
+  link.append(icon, copy, meter, open);
+  return link;
+}
+
+function landing() {
+  const section = el("section", "curriculumhome");
+  const tools = el("div", "journeytools");
+  tools.append(el("span", "", "Browse one Topic or view the whole path."));
+  const journey = el("a", "btn");
+  journey.href = "#/journey";
+  journey.textContent = "Your Journey →";
+  tools.append(journey);
+  section.append(tools);
+  section.append(heading(
+    "Open curriculum",
+    "Choose a Topic",
+    "Every challenge is available from the start. The trees suggest a useful order without preventing you from jumping directly to what you need.",
+  ));
+  const cards = el("div", "topicgrid");
+  TOPICS.forEach(topic => cards.append(topicCard(topic)));
+  section.append(cards);
+  return section;
+}
+
+function levelsFor(nodes) {
+  const selected = new Map(nodes.map(node => [node.number, node]));
+  const memo = new Map();
+  function level(node, visiting = new Set()) {
+    if (memo.has(node.number)) return memo.get(node.number);
+    if (visiting.has(node.number)) return 0;
+    const nextVisiting = new Set(visiting).add(node.number);
+    const parents = node.recommendedAfter.map(number => selected.get(number)).filter(Boolean);
+    const value = parents.length ? 1 + Math.max(...parents.map(parent => level(parent, nextVisiting))) : 0;
+    memo.set(node.number, value);
+    return value;
   }
-
-  /* The padlock is decoration; the word itself is spoken. */
-  const label = state === "locked" ? "Locked" : "Unlocked";
-  const mark = el("span", "bstate");
-  mark.innerHTML = (state === "locked" ? ICON.locked : ICON.unlocked) +
-    `<span class="vh">${label}</span>`;
-  mark.title = label;
-  node.append(mark);
-
-  node.append(el("h2", "bname", topic.name));
-  node.append(el("p", "bcount", `${prog.done} out of ${prog.total}`));
-
-  const pips = el("div", "bpips");
-  pips.setAttribute("aria-hidden", "true");
-  for (const item of topic.nodes) {
-    pips.append(el("span", "bpip is-" + stateOf(item.slug)));
-  }
-  node.append(pips);
-
-  return node;
+  const rows = [];
+  nodes.forEach(node => (rows[level(node)] ||= []).push(node));
+  return rows;
 }
 
-/* ---- one challenge, inside the topic panel ------------------------------ */
-
-function pad(n) { return String(n).padStart(2, "0"); }
-
-function stateLabel(state) {
-  if (state === "done") return ICON.tick + "Done";
-  if (state === "open") return ICON.unlocked + "Start here";
-  return ICON.locked + "Locked";
+function spreadTerminalNodes(row, nodes) {
+  const terminal = row.filter(node => !nodes.some(next => next.recommendedAfter.includes(node.number)));
+  const continuing = row.filter(node => !terminal.includes(node));
+  const split = Math.ceil(terminal.length / 2);
+  return [...terminal.slice(0, split), ...continuing, ...terminal.slice(split)];
 }
 
-/* Why a locked challenge is locked. A challenge may say it in its own words;
-   otherwise it is derived from what it requires, so a card can never sit there
-   saying "Locked" and nothing else. */
-function waitsHTML(item) {
-  if (item.waitsText) return item.waitsText;
-
-  const groups = item.prerequisiteGroups.map(group => {
-    const names = group.sources
-      .map(source => ALL_NODES.find(node => node.number === source))
-      .filter(Boolean)
-      .map(node => `<strong>${node.title}</strong> (challenge ${node.displayNum})`);
-    if (names.length === 1) return names[0];
-    const joined = `${names.slice(0, -1).join(", ")} and ${names[names.length - 1]}`;
-    return group.mode === "any" ? `one of ${joined}` : `all of ${joined}`;
-  });
-  if (groups.length === 0) return "";
-  return `Waits for ${groups.join(" and ")}.`;
-}
-
-function nodeCard(item) {
-  const state = stateOf(item.slug);
-  const built = isBuilt(item.slug);
-  const clickable = state !== "locked" && built;
-
-  const card = document.createElement(clickable ? "a" : "div");
-  card.className = "node is-" + state;
-  if (clickable) {
-    card.href = "#/c/" + item.slug;
-    card.addEventListener("click", closeModal);
-  }
-
-  const head = el("div", "nhead");
-  head.append(el("span", "nnum", "Challenge " + pad(item.displayNum)));
-  const st = el("span", "nstate");
-  st.innerHTML = stateLabel(state);
-  head.append(st);
-  card.append(head);
-
-  card.append(el("h3", "ntitle", item.title));
-
-  if (item.commands && item.commands.length) {
-    const chips = el("div", "ncmds");
-    for (const c of item.commands) chips.append(el("code", "", c));
-    card.append(chips);
-  }
-  if (item.line) card.append(el("p", "nline", item.line));
-
-  if (state === "locked") {
-    const why = waitsHTML(item);
-    if (why) card.append(el("p", "nwaits", why));
-  } else if (!built) {
-    card.append(el("p", "nstub", "Not written yet. Its place on the map is real; its content is not."));
-  }
-  if (item.note) card.append(el("p", "nnote", item.note));
-
-  return card;
-}
-
-/* ---- modals ------------------------------------------------------------- */
-
-let openDialog = null;
-let lastFocus = null;
-
-function closeModal() {
-  if (!openDialog) return;
-  openDialog.remove();
-  openDialog = null;
-  document.removeEventListener("keydown", onModalKey);
-  if (lastFocus && lastFocus.focus) lastFocus.focus();
-}
-
-function onModalKey(ev) { if (ev.key === "Escape") closeModal(); }
-
-function modal(title, buildBody) {
-  closeModal();
-  lastFocus = document.activeElement;
-
-  const back = el("div", "modalback");
-  const box = el("div", "modal");
-  box.setAttribute("role", "dialog");
-  box.setAttribute("aria-modal", "true");
-  box.setAttribute("aria-label", title);
-
-  const head = el("div", "modalhead");
-  head.append(el("h2", "", title));
-  const x = el("button", "modalclose", "×");
-  x.type = "button";
-  x.setAttribute("aria-label", "Close");
-  x.addEventListener("click", closeModal);
-  head.append(x);
-
-  const body = el("div", "modalbody");
-  buildBody(body);
-
-  box.append(head, body);
-  back.append(box);
-  back.addEventListener("mousedown", ev => { if (ev.target === back) closeModal(); });
-
-  document.body.append(back);
-  document.addEventListener("keydown", onModalKey);
-  openDialog = back;
-  x.focus();
-}
-
-function openTopicPanel(topic) {
-  modal(topic.name, body => {
-    const prog = topicProgress(topic);
-    body.append(el("p", "modallede",
-      `${topic.blurb} <strong>${prog.done} out of ${prog.total}</strong> done.`));
-    const stack = el("div", "nodestack");
-    for (const item of topic.nodes) stack.append(nodeCard(item));
-    body.append(stack);
-  });
-}
-
-/* Shown once, at the moment the core is finished — that is when it becomes
-   true, and it is a thing you are told once rather than a band that lives on
-   the page for ever. */
-function openRoutesModal() {
-  modal("Three routes open here", body => {
-    body.append(el("p", "modallede",
-      "Finishing <code>ssh</code> opens all three routes at once. This is not a fork " +
-      "you can get wrong: you take all three before the last challenge, and picking " +
-      "one now closes nothing off."));
-
-    const list = el("div", "routelist");
-    for (const key of ROUTE_KEYS) {
-      const topic = topicByKey(key);
-      if (!topic) continue;
-      const row = el("div", "routerow");
-      row.append(el("h3", "", topic.name));
-      row.append(el("p", "", topic.blurb));
-      row.append(el("p", "routemeta", `${topic.nodes.length} challenges`));
-      list.append(row);
-    }
-    body.append(list);
-
-    body.append(el("p", "modalfoot",
-      "Start with the route you need first. If none of them is more urgent, take " +
-      "them in the order shown."));
-
-    const actions = el("div", "modalactions");
-    const ok = el("button", "btn", "Got it");
-    ok.type = "button";
-    ok.addEventListener("click", closeModal);
-    actions.append(ok);
-    body.append(actions);
-  });
-}
-
-/* ---- the wires ---------------------------------------------------------- */
-
-function arrowDefs() {
+function arrowDefs(markerId) {
   const defs = svg("defs");
   const marker = svg("marker");
-  marker.setAttribute("id", "wire-arrow");
+  marker.setAttribute("id", markerId);
   marker.setAttribute("viewBox", "0 0 8 8");
   marker.setAttribute("refX", "7");
   marker.setAttribute("refY", "4");
   marker.setAttribute("markerWidth", "7");
   marker.setAttribute("markerHeight", "7");
-  marker.setAttribute("orient", "auto-start-reverse");
-  marker.setAttribute("markerUnits", "userSpaceOnUse");
+  marker.setAttribute("orient", "auto");
   const head = svg("path");
-  head.setAttribute("d", "M 0.5 0.8 L 7 4 L 0.5 7.2");
+  head.setAttribute("d", "M .5 .8 L 7 4 L .5 7.2");
   head.setAttribute("class", "wirehead");
   marker.append(head);
   defs.append(marker);
   return defs;
 }
 
-function drawWires(graph, wires, nodes, routes) {
+function drawWires(graph, wires, elements, nodes, markerId) {
   function redraw() {
     const box = graph.getBoundingClientRect();
     if (!box.width || !box.height) return;
     wires.setAttribute("viewBox", `0 0 ${box.width} ${box.height}`);
-    wires.setAttribute("preserveAspectRatio", "none");
     clear(wires);
-    wires.append(arrowDefs());
+    wires.append(arrowDefs(markerId));
 
-    const bottom = n => {
-      const r = n.getBoundingClientRect();
-      return { x: r.left - box.left + r.width / 2, y: r.bottom - box.top };
-    };
-    const top = n => {
-      const r = n.getBoundingClientRect();
-      return { x: r.left - box.left + r.width / 2, y: r.top - box.top };
-    };
-
-    function wire(from, to, locked) {
-      const dy = Math.max(18, (to.y - from.y) * 0.55);
-      const p = svg("path");
-      p.setAttribute("d",
-        `M ${from.x} ${from.y} C ${from.x} ${from.y + dy}, ${to.x} ${to.y - dy}, ${to.x} ${to.y}`);
-      p.setAttribute("class", "wire" + (locked ? " is-locked" : ""));
-      p.setAttribute("marker-end", "url(#wire-arrow)");
-      wires.append(p);
-    }
-
-    for (const topic of routes) {
-      const node = nodes[topic.key];
-      if (!node) continue;
-      const locked = node.classList.contains("is-locked");
-      if (nodes.core) wire(bottom(nodes.core), top(node), locked);
-      if (nodes.finale) wire(bottom(node), top(nodes.finale), nodes.finale.classList.contains("is-locked"));
+    for (const node of nodes) {
+      const toElement = elements.get(node.number);
+      if (!toElement) continue;
+      for (const source of node.recommendedAfter) {
+        const fromElement = elements.get(source);
+        if (!fromElement) continue;
+        const fromBox = fromElement.getBoundingClientRect();
+        const toBox = toElement.getBoundingClientRect();
+        const from = { x: fromBox.left - box.left + fromBox.width / 2, y: fromBox.bottom - box.top };
+        const to = { x: toBox.left - box.left + toBox.width / 2, y: toBox.top - box.top };
+        const bend = Math.max(24, (to.y - from.y) * 0.48);
+        const path = svg("path");
+        path.setAttribute("d", `M ${from.x} ${from.y} C ${from.x} ${from.y + bend}, ${to.x} ${to.y - bend}, ${to.x} ${to.y}`);
+        path.setAttribute("class", "wire");
+        path.setAttribute("marker-end", `url(#${markerId})`);
+        wires.append(path);
+      }
     }
   }
 
   requestAnimationFrame(redraw);
-  if (typeof ResizeObserver === "function") {
-    new ResizeObserver(() => requestAnimationFrame(redraw)).observe(graph);
-  } else {
-    window.addEventListener("resize", () => requestAnimationFrame(redraw));
-  }
+  if (typeof ResizeObserver === "function") new ResizeObserver(() => requestAnimationFrame(redraw)).observe(graph);
+  else window.addEventListener("resize", redraw);
 }
 
-function buildGraph() {
-  const graph = el("div", "graph");
+function pathNode(node, recommended) {
+  const built = isBuilt(node.slug);
+  const card = document.createElement(built ? "a" : "div");
+  card.className = "pathnode" + (isSolved(node.slug) ? " is-done" : recommended ? " is-next" : "");
+  if (built) card.href = `#/c/${node.slug}`;
+  else card.setAttribute("aria-disabled", "true");
+
+  const state = el("span", "pathstate");
+  state.innerHTML = isSolved(node.slug) ? ICON.tick + "Complete" : recommended ? "Recommended next" : "Available";
+  card.append(state, el("strong", "", node.title), el("small", "", node.topicKey.toUpperCase()));
+  if (node.commands?.length) card.append(el("span", "pathcommands", node.commands.map(command => `<code>${command}</code>`).join(" ")));
+  return card;
+}
+
+function graphFor(nodes, name) {
+  const graph = el("div", "journeygraph");
+  graph.setAttribute("aria-label", `${name} recommended learning tree`);
   const wires = svg("svg");
   wires.setAttribute("class", "wires");
   wires.setAttribute("aria-hidden", "true");
   graph.append(wires);
 
-  const nodes = {};
-  const core = topicByKey("core");
-  const finale = topicByKey("finale");
-  const routes = ROUTE_KEYS.map(topicByKey).filter(Boolean);
-
-  if (core) {
-    const cell = el("div", "gcell gcell-core");
-    nodes.core = bubble(core);
-    cell.append(nodes.core);
-    graph.append(cell);
+  const elements = new Map();
+  const firstOpen = nodes.find(node => !isSolved(node.slug) && isBuilt(node.slug));
+  for (const level of levelsFor(nodes)) {
+    const row = el("div", "journeyrow");
+    for (const node of spreadTerminalNodes(level, nodes)) {
+      const card = pathNode(node, node === firstOpen);
+      elements.set(node.number, card);
+      row.append(card);
+    }
+    graph.append(row);
   }
-  routes.forEach((topic, i) => {
-    const cell = el("div", `gcell gcell-route col-${i + 1}`);
-    nodes[topic.key] = bubble(topic);
-    cell.append(nodes[topic.key]);
-    graph.append(cell);
-  });
-  if (finale) {
-    const cell = el("div", "gcell gcell-finale");
-    nodes.finale = bubble(finale);
-    cell.append(nodes.finale);
-    graph.append(cell);
-  }
-
-  drawWires(graph, wires, nodes, routes);
+  drawWires(graph, wires, elements, nodes, `journey-arrow-${name.toLowerCase().replace(/\W+/g, "-")}`);
   return graph;
 }
 
-/* ---- the screen --------------------------------------------------------- */
-
-let routesShown = false;
-
-export function renderMap(mount) {
-  const root = el("div", "app");
-  root.append(topbar(null));
-
-  const scroll = el("div", "mapscroll");
-  const page = el("div", "mappage");
-
-  const p = overallProgress();
-  const head = el("div", "pagehead");
-  head.append(el("span", "headrule wide"));
-  head.append(el("div", "cnum", "Your map"));
-  head.append(el("h1", "ctitle", p.done === 0 ? "Start here" : "Where you are"));
-  head.append(el("p", "lede",
-    `${p.topics} topics, ${p.total} challenges. The core takes everyone from the prompt ` +
-    "to logging in to the cluster. After that, three routes open at once — you take all " +
-    "three before the last challenge, in whatever order suits you."));
-  page.append(head);
-
-  page.append(buildGraph());
-
-  const actions = el("div", "mapactions");
-  const why = el("button", "btn ghost small", "Why three routes?");
-  why.type = "button";
-  why.addEventListener("click", openRoutesModal);
-  actions.append(why);
-  page.append(actions);
-
-  scroll.append(page);
-  root.append(scroll);
-
-  const core = topicByKey("core");
-  const coreDone = core && core.nodes.every(n => isSolved(n.slug));
-  if (coreDone && !routesShown) {
-    routesShown = true;
-    setTimeout(openRoutesModal, 350);
+function graphPage(topic) {
+  const page = el("section", "journeypage");
+  const tools = el("div", "journeytools");
+  const back = el("a", "btn ghost", "← All Topics");
+  back.href = "#/";
+  if (topic) {
+    const all = el("a", "btn", "Your Journey →");
+    all.href = "#/journey";
+    tools.append(back, all);
+  } else {
+    tools.append(el("span", "", "All Topics shown as one connected route."), back);
   }
+  page.append(tools);
 
-  mount(root, closeModal);
+  if (topic) {
+    page.append(heading("Focused Topic", topic.name, topic.blurb));
+    page.append(el("p", "graphnote", "Lines show the recommended order. Every challenge can be opened now."));
+    page.append(graphFor(topic.nodes, topic.name));
+  } else {
+    page.append(heading(
+      "Your Journey",
+      "See the whole picture",
+      "Start at the beginning and follow the branches, or jump directly to any challenge. Connections recommend a logical path; they do not lock content.",
+    ));
+    page.append(el("p", "graphnote", "Recommended path · every node is available"));
+    page.append(graphFor(ALL_NODES, "Complete journey"));
+  }
+  return page;
+}
+
+export function renderMap(mount, view = {}) {
+  const root = el("div", "app");
+  const scroll = el("div", "mapscroll");
+  const page = el("main", "mappage");
+  const topic = view.topicKey ? topicByKey(view.topicKey) : null;
+  page.append(view.journey || topic ? graphPage(topic) : landing());
+  scroll.append(page);
+  root.append(topbar(null), scroll);
+  mount(root);
   return root;
 }

@@ -1,0 +1,135 @@
+<ul>
+<li><p>Configure <code>git</code> the first time it is used on a computer.</p></li>
+<li><p>Understand the meaning of the <code>--global</code> configuration flag.</p></li>
+</ul>
+<ul>
+<li><p>How do I get set up to use Git?</p></li>
+</ul>
+<p>When we use Git on a new computer for the first time, we need to configure a few things. Below are a few examples of configurations we will set as we get started with Git:</p>
+<ul>
+<li><p>our name and email address,</p></li>
+<li><p>what our preferred text editor is,</p></li>
+<li><p>and that we want to use these settings globally (i.e. for every project).</p></li>
+</ul>
+<p>On a command line, Git commands are written as <code>git verb options</code>, where <code>verb</code> is what we actually want to do and <code>options</code> is additional optional information which may be needed for the <code>verb</code>. So here is how Alfredo sets up his new laptop:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> user.name <span class="st">&quot;Alfredo Linguini&quot;</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> user.email <span class="st">&quot;a.linguini@ratatouille.fr&quot;</span></span></code></pre></div>
+<p>Please use your own name and email address instead of Alfredo’s. This user name and email will be associated with your subsequent Git activity, which means that any changes pushed to <a href="https://github.com/">GitHub</a>, <a href="https://bitbucket.org/">BitBucket</a>, <a href="https://gitlab.com/">GitLab</a> or another Git host server after this lesson will include this information.</p>
+<p>For this lesson, we will be interacting with <a href="https://github.com/">GitHub</a> and so the email address used should be the same as the one used when setting up your GitHub account. If you are concerned about privacy, please review <a href="https://help.github.com/articles/keeping-your-email-address-private/">GitHub’s instructions for keeping your email address private</a>.</p>
+<h2 id="keeping-your-email-private">Keeping your email private</h2>
+<p>If you elect to use a private email address with GitHub, then use GitHub’s no-reply email address for the <code>user.email</code> value. It looks like <code>ID+username@users.noreply.github.com</code>. You can look up your own address in your GitHub <a href="https://github.com/settings/emails">email settings</a>.</p>
+<h2 id="line-endings">Line Endings</h2>
+<p>As with other keys, when you press Enter or ↵ or on Macs, Return on your keyboard, your computer encodes this input as a character. Different operating systems use different character(s) to represent the end of a line. (You may also hear these referred to as newlines or line breaks.) Because Git uses these characters to compare files, it may cause unexpected issues when editing a file on different machines. Though it is beyond the scope of this lesson, you can read more about this issue <a href="https://www.git-scm.com/book/en/v2/Customizing-Git-Git-Configuration#_core_autocrlf">in the Pro Git book</a>.</p>
+<p>You can change the way Git recognizes and encodes line endings using the <code>core.autocrlf</code> command to <code>git config</code>. The following settings are recommended:</p>
+<p>On macOS and Linux:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> core.autocrlf input</span></code></pre></div>
+<p>And on Windows:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> core.autocrlf true</span></code></pre></div>
+<p>Alfredo also has to set his favorite text editor, following this table:</p>
+<figure>
+<div data-align="center">
+<table>
+<thead>
+<tr>
+<th style="text-align: left;"><p>Editor</p></th>
+<th style="text-align: left;"><p>Configuration command</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td style="text-align: left;"><p>Atom</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "atom --wait"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>nano</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "nano -w"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>BBEdit (Mac, with command line tools)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "bbedit -w"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Sublime Text (Mac)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "/Applications/Sublime\ Text.app/Contents/SharedSupport/bin/subl -n -w"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Sublime Text (Win, 32-bit install)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "'c:/program files (x86)/sublime text 3/sublime_text.exe' -w"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Sublime Text (Win, 64-bit install)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "'c:/program files/sublime text 3/sublime_text.exe' -w"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Notepad (Win)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "c:/Windows/System32/notepad.exe"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Notepad++ (Win, 32-bit install)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "'c:/program files (x86)/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Notepad++ (Win, 64-bit install)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "'c:/program files/Notepad++/notepad++.exe' -multiInst -notabbar -nosession -noPlugin"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Kate (Linux)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "kate"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Gedit (Linux)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "gedit --wait --new-window"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Scratch (Linux)</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "scratch-text-editor"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Emacs</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "emacs"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>Vim</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "vim"</code></p></td>
+</tr>
+<tr>
+<td style="text-align: left;"><p>VS Code</p></td>
+<td style="text-align: left;"><p><code>$ git config --global core.editor "code --wait"</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+<p>It is possible to reconfigure the text editor for Git whenever you want to change it.</p>
+<h2 id="exiting-vim">Exiting Vim</h2>
+<p>Note that Vim is the default editor for many programs. If you haven’t used Vim before and wish to exit a session without saving your changes, press Esc then type <code>:q!</code> and press Enter or ↵ or on Macs, Return. If you want to save your changes and quit, press Esc then type <code>:wq</code> and press Enter or ↵ or on Macs, Return.</p>
+<p>Git (2.28+) allows configuration of the name of the branch created when you initialize any new repository. Alfredo decides to use that feature to set it to <code>main</code> so it matches the cloud service he will eventually use.</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> init.defaultBranch main</span></code></pre></div>
+<h2 id="default-git-branch-naming">Default Git branch naming</h2>
+<p>Source file changes are associated with a “branch.” For new learners in this lesson, it’s enough to know that branches exist, and this lesson uses one branch.<br />
+By default, Git will create a branch called <code>master</code> when you create a new repository with <code>git init</code> (as explained in the next Episode). This term evokes the racist practice of human slavery and the <a href="https://github.com/github/renaming">software development community</a> has moved to adopt more inclusive language.</p>
+<p>In 2020, most Git code hosting services transitioned to using <code>main</code> as the default branch. As an example, any new repository that is opened in GitHub and GitLab default to <code>main</code>. However, Git has not yet made the same change. As a result, local repositories must be manually configured have the same main branch name as most cloud services.</p>
+<p>For versions of Git prior to 2.28, the change can be made on an individual repository level. The command for this is in the next episode. Note that if this value is unset in your local Git configuration, the <code>init.defaultBranch</code> value defaults to <code>master</code>.</p>
+<p>The five commands we just ran above only need to be run once: the flag <code>--global</code> tells Git to use the settings for every project, in your user account, on this computer.</p>
+<p>Let’s review those settings and test our <code>core.editor</code> right away:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> <span class="at">--edit</span></span></code></pre></div>
+<p>Let’s close the file without making any additional changes. Remember, since typos in the config file will cause issues, it’s safer to view the configuration with:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--list</span> <span class="at">--global</span></span></code></pre></div>
+<p>And if necessary, change your configuration using the same commands to choose another editor or update your email address. This can be done as many times as you want.</p>
+<h2 id="proxy">Proxy</h2>
+<p>In some networks you need to use a <a href="https://en.wikipedia.org/wiki/Proxy_server">proxy</a>. If this is the case, you may also need to tell Git about the proxy:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> http.proxy proxy-url</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> https.proxy proxy-url</span></code></pre></div>
+<p>To disable the proxy, use</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> <span class="at">--unset</span> http.proxy</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> <span class="at">--unset</span> https.proxy</span></code></pre></div>
+<h2 id="git-help-and-manual">Git Help and Manual</h2>
+<p>Always remember that if you forget the subcommands or options of a <code>git</code> command, you can access the relevant list of options typing <code>git &lt;command&gt; -h</code> or access the corresponding Git manual by typing <code>git &lt;command&gt; --help</code>, e.g.:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">-h</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--help</span></span></code></pre></div>
+<p>While viewing the manual, remember the <code>:</code> is a prompt waiting for commands and you can press Q to exit the manual.</p>
+<p>More generally, you can get the list of available <code>git</code> commands and further resources of the Git manual typing:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git help</span></code></pre></div>
+<ul>
+<li><p>Use <code>git config</code> with the <code>--global</code> option to configure a user name, email address, editor, and other preferences once per machine.</p></li>
+</ul>

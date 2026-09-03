@@ -7,9 +7,10 @@ types an answer to move on.
 ## Language
 
 **Challenge**:
-One unit of the trainer: a scenario, a worked example, a task, a simulated world,
-and one answer. Numbered from 0.
-_Avoid_: Level, exercise, lesson, puzzle
+One unit of the trainer. A text challenge is an attributed block document with a
+reading timer; a code challenge adds a task, simulated world, hints, and a
+validator. Numbered from 0.
+_Avoid_: Level, lesson, puzzle
 
 **Learner**:
 A university student working through the trainer, with no assumed computing or
@@ -51,30 +52,25 @@ match paired with an explanation. Distinct from a hint, which the learner reques
 before answering.
 _Avoid_: Error, validation message
 
-**Challenge graph**:
-The directed acyclic dependency structure over all challenges, formed by explicit
-prerequisite edges. It decides what is unlocked, and it can branch: two challenges
-can open several others at once.
-_Avoid_: Syllabus, tree, curriculum, path
+**Recommended tree**:
+The directed acyclic structure that shows a useful order through challenges. It
+may split and rejoin, but never controls access: every challenge can be opened
+directly.
+_Avoid_: Prerequisite graph, unlock graph, syllabus
 
-**Prerequisite edge**:
-A directed relationship declaring that a target challenge requires completion of
-a source challenge before it becomes available.
-_Avoid_: Connection, link, dependency rule
+**Recommended connection**:
+A directed relationship showing that one challenge is a useful next step after
+another. It is advisory and has no completion requirement.
+_Avoid_: Prerequisite, lock, dependency rule
 
-**Prerequisite group**:
-A set of prerequisite edges evaluated as all-of or any-of. A challenge unlocks
-only when every one of its prerequisite groups is satisfied.
-_Avoid_: Boolean expression, condition set
-
-**Interactive challenge**:
-A challenge with a world, simulated shell, answer, and hint ladder. It is distinct
-from a reading challenge and cannot omit any of those parts.
-_Avoid_: Terminal lesson, shell exercise
+**Code challenge**:
+A challenge with a task and answer or terminal-state validator. It may use the
+simulated shell, declarative world, Bash blocks, and hint ladder.
+_Avoid_: Interactive challenge, terminal lesson, shell exercise
 
 **Topic**:
-A presentation group of challenges with a name, blurb, and display order. Topics
-do not determine prerequisite edges.
+A presentation group of challenges with a name, blurb, display order, progress,
+and its focused recommended tree.
 _Avoid_: Route, track, path
 
 **Learner progress**:
@@ -88,15 +84,16 @@ A JSON recovery artifact containing content releases, retained revisions, drafts
 the challenge graph, and audit records, but no authentication secrets.
 _Avoid_: Database dump, backup file
 
-**Current challenge graph**:
-The challenge graph from the newest published content release. It determines
-availability only for challenges a learner has not started.
-_Avoid_: Live graph, current path
+**Your Journey**:
+The complete recommended tree from the newest content release, spanning Linux,
+Git, and HPC. A learner can follow it from the beginning or jump anywhere.
+_Avoid_: Unlock graph, required path
 
-**Reading challenge**:
-A challenge with no answer, no world, and no hints, which the learner completes by
-visiting it. Challenge 0 is one.
-_Avoid_: Intro, page, lesson
+**Text challenge**:
+An attributed ordered block document with no required validator. Opening it starts
+a persistent 120-second timer that continues in the background; afterward the
+learner explicitly marks it complete.
+_Avoid_: Reading challenge, page, lesson
 
 **Worked example**:
 The demonstration of a command in use, shown in the reading pane without the
@@ -136,7 +133,22 @@ _Avoid_: Environment, state, fixture
 **Admin**:
 A university-authorized person who authors and publishes challenge content through
 the admin application.
-_Avoid_: Editor, author, content manager
+_Avoid_: Content manager
+
+**Author**:
+The person responsible for adding or adapting a challenge on this site. Imported
+content separately retains its pinned source and licence attribution.
+_Avoid_: Committer, uploader
+
+**Content block**:
+One ordered, stable-ID unit in a challenge revision: restricted Typst, callout, or
+Bash. Blocks are edited like notebook cells and published as safe static HTML.
+_Avoid_: Widget, component, card
+
+**Source**:
+The exact pinned upstream file revision from which content was imported or
+adapted. It is linked beside the author and recorded in the licence register.
+_Avoid_: Inspiration, reference link
 
 **Challenge revision**:
 An immutable published snapshot of one challenge's authored content and world.
@@ -155,21 +167,20 @@ For example, `00F001` is challenge `00F` (decimal 15), revision `001`.
 _Avoid_: Challenge ID, version ID
 
 **Started challenge**:
-A challenge for which a learner has taken a first learning action: revealing a
-hint, running a terminal command, or submitting an answer. It remains on its
-selected challenge revision even when a later revision is published.
+A text challenge whose page was opened, or a code challenge where the learner
+revealed a hint, ran a terminal command, or submitted an answer. It remains on
+its selected revision when a later revision is published.
 _Avoid_: In-progress lesson, active exercise
 
 **Draft**:
-A mutable, unpublished admin-authored change to challenge content or the concept
-graph. Saving a draft does not create a challenge revision.
+A mutable, unpublished Admin-authored change to challenge content or the
+recommended tree. Saving a draft does not create a challenge revision.
 _Avoid_: Revision, autosave, live version
 
 **Completed challenge**:
-A challenge for which a learner has supplied a correct answer on its selected
-challenge revision. It remains part of that learner's progress after later
-revisions are published and satisfies current prerequisites for that challenge
-number.
+A text challenge marked complete after its timer, or a code challenge whose
+validator succeeded. It remains part of learner progress after later revisions
+but never controls access to other challenges.
 _Avoid_: Finished lesson, passed level
 
 **Expired attempt**:
@@ -184,7 +195,7 @@ _Avoid_: Live version, current draft
 
 **Content release**:
 An immutable, atomically published set of challenge revisions and one validated
-challenge graph. It is the learner-visible unit of publication.
+recommended tree. It is the learner-visible unit of publication.
 _Avoid_: Deployment, draft, partial update
 
 **Audit record**:
@@ -193,7 +204,7 @@ time, changed fields, and prior revision.
 _Avoid_: Edit history, activity log
 
 **Archived challenge**:
-A challenge omitted from the current challenge graph. It is unavailable to new
+A challenge omitted from the current content release. It is unavailable to new
 learners but retains its recent revision history and eligible started attempts.
 _Avoid_: Deleted challenge, removed level
 

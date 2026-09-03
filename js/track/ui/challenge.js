@@ -6,7 +6,7 @@
 import { el } from "./dom.js";
 import { makeTerminal } from "./terminal.js";
 import { topbar, challengeHeading, block, labelled, exampleBlock, hintLadder, answerBlock } from "./parts.js";
-import { markSolved, markStarted, unlockedBy, nextAfter } from "../progress.js";
+import { markSolved, markStarted, nextAfter } from "../progress.js";
 import { isBuilt } from "../challenges/index.js";
 
 export function renderChallenge(challenge, mount) {
@@ -54,22 +54,7 @@ export function renderChallenge(challenge, mount) {
 }
 
 function onCorrect(challenge, verdict, after) {
-  /* Ask what this opens *before* marking it solved, or it counts as already
-     unlocked and the sentence comes out empty. */
-  const opened = unlockedBy(challenge.slug);
   markSolved(challenge.slug);
-
-  if (opened.length) {
-    verdict.append(document.createTextNode("That opens "));
-    opened.forEach((n, i) => {
-      if (i > 0) verdict.append(document.createTextNode(i === opened.length - 1 ? " and " : ", "));
-      const strong = el("strong");
-      strong.textContent = n.title;
-      verdict.append(strong);
-    });
-    verdict.append(document.createTextNode("."));
-  }
-
   after.append(doneActions(challenge.slug));
 }
 

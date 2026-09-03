@@ -1,9 +1,8 @@
 // The challenge registry.
 //
-// All twenty-two are written. js/track/content.js owns their stable identities,
-// topic membership and explicit prerequisite graph. This compatibility registry
-// supplies the existing prose and worlds while those modules are migrated to
-// the declarative content format.
+// js/track/content.js owns stable identities, Topic membership and recommended
+// connections. This registry joins existing code-challenge modules with imported
+// static block documents while worlds migrate to the declarative format.
 
 import whatIsATerminal from "./what-is-a-terminal.js";
 import whereAmI from "./where-am-i.js";
@@ -28,7 +27,7 @@ import submittingAJob from "./submitting-a-job.js";
 import watchingItChange from "./watching-it-change.js";
 import puttingItTogether from "./putting-it-together.js";
 
-import { topicOf } from "../topics.js";
+import { ALL_NODES } from "../topics.js";
 
 const LIST = [
   whatIsATerminal, whereAmI, movingAround, sameCommandMoreQuestions, askTheMachine,
@@ -38,20 +37,19 @@ const LIST = [
   runningWorkIntroduction, isThereRoom, whatsRunning, submittingAJob, watchingItChange,
   puttingItTogether,
 ];
+const authored = new Map(LIST.map(challenge => [challenge.slug, challenge]));
 
 export const CHALLENGES = {};
-for (const c of LIST) {
-  const where = topicOf(c.slug);
-  if (!where) throw new Error(`challenge "${c.slug}" is not placed in js/track/topics.js`);
-  c.topicKey = where.topic.key;
-  c.number = where.node.number;
-  c.displayNum = where.node.displayNum;
-  c.revision = where.node.revision;
-  c.kind = where.node.kind;
-  c.revisionId = where.node.id;
-  c.prerequisiteGroups = where.node.prerequisiteGroups;
-  c.requires = where.node.requires;
-  CHALLENGES[c.slug] = c;
+for (const node of ALL_NODES) {
+  // Imported reading lessons are static block documents. They intentionally
+  // replace an older compatibility module when they reuse its stable ID.
+  const challenge = node.contentUrl ? {} : authored.get(node.slug);
+  if (!challenge) continue;
+  Object.assign(challenge, node, {
+    revisionId: node.id,
+    requires: node.recommendedSlugs,
+  });
+  CHALLENGES[node.slug] = challenge;
 }
 
 export function getChallenge(slug) {

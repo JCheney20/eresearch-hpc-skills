@@ -39,11 +39,35 @@ export function topbar(challenge) {
     bar.append(prog);
   }
 
+  const licences = el("a", "maplink", "Licences");
+  licences.href = "#/licenses";
+  bar.append(licences);
+
   const map = el("a", "maplink", "Map");
   map.href = "#/";
   bar.append(map);
 
   return bar;
+}
+
+export function attributionLine(challenge) {
+  const line = el("p", "byline");
+  line.append(document.createTextNode(challenge.author || "Justin Cheney"));
+  line.append(document.createTextNode(" | "));
+  if (challenge.source?.url) {
+    const source = el("a", "", challenge.source.label || "Source");
+    source.href = challenge.source.url;
+    source.target = "_blank";
+    source.rel = "noopener noreferrer";
+    line.append(source);
+  } else {
+    line.append(document.createTextNode(challenge.source?.label || "UWC HPC Skills"));
+  }
+  line.append(document.createTextNode(" | Updated "));
+  const updated = el("time", "", challenge.updated || "2026-09-03");
+  updated.dateTime = challenge.updated || "2026-09-03";
+  line.append(updated);
+  return line;
 }
 
 export function challengeHeading(challenge) {
@@ -56,6 +80,7 @@ export function challengeHeading(challenge) {
     : `Challenge ${challenge.displayNum ?? challenge.num}`;
   h.append(el("div", "cnum", lead + (chips ? " · " + chips : "")));
   h.append(el("h1", "ctitle", challenge.title));
+  h.append(attributionLine(challenge));
   return h;
 }
 

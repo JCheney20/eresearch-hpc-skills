@@ -1,0 +1,219 @@
+<ul>
+<li><p>Explain what remote repositories are and why they are useful.</p></li>
+<li><p>Push to or pull from a remote repository.</p></li>
+</ul>
+<ul>
+<li><p>How do I share my changes with others on the web?</p></li>
+</ul>
+<p>Version control really comes into its own when we begin to collaborate with other people. We already have most of the machinery we need to do this; the only thing missing is to copy changes from one repository to another.</p>
+<p>Systems like Git allow us to move work between any two repositories. In practice, though, it’s easiest to use one copy as a central hub, and to keep it on the web rather than on someone’s laptop. Most programmers use hosting services like <a href="https://github.com">GitHub</a>, <a href="https://bitbucket.org">Bitbucket</a> or <a href="https://gitlab.com/">GitLab</a> to hold those main copies; we’ll explore the pros and cons of this in a <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/episodes/13-hosting.md">later episode</a>.</p>
+<p>Let’s start by sharing the changes we’ve made to our current project with the world. To this end we are going to create a <em>remote</em> repository that will be linked to our <em>local</em> repository.</p>
+<h2 id="create-a-remote-repository">1. Create a remote repository</h2>
+<p>Log in to <a href="https://github.com">GitHub</a>, then click on the icon in the top right corner to create a new repository called <code>recipes</code>:</p>
+<p><span class="box"><img src="/content/assets/git-remotes/001-github-create-repo-01.png" /></span></p>
+<p>Name your repository “recipes” and then click “Create Repository”.</p>
+<p>Note: Since this repository will be connected to a local repository, it needs to be empty. Leave “Initialize this repository with a README” unchecked, and keep “None” as options for both “Add .gitignore” and “Add a license.” See the “GitHub License and README files” exercise below for a full explanation of why the repository needs to be empty.</p>
+<p><span class="box"><img src="/content/assets/git-remotes/002-github-create-repo-02.png" /></span></p>
+<p>As soon as the repository is created, GitHub displays a page with a URL and some information on how to configure your local repository:</p>
+<p><span class="box"><img src="/content/assets/git-remotes/003-github-create-repo-03.png" /></span></p>
+<p>This effectively does the following on GitHub’s servers:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir recipes</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd recipes</span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git init</span></code></pre></div>
+<p>If you remember back to the earlier <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/episodes/04-changes.md">episode</a> where we added and committed our earlier work on <code>guacamole.md</code>, we had a diagram of the local repository which looked like this:</p>
+<p><span class="box"><img src="/content/assets/git-remotes/004-git-staging-area.svg" /></span></p>
+<p>Now that we have two repositories, we need a diagram like this:</p>
+<p><span class="box"><img src="/content/assets/git-remotes/005-git-freshly-made-github-repo.svg" /></span></p>
+<p>Note that our local repository still contains our earlier work on <code>guacamole.md</code>, but the remote repository on GitHub appears empty as it doesn’t contain any files yet.</p>
+<h2 id="connect-local-to-remote-repository">2. Connect local to remote repository</h2>
+<p>Now we connect the two repositories. We do this by making the GitHub repository a <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/learners/reference.md#remote">remote</a> for the local repository. The home page of the repository on GitHub includes the URL string we need to identify it:</p>
+<p><span class="box"><img src="/content/assets/git-remotes/006-github-change-repo-string.png" /></span></p>
+<p>Click on the ‘SSH” link to change the <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/learners/reference.md#protocol">protocol</a> from HTTPS to SSH.</p>
+<h2 id="https-vs.-ssh">HTTPS vs. SSH</h2>
+<p>We use SSH here because, while it requires some additional configuration, it is a security protocol widely used by many applications. The steps below describe SSH at a minimum level for GitHub.</p>
+<p><span class="box"><img src="/content/assets/git-remotes/007-github-find-repo-string.png" /></span></p>
+<p>Copy that URL from the browser, go into the local <code>recipes</code> repository, and run this command:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git remote add origin git@github.com:alflin/recipes.git</span></code></pre></div>
+<p>Make sure to use the URL for your repository rather than Alfredo’s: the only difference should be your username instead of <code>alflin</code>.</p>
+<p><code>origin</code> is a local name used to refer to the remote repository. It could be called anything, but <code>origin</code> is a convention that is often used by default in git and GitHub, so it’s helpful to stick with this unless there’s a reason not to.</p>
+<p>We can check that the command has worked by running <code>git remote -v</code>:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git remote <span class="at">-v</span></span></code></pre></div>
+<pre class="output"><code>origin   git@github.com:alflin/recipes.git (fetch)
+origin   git@github.com:alflin/recipes.git (push)
+</code></pre>
+<p>We’ll discuss remotes in more detail in the next episode, while talking about how they might be used for collaboration.</p>
+<h2 id="ssh-background-and-setup">3. SSH Background and Setup</h2>
+<p>Before Alfredo can connect to a remote repository, he needs to set up a way for his computer to authenticate with GitHub so it knows it’s him trying to connect to his remote repository.</p>
+<p>We are going to set up the method that is commonly used by many different services to authenticate access on the command line. This method is called Secure Shell Protocol (SSH). SSH is a cryptographic network protocol that allows secure communication between computers using an otherwise insecure network.</p>
+<p>SSH uses what is called a key pair. This is two keys that work together to validate access. One key is publicly known and called the public key, and the other key called the private key is kept private. Very descriptive names.</p>
+<p>You can think of the public key as a padlock, and only you have the key (the private key) to open it. You use the public key where you want a secure method of communication, such as your GitHub account. You give this padlock, or public key, to GitHub and say “lock the communications to my account with this so that only computers that have my private key can unlock communications and send git commands as my GitHub account.”</p>
+<p>What we will do now is the minimum required to set up the SSH keys and add the public key to a GitHub account.</p>
+<p>The first thing we are going to do is check if this has already been done on the computer you’re on. Because generally speaking, this setup only needs to happen once and then you can forget about it.</p>
+<h2 id="keeping-your-keys-secure">Keeping your keys secure</h2>
+<p>You shouldn’t really forget about your SSH keys, since they keep your account secure. It’s good practice to check your SSH keys every so often to ensure they are still secure, up to date, and that there are no unauthorized keys that could compromise your account. This is especially important if you are using multiple computers to access your account.</p>
+<p>We will run the list command to check what key pairs already exist on your computer.</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-al</span> ~/.ssh</span></code></pre></div>
+<p>Your output is going to look a little different depending on whether or not SSH has ever been set up on the computer you are using.</p>
+<p>Alfredo has not set up SSH on his computer, so his output is</p>
+<pre class="output"><code>ls: cannot access &#39;/c/Users/Alfredo/.ssh&#39;: No such file or directory
+</code></pre>
+<p>If SSH has been set up on the computer you’re using, the public and private key pairs will be listed. The file names are either <code>id_ed25519</code>/<code>id_ed25519.pub</code> or <code>id_rsa</code>/<code>id_rsa.pub</code> depending on how the key pairs were set up. Since they don’t exist on Alfredo’s computer, he uses this command to create them.</p>
+<h2 id="resolving-ssh-key-conflicts-custom-names-and-paths">Resolving SSH Key Conflicts: Custom Names and Paths</h2>
+<p>If you need to create an SSH key pair with a custom name or store it in a non-default location (e.g., because a default-named key like id_ed25519 already exists), Git may not automatically use it when pushing or pulling from GitHub.</p>
+<p>One solution is to add a GitHub entry to your SSH config.</p>
+<p>Open or create the SSH config file:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano ~/.ssh/config</span></code></pre></div>
+<p>Add an entry for GitHub, replacing the path with your key’s actual name and location:</p>
+<pre><code>Host github.com
+    HostName github.com
+    User git
+    IdentityFile ~/&lt;full_path_to_SSH_key_file&gt;/&lt;key_name&gt;
+    IdentitiesOnly yes
+</code></pre>
+<p>Save and exit. Now Git will use the correct key when pushing to GitHub.</p>
+<h3 id="create-an-ssh-key-pair">3.1 Create an SSH key pair</h3>
+<p>To create an SSH key pair Alfredo uses this command, where the <code>-t</code> option specifies which type of algorithm to use and <code>-C</code> attaches a comment to the key (here, Alfredo’s email):</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ssh-keygen <span class="at">-t</span> ed25519 <span class="at">-C</span> <span class="st">&quot;a.linguini@ratatouille.fr&quot;</span></span></code></pre></div>
+<p>In the command above, the `-C- flag is used to label the SSH key with the owner’s email address. It’s good practice to use the same email associated to your GitHub account, but it does not have to be, and will not be used to validate the access. You can also decide not to add any label.</p>
+<p>If you are using a legacy system that doesn’t support the Ed25519 algorithm, use: <code>$ ssh-keygen -t rsa -b 4096 -C "your_email@example.com"</code></p>
+<pre class="output"><code>Generating public/private ed25519 key pair.
+Enter file in which to save the key (/c/Users/Alfredo/.ssh/id_ed25519):
+</code></pre>
+<p>We want to use the default file, so just press Enter.</p>
+<pre class="output"><code>Created directory &#39;/c/Users/Alfredo/.ssh&#39;.
+Enter passphrase (empty for no passphrase):
+</code></pre>
+<p>Now, it is prompting Alfredo for a passphrase. Since he is using his kitchen’s laptop that other people sometimes have access to, he wants to create a passphrase. Be sure to use something memorable or save your passphrase somewhere, as there is no “reset my password” option. Note that, when typing a passphrase on a terminal, there won’t be any visual feedback of your typing. This is normal: your passphrase will be recorded even if you see nothing changing on your screen.</p>
+<pre class="output"><code>Enter same passphrase again:
+</code></pre>
+<p>After entering the same passphrase a second time, we receive the confirmation</p>
+<pre class="output"><code>Your identification has been saved in /c/Users/Alfredo/.ssh/id_ed25519
+Your public key has been saved in /c/Users/Alfredo/.ssh/id_ed25519.pub
+The key fingerprint is:
+SHA256:SMSPIStNyA00KPxuYu94KpZgRAYjgt9g4BA4kFy3g1o a.linguini@ratatouille.fr
+The key&#39;s randomart image is:
++--[ED25519 256]--+
+|^B== o.          |
+|%*=.*.+          |
+|+=.E =.+         |
+| .=.+.o..        |
+|....  . S        |
+|.+ o             |
+|+ =              |
+|.o.o             |
+|oo+.             |
++----[SHA256]-----+
+</code></pre>
+<p>The “identification” is actually the private key. You should never share it. The public key is appropriately named. The “key fingerprint” is a shorter version of a public key.</p>
+<p>Now that we have generated the SSH keys, we will find the SSH files when we check.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="at">-al</span> ~/.ssh</span></code></pre></div>
+<pre class="output"><code>drwxr-xr-x 1 Alfredo   197121   0 Jul 16 14:48 ./
+drwxr-xr-x 1 Alfredo   197121   0 Jul 16 14:48 ../
+-rw-r--r-- 1 Alfredo   197121 419 Jul 16 14:48 id_ed25519
+-rw-r--r-- 1 Alfredo   197121 106 Jul 16 14:48 id_ed25519.pub
+</code></pre>
+<h3 id="copy-the-public-key-to-github">3.2 Copy the public key to GitHub</h3>
+<p>Now we have a SSH key pair and we can run this command to check if GitHub can read our authentication.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-T</span> git@github.com</span></code></pre></div>
+<pre class="output"><code>The authenticity of host &#39;github.com (192.30.255.112)&#39; can&#39;t be established.
+RSA key fingerprint is SHA256:nThbg6kXUpJWGl7E1IGOCspRomTxdCARLviKw6E5SY8.
+This key is not known by any other names
+Are you sure you want to continue connecting (yes/no/[fingerprint])? y
+Please type &#39;yes&#39;, &#39;no&#39; or the fingerprint: yes
+Warning: Permanently added &#39;github.com&#39; (RSA) to the list of known hosts.
+git@github.com: Permission denied (publickey).
+</code></pre>
+<p>Right, we forgot that we need to give GitHub our public key!</p>
+<p>First, we need to copy the public key. Be sure to include the <code>.pub</code> at the end, otherwise you’re looking at the private key.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span> ~/.ssh/id_ed25519.pub</span></code></pre></div>
+<pre class="output"><code>ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIDmRA3d51X0uu9wXek559gfn6UFNF69yZjChyBIU2qKI a.linguini@ratatouille.fr
+</code></pre>
+<p>Now, going to GitHub.com, click on your profile icon in the top right corner to get the drop-down menu. Click “Settings”, then on the settings page, click “SSH and GPG keys”, on the left side “Access” menu. Click the “New SSH key” button on the right side. Now, you can add the title (Alfredo uses the title “Alfredo’s Kitchen Laptop” so he can remember where the original key pair files are located), paste your SSH key into the field, and click the “Add SSH key” to complete the setup.</p>
+<p>Now that we’ve set that up, let’s check our authentication again from the command line.</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ssh <span class="at">-T</span> git@github.com</span></code></pre></div>
+<pre class="output"><code>Hi Alfredo! You&#39;ve successfully authenticated, but GitHub does not provide shell access.
+</code></pre>
+<p>Good! This output confirms that the SSH key works as intended. We are now ready to push our work to the remote repository.</p>
+<h2 id="push-local-changes-to-a-remote">4. Push local changes to a remote</h2>
+<p>Now that authentication is setup, we can return to the remote. This command will push the changes from our local repository to the repository on GitHub:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git push origin main</span></code></pre></div>
+<p>Since Alfredo set up a passphrase, it will prompt him for it. If you completed advanced settings for your authentication, it will not prompt for a passphrase.</p>
+<pre class="output"><code>Enumerating objects: 16, done.
+Counting objects: 100% (16/16), done.
+Delta compression using up to 8 threads.
+Compressing objects: 100% (11/11), done.
+Writing objects: 100% (16/16), 1.45 KiB | 372.00 KiB/s, done.
+Total 16 (delta 2), reused 0 (delta 0)
+remote: Resolving deltas: 100% (2/2), done.
+To https://github.com/alflin/recipes.git
+ * [new branch]      main -&gt; main
+</code></pre>
+<h2 id="proxy">Proxy</h2>
+<p>If the network you are connected to uses a proxy, there is a chance that your last command failed with “Could not resolve hostname” as the error message. To solve this issue, you need to tell Git about the proxy:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> http.proxy http://user:password@proxy.url</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> https.proxy https://user:password@proxy.url</span></code></pre></div>
+<p>When you connect to another network that doesn’t use a proxy, you will need to tell Git to disable the proxy using:</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> <span class="at">--unset</span> http.proxy</span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config <span class="at">--global</span> <span class="at">--unset</span> https.proxy</span></code></pre></div>
+<h2 id="password-managers">Password Managers</h2>
+<p>If your operating system has a password manager configured, <code>git push</code> will try to use it when it needs your username and password. For example, this is the default behavior for Git Bash on Windows. If you want to type your username and password at the terminal instead of using a password manager, type:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> unset SSH_ASKPASS</span></code></pre></div>
+<p>in the terminal, before you run <code>git push</code>. Despite the name, <a href="https://git-scm.com/docs/gitcredentials#_requesting_credentials">Git uses <code>SSH_ASKPASS</code> for all credential entry</a>, so you may want to unset <code>SSH_ASKPASS</code> whether you are using Git via SSH or https.</p>
+<p>You may also want to add <code>unset SSH_ASKPASS</code> at the end of your <code>~/.bashrc</code> to make Git default to using the terminal for usernames and passwords.</p>
+<p>Our local and remote repositories are now in this state:</p>
+<p><span class="box"><img src="/content/assets/git-remotes/008-github-repo-after-first-push.svg" /></span></p>
+<h2 id="the--u-flag">The ‘-u” Flag</h2>
+<p>You may see a <code>-u</code> option used with <code>git push</code> in some documentation. This option is synonymous with the <code>--set-upstream-to</code> option for the <code>git branch</code> command, and is used to associate the current branch with a remote branch so that the <code>git pull</code> command can be used without any arguments. To do this, simply use <code>git push -u origin main</code> once the remote has been set up.</p>
+<p>We can pull changes from the remote repository to the local one as well:</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git pull origin main</span></code></pre></div>
+<pre class="output"><code>From https://github.com/alflin/recipes
+ * branch            main     -&gt; FETCH_HEAD
+Already up-to-date.
+</code></pre>
+<p>Pulling has no effect in this case because the two repositories are already synchronized. If someone else had pushed some changes to the repository on GitHub, though, this command would download them to our local repository.</p>
+<h2 id="github-gui">GitHub GUI</h2>
+<p>Browse to your <code>recipes</code> repository on GitHub. Under the Code tab, find and click on the text that says “XX commits” (where “XX” is some number). Hover over, and click on, the three buttons to the right of each commit. What information can you gather/explore from these buttons? How would you get that same information in the shell?</p>
+<h2 id="solution">Solution</h2>
+<p>When you click on the left-most button, you’ll see all of the changes that were made in that particular commit. Green shaded lines indicate additions and red ones removals. In the shell we can do the same thing with <code>git diff</code>. In particular, <code>git diff ID1..ID2</code> where ID1 and ID2 are commit identifiers (e.g. <code>git diff a3bf1e5..041e637</code>) will show the differences between those two commits.</p>
+<p>The middle button (with the picture of two overlapping squares or pages) copies the full identifier of the commit to the clipboard. In the shell, <code>git log</code> will show you the full commit identifier for each commit.</p>
+<p>The right-most button lets you view all of the files in the repository at the time of that commit. To do this in the shell, we’d need to checkout the repository at that particular time. We can do this with <code>git checkout ID</code> where ID is the identifier of the commit we want to look at. If we do this, we need to remember to put the repository back to the right state afterwards!</p>
+<h2 id="uploading-files-directly-in-github-browser">Uploading files directly in GitHub browser</h2>
+<p>Github also allows you to skip the command line and upload files directly to your repository without having to leave the browser. There are two options. First you can click the “Upload files” button in the toolbar at the top of the file tree. Or, you can drag and drop files from your desktop onto the file tree. You can read more about this <a href="https://help.github.com/articles/adding-a-file-to-a-repository/">on this GitHub page</a>.</p>
+<h2 id="github-timestamp">GitHub Timestamp</h2>
+<p>Create a remote repository on GitHub. Push the contents of your local repository to the remote. Make changes to your local repository and push these changes. Go to the repo you just created on GitHub and check the <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/learners/reference.md#timestamp">timestamps</a> of the files. How does GitHub record times, and why?</p>
+<h2 id="solution-1">Solution</h2>
+<p>GitHub displays timestamps in a human readable relative format (i.e. “22 hours ago” or “three weeks ago”). However, if you hover over the timestamp, you can see the exact time at which the last change to the file occurred.</p>
+<h2 id="push-vs.-commit">Push vs. Commit</h2>
+<p>In this episode, we introduced the “git push” command. How is “git push” different from “git commit”?</p>
+<h2 id="solution-2">Solution</h2>
+<p>When we push changes, we’re interacting with a remote repository to update it with the changes we’ve made locally (often this corresponds to sharing the changes we’ve made with others). Commit only updates your local repository.</p>
+<h2 id="github-license-and-readme-files">GitHub License and README files</h2>
+<p>In this episode we learned about creating a remote repository on GitHub, but when you initialized your GitHub repo, you didn’t add a README.md or a license file. If you had, what do you think would have happened when you tried to link your local and remote repositories?</p>
+<h2 id="solution-3">Solution</h2>
+<p>In this case, we’d see a merge conflict due to unrelated histories. When GitHub creates a README.md file, it performs a commit in the remote repository. When you try to pull the remote repository to your local repository, Git detects that they have histories that do not share a common origin and refuses to merge.</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git pull origin main</span></code></pre></div>
+<pre class="output"><code>warning: no common commits
+remote: Enumerating objects: 3, done.
+remote: Counting objects: 100% (3/3), done.
+remote: Total 3 (delta 0), reused 0 (delta 0), pack-reused 0
+Unpacking objects: 100% (3/3), done.
+From https://github.com/alflin/recipes
+ * branch            main     -&gt; FETCH_HEAD
+ * [new branch]      main     -&gt; origin/main
+fatal: refusing to merge unrelated histories
+</code></pre>
+<p>You can force git to merge the two repositories with the option <code>--allow-unrelated-histories</code>. Be careful when you use this option and carefully examine the contents of local and remote repositories before merging.</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git pull <span class="at">--allow-unrelated-histories</span> origin main</span></code></pre></div>
+<pre class="output"><code>From https://github.com/alflin/recipes
+ * branch            main     -&gt; FETCH_HEAD
+Merge made by the &#39;recursive&#39; strategy.
+README.md | 1 +
+1 file changed, 1 insertion(+)
+create mode 100644 README.md
+</code></pre>
+<ul>
+<li><p>A local Git repository can be connected to one or more remote repositories.</p></li>
+<li><p>Use the SSH protocol to connect to remote repositories.</p></li>
+<li><p><code>git push</code> copies changes from a local repository to a remote repository.</p></li>
+<li><p><code>git pull</code> copies changes from a remote repository to a local repository.</p></li>
+</ul>

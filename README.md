@@ -10,17 +10,17 @@ Open `index.html` over HTTP (ES modules will not load from `file://`):
 
 ## What is here
 
-**The beginner track** (`index.html`) is the current trainer. Nineteen
-challenges across five topics, drawn as a graph: a core of nine that takes
-everyone from "what is a prompt" to logging in with `ssh`, then three routes
-that open at once — moving files, keeping a record, running work — and a
-finale that needs all three.
+**The beginner track** (`index.html`) contains 40 challenges across Linux, Git,
+and HPC. The home page opens one Topic at a time; **Your Journey** shows the
+complete recommended tree. Connections suggest a useful order but never lock
+content, so every challenge can be opened directly.
 
-Each challenge is a reading pane on the left and a live terminal on the right.
-The learner reads the scenario, copies a worked example, tries it, and answers
-a question about what they saw. Answers are *computed facts* — a job ID, a
-file size, a count — rather than passwords copied from one screen to the next,
-so a right answer means they read the output.
+Text challenges are attributed block documents with a short reading timer and
+an explicit completion action. Code challenges pair instructions with the live
+simulated terminal and complete through an answer or terminal-state validator.
+Imported Shell and Git lessons come from pinned Software Carpentry revisions;
+four pinned CHPC SCC tutorials are retained as long-form HPC source material
+pending review, simplification, and splitting.
 
 **The original wargame** (`legacy.html`) is the 25-level Bandit-style game this
 repository started as, aimed at people already comfortable in a terminal. It
@@ -41,15 +41,16 @@ Whether it is retired is not decided yet, which is why it is still here.
     js/commands/          coreutils and the scenario commands
     js/levels/            the original wargame's 25 levels
     js/track/             the beginner track
-      content.js          stable IDs, topics and explicit prerequisites
+      content.js          stable IDs, Topics and recommended connections
       topics.js           runtime projection of the authored curriculum
       challenges/         one file per challenge, plus the shared worlds
       commands.js         scp, rsync, ll, tldr, df, watch, git
       session.js          a challenge, wired to the shell engine
-      progress.js         revision-aware browser progress and unlocking
+      progress.js         revision-aware browser progress
       answer.js           normalising and judging an answer
       ui/                 the three screens
-    tools/                the checks
+    content/              imported Typst, generated HTML and block JSON
+    tools/                checks and the pinned lesson importer
     vendor/               xterm.js
     admin_backend/        private Django content service (not yet deployed)
 
@@ -89,13 +90,11 @@ installation checks and rollback procedure are in `docs/deployment-plan.md`.
 
 ## Writing a challenge
 
-Add the challenge's stable number, initial revision, topic and explicit
-prerequisite groups to `js/track/content.js`. Topics control presentation only;
-prerequisites are authored as `all` or `any` groups of challenge numbers. Then
-write `js/track/challenges/<slug>.js` and import it in
-`js/track/challenges/index.js`. These challenge modules are the compatibility
-source for prose and worlds while that content is migrated to the declarative
-format.
+Add the challenge's stable number, revision, Topic and `recommendedAfter`
+connections to `js/track/content.js`. Recommendations draw the tree but never
+gate access. Text challenges use ordered block JSON documented in
+`docs/content-blocks.md`; code challenges still use compatibility modules in
+`js/track/challenges/` while their worlds migrate to the declarative format.
 
 A challenge declares its prose (`scenario`, `task`), its worked `example`s,
 three `hints`, the `answer` with its `alternatives` and its named `failures`,
@@ -115,10 +114,10 @@ real file behind where a real copy would have. Then run
 `node tools/check.mjs` — the two invariants above will tell you immediately if
 the challenge is unsolvable or the examples are wrong.
 
-All twenty-two are written, including four reading introductions. The prose is
-a first pass and expects to be edited;
-the worlds, answers and examples behind it are checked, so editing the words
-will not quietly break a challenge.
+All current challenge nodes have content. Imported episodes and CHPC tutorials
+are intentionally long first-pass text challenges; they are source material for
+later smaller revisions. Existing worlds, answers and examples remain checked,
+so editing code-challenge prose will not quietly make a challenge unsolvable.
 
 Worked-example output is **not typed by hand**. Each challenge declares its
 examples' output as entries in one `const OUT = [...]` block, and
@@ -129,5 +128,6 @@ independently, so a hand-edit that drifts is still caught.
 
 ## Credits
 
-Inspired by [OverTheWire: Bandit](https://overthewire.org/wargames/bandit/).
+See the in-site **Sources and licences** register for pinned Software Carpentry
+and CHPC SCC attribution. Inspired by [OverTheWire: Bandit](https://overthewire.org/wargames/bandit/).
 Terminal by [xterm.js](https://xtermjs.org/). Colours and type are UWC's own.
