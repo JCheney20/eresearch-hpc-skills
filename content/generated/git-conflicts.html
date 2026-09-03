@@ -1,0 +1,382 @@
+<ul>
+<li><p>Explain what conflicts are and when they can occur.</p></li>
+<li><p>Resolve conflicts resulting from a merge.</p></li>
+</ul>
+<ul>
+<li><p>What do I do when my changes conflict with someone else’s?</p></li>
+</ul>
+<p>As soon as people can work in parallel, they’ll likely step on each other’s toes. This will even happen with a single person: if we are working on a piece of software on both our laptop and a server in the lab, we could make different changes to each copy. Version control helps us manage these <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/learners/reference.md#conflict">conflicts</a> by giving us tools to <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/learners/reference.md#resolve">resolve</a> overlapping changes.</p>
+<p>To see how we can resolve conflicts, we must first create one. The file <code>guacamole.md</code> currently looks like this in both partners” copies of our <code>recipes</code> repository:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+* avocado
+* lime
+* salt
+## Instructions
+</code></pre>
+<p>Let’s add a line to the collaborator’s copy only:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano guacamole.md</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+* avocado
+* lime
+* salt
+## Instructions
+* put one avocado into a bowl.
+</code></pre>
+<p>and then push the change to GitHub:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.md</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;First step on the instructions&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main 5ae9631] First step on the instructions
+ 1 file changed, 1 insertion(+)
+</code></pre>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git push origin main</span></code></pre></div>
+<pre class="output"><code>Enumerating objects: 5, done.
+Counting objects: 100% (5/5), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (3/3), done.
+Writing objects: 100% (3/3), 331 bytes | 331.00 KiB/s, done.
+Total 3 (delta 2), reused 0 (delta 0)
+remote: Resolving deltas: 100% (2/2), completed with 2 local objects.
+To https://github.com/alflin/recipes.git
+   29aba7c..dabb4c8  main -&gt; main
+</code></pre>
+<p>Now let’s have the owner make a different change to their copy <em>without</em> updating from GitHub:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano guacamole.md</span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+* avocado
+* lime
+* salt
+## Instructions
+* peel the avocados
+</code></pre>
+<p>We can commit the change locally:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.md</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Add first step&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main 07ebc69] Add first step
+ 1 file changed, 1 insertion(+)
+</code></pre>
+<p>but Git won’t let us push it to GitHub:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git push origin main</span></code></pre></div>
+<pre class="output"><code>To https://github.com/alflin/recipes.git
+ ! [rejected]        main -&gt; main (fetch first)
+error: failed to push some refs to &#39;https://github.com/alflin/recipes.git&#39;
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., &#39;git pull ...&#39;) before pushing again.
+hint: See the &#39;Note about fast-forwards&#39; in &#39;git push --help&#39; for details.
+</code></pre>
+<p><span class="box"><img src="/content/assets/git-conflicts/001-conflict.svg" /></span></p>
+<p>Git rejects the push because it detects that the remote repository has new updates that have not been incorporated into the local branch. What we have to do is pull the changes from GitHub, <a href="https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/learners/reference.md#merge">merge</a> them into the copy we’re currently working in, and then push that. Let’s start by pulling:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git pull origin main</span></code></pre></div>
+<pre class="output"><code>remote: Enumerating objects: 5, done.
+remote: Counting objects: 100% (5/5), done.
+remote: Compressing objects: 100% (1/1), done.
+remote: Total 3 (delta 2), reused 3 (delta 2), pack-reused 0
+Unpacking objects: 100% (3/3), done.
+From https://github.com/alflin/recipes
+ * branch            main     -&gt; FETCH_HEAD
+    29aba7c..dabb4c8  main     -&gt; origin/main
+Auto-merging guacamole.md
+CONFLICT (content): Merge conflict in guacamole.md
+Automatic merge failed; fix conflicts and then commit the result.
+</code></pre>
+<h2 id="you-may-need-to-tell-git-what-to-do">You may need to tell Git what to do</h2>
+<p>If you see the below in your output, Git is asking what it should do.</p>
+<pre class="output"><code>hint: You have divergent branches and need to specify how to reconcile them.
+hint: You can do so by running one of the following commands sometime before
+hint: your next pull:
+hint:
+hint:   git config pull.rebase false  # merge (the default strategy)
+hint:   git config pull.rebase true   # rebase
+hint:   git config pull.ff only       # fast-forward only
+hint:
+hint: You can replace &quot;git config&quot; with &quot;git config --global&quot; to set a default
+hint: preference for all repositories. You can also pass --rebase, --no-rebase,
+hint: or --ff-only on the command line to override the configured default per
+hint: invocation.
+</code></pre>
+<p>In newer versions of Git it gives you the option of specifying different behaviours when a pull would merge divergent branches. In our case we want ‘the default strategy’. To use this strategy run the following command to select it as the default thing git should do.</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git config pull.rebase false</span></code></pre></div>
+<p>Then attempt the pull again.</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git pull origin main</span></code></pre></div>
+<p>The <code>git pull</code> command updates the local repository to include those changes already included in the remote repository. After the changes from remote branch have been fetched, Git detects that changes made to the local copy overlap with those made to the remote repository, and therefore refuses to merge the two versions to stop us from trampling on our previous work. The conflict is marked in in the affected file:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+* avocado
+* lime
+* salt
+## Instructions
+&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD
+* peel the avocados
+=======
+* put one avocado into a bowl.
+&gt;&gt;&gt;&gt;&gt;&gt;&gt; dabb4c8c450e8475aee9b14b4383acc99f42af1d
+</code></pre>
+<p>Our change is preceded by <code>&lt;&lt;&lt;&lt;&lt;&lt;&lt; HEAD</code>. Git has then inserted <code>=======</code> as a separator between the conflicting changes and marked the end of the content downloaded from GitHub with <code>&gt;&gt;&gt;&gt;&gt;&gt;&gt;</code>. (The string of letters and digits after that marker identifies the commit we’ve just downloaded.)</p>
+<p>It is now up to us to edit this file to remove these markers and reconcile the changes. We can do anything we want: keep the change made in the local repository, keep the change made in the remote repository, write something new to replace both, or get rid of the change entirely. Let’s replace both so that the file looks like this:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+* avocado
+* lime
+* salt
+## Instructions
+* peel the avocados and put them into a bowl.
+</code></pre>
+<p>To finish merging, we add <code>guacamole.md</code> to the changes being made by the merge and then commit:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.md</span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<pre class="output"><code>On branch main
+All conflicts fixed but you are still merging.
+  (use &quot;git commit&quot; to conclude merge)
+
+Changes to be committed:
+
+    modified:   guacamole.md
+</code></pre>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Merge changes from GitHub&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main 2abf2b1] Merge changes from GitHub
+</code></pre>
+<p>Now we can push our changes to GitHub:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git push origin main</span></code></pre></div>
+<pre class="output"><code>Enumerating objects: 10, done.
+Counting objects: 100% (10/10), done.
+Delta compression using up to 8 threads
+Compressing objects: 100% (6/6), done.
+Writing objects: 100% (6/6), 645 bytes | 645.00 KiB/s, done.
+Total 6 (delta 4), reused 0 (delta 0)
+remote: Resolving deltas: 100% (4/4), completed with 2 local objects.
+To https://github.com/alflin/recipes.git
+   dabb4c8..2abf2b1  main -&gt; main
+</code></pre>
+<p>Git keeps track of what we’ve merged with what, so we don’t have to fix things by hand again when the collaborator who made the first change pulls again:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git pull origin main</span></code></pre></div>
+<pre class="output"><code>remote: Enumerating objects: 10, done.
+remote: Counting objects: 100% (10/10), done.
+remote: Compressing objects: 100% (2/2), done.
+remote: Total 6 (delta 4), reused 6 (delta 4), pack-reused 0
+Unpacking objects: 100% (6/6), done.
+From https://github.com/alflin/recipes
+ * branch            main     -&gt; FETCH_HEAD
+    dabb4c8..2abf2b1  main     -&gt; origin/main
+Updating dabb4c8..2abf2b1
+Fast-forward
+ guacamole.md | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+</code></pre>
+<p>We get the merged file:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat guacamole.md</span></code></pre></div>
+<pre class="output"><code># Guacamole
+## Ingredients
+* avocado
+* lime
+* salt
+## Instructions
+* peel the avocados and put them into a bowl.
+</code></pre>
+<p>We don’t need to merge again because Git knows someone has already done that.</p>
+<p>Git’s ability to resolve conflicts is very useful, but conflict resolution costs time and effort, and can introduce errors if conflicts are not resolved correctly. If you find yourself resolving a lot of conflicts in a project, consider these technical approaches to reducing them:</p>
+<ul>
+<li><p>Pull from upstream more frequently, especially before starting new work</p></li>
+<li><p>Use topic branches to segregate work, merging to main when complete</p></li>
+<li><p>Make smaller more atomic commits</p></li>
+<li><p>Push your work when it is done and encourage your team to do the same to reduce work in progress and, by extension, the chance of having conflicts</p></li>
+<li><p>Where logically appropriate, break large files into smaller ones so that it is less likely that two authors will alter the same file simultaneously</p></li>
+</ul>
+<p>Conflicts can also be minimized with project management strategies:</p>
+<ul>
+<li><p>Clarify who is responsible for what areas with your collaborators</p></li>
+<li><p>Discuss what order tasks should be carried out in with your collaborators so that tasks expected to change the same lines won’t be worked on simultaneously</p></li>
+<li><p>If the conflicts are stylistic churn (e.g. tabs vs. spaces), establish a project convention that is governing and use code style tools (e.g. <code>htmltidy</code>, <code>perltidy</code>, <code>rubocop</code>, etc.) to enforce, if necessary</p></li>
+</ul>
+<h2 id="solving-conflicts-that-you-create">Solving Conflicts that You Create</h2>
+<p>Clone the repository created by your instructor. Add a new file to it, and modify an existing file (your instructor will tell you which one). When asked by your instructor, pull her changes from the repository to create a conflict, then resolve it.</p>
+<h2 id="conflicts-on-non-textual-files">Conflicts on Non-textual files</h2>
+<p>What does Git do when there is a conflict in an image or some other non-textual file that is stored in version control?</p>
+<h2 id="solution">Solution</h2>
+<p>Let’s try it. Suppose Alfredo takes a picture of its guacamole and calls it <code>guacamole.jpg</code>.</p>
+<p>If you do not have an image file of guacamole available, you can create a dummy binary file like this:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> head <span class="at">--bytes</span> 1024 /dev/urandom <span class="op">&gt;</span> guacamole.jpg</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-lh</span> guacamole.jpg</span></code></pre></div>
+<pre class="output"><code>-rw-r--r-- 1 alflin 57095 1.0K Mar  8 20:24 guacamole.jpg
+</code></pre>
+<p><code>ls</code> shows us that this created a 1-kilobyte file. It is full of random bytes read from the special file, <code>/dev/urandom</code>.</p>
+<p>Now, suppose Alfredo adds <code>guacamole.jpg</code> to his repository:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.jpg</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Add picture of guacamole&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main 8e4115c] Add picture of guacamole
+ 1 file changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 guacamole.jpg
+</code></pre>
+<p>Suppose that Jimmy has added a similar picture in the meantime. Theirs is a picture of a guacamole with nachos, but it is <em>also</em> called <code>guacamole.jpg</code>. When Alfredo tries to push, he gets a familiar message:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git push origin main</span></code></pre></div>
+<pre class="output"><code>To https://github.com/alflin/recipes.git
+ ! [rejected]        main -&gt; main (fetch first)
+error: failed to push some refs to &#39;https://github.com/alflin/recipes.git&#39;
+hint: Updates were rejected because the remote contains work that you do
+hint: not have locally. This is usually caused by another repository pushing
+hint: to the same ref. You may want to first integrate the remote changes
+hint: (e.g., &#39;git pull ...&#39;) before pushing again.
+hint: See the &#39;Note about fast-forwards&#39; in &#39;git push --help&#39; for details.
+</code></pre>
+<p>We’ve learned that we must pull first and resolve any conflicts:</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git pull origin main</span></code></pre></div>
+<p>When there is a conflict on an image or other binary file, git prints a message like this:</p>
+<pre class="output"><code>$ git pull origin main
+remote: Counting objects: 3, done.
+remote: Compressing objects: 100% (3/3), done.
+remote: Total 3 (delta 0), reused 0 (delta 0)
+Unpacking objects: 100% (3/3), done.
+From https://github.com/alflin/recipes.git
+ * branch            main     -&gt; FETCH_HEAD
+   6a67967..439dc8c  main     -&gt; origin/main
+warning: Cannot merge binary files: guacamole.jpg (HEAD vs. 439dc8c08869c342438f6dc4a2b615b05b93c76e)
+Auto-merging guacamole.jpg
+CONFLICT (add/add): Merge conflict in guacamole.jpg
+Automatic merge failed; fix conflicts and then commit the result.
+</code></pre>
+<p>The conflict message here is mostly the same as it was for <code>guacamole.md</code>, but there is one key additional line:</p>
+<pre class="output"><code>warning: Cannot merge binary files: guacamole.jpg (HEAD vs. 439dc8c08869c342438f6dc4a2b615b05b93c76e)
+</code></pre>
+<p>Git cannot automatically insert conflict markers into an image as it does for text files. So, instead of editing the image file, we must check out the version we want to keep. Then we can add and commit this version.</p>
+<p>On the key line above, Git has conveniently given us commit identifiers for the two versions of <code>guacamole.jpg</code>. Our version is <code>HEAD</code>, and Jimmy’s version is <code>439dc8c0...</code>. If we want to use our version, we can use <code>git checkout</code>:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git checkout HEAD guacamole.jpg</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.jpg</span>
+<span id="cb43-3"><a href="#cb43-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Use image of just guacamole instead of with nachos&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main 21032c3] Use image of just guacamole instead of with nachos
+</code></pre>
+<p>If instead we want to use Jimmy’s version, we can use <code>git checkout</code> with Jimmy’s commit identifier, <code>439dc8c0</code>:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git checkout 439dc8c0 guacamole.jpg</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole.jpg</span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Use image of guacamole with nachos instead of just guacamole&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main da21b34] Use image of guacamole with nachos instead of just guacamole
+</code></pre>
+<p>We can also keep <em>both</em> images. The catch is that we cannot keep them under the same name. But, we can check out each version in succession and <em>rename</em> it, then add the renamed versions. First, check out each image and rename it:</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git checkout HEAD guacamole.jpg</span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mv guacamole.jpg guacamole-only.jpg</span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git checkout 439dc8c0 guacamole.jpg</span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mv guacamole.jpg guacamole-nachos.jpg</span></code></pre></div>
+<p>Then, remove the old <code>guacamole.jpg</code> and add the two new files:</p>
+<div class="sourceCode" id="cb48"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git rm guacamole.jpg</span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole-only.jpg</span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add guacamole-nachos.jpg</span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Use two images: just guacamole and with nachos&quot;</span></span></code></pre></div>
+<pre class="output"><code>[main 94ae08c] Use two images: just guacamole and with nachos
+ 2 files changed, 0 insertions(+), 0 deletions(-)
+ create mode 100644 guacamole-nachos.jpg
+ rename guacamole.jpg =&gt; guacamole-only.jpg (100%)
+</code></pre>
+<p>Now both images of guacamole are checked into the repository, and <code>guacamole.jpg</code> no longer exists.</p>
+<h2 id="a-typical-work-session">A Typical Work Session</h2>
+<p>You sit down at your computer to work on a shared project that is tracked in a remote Git repository. During your work session, you take the following actions, but not in this order:</p>
+<ul>
+<li><p><em>Make changes</em> by appending the number <code>100</code> to a text file <code>numbers.txt</code></p></li>
+<li><p><em>Update remote</em> repository to match the local repository</p></li>
+<li><p><em>Celebrate</em> your success with some fancy beverage(s)</p></li>
+<li><p><em>Update local</em> repository to match the remote repository</p></li>
+<li><p><em>Stage changes</em> to be committed</p></li>
+<li><p><em>Commit changes</em> to the local repository</p></li>
+</ul>
+<p>In what order should you perform these actions to minimize the chances of conflicts? Put the commands above in order in the <em>action</em> column of the table below. When you have the order right, see if you can write the corresponding commands in the <em>command</em> column. A few steps are populated to get you started.</p>
+<figure>
+<div data-align="center">
+<table>
+<thead>
+<tr>
+<th><p>order</p></th>
+<th><p>action . . . . . . . . . .</p></th>
+<th><p>command . . . . . . . . . .</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>1</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>2</p></td>
+<td></td>
+<td><p><code>echo 100 &gt;&gt; numbers.txt</code></p></td>
+</tr>
+<tr>
+<td><p>3</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>4</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>5</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>6</p></td>
+<td><p>Celebrate!</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+<h2 id="solution-1">Solution</h2>
+<figure>
+<div data-align="center">
+<table>
+<thead>
+<tr>
+<th><p>order</p></th>
+<th><p>action . . . . . .</p></th>
+<th><p>command . . . . . . . . . . . . . . . . . . .</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>1</p></td>
+<td><p>Update local</p></td>
+<td><p><code>git pull origin main</code></p></td>
+</tr>
+<tr>
+<td><p>2</p></td>
+<td><p>Make changes</p></td>
+<td><p><code>echo 100 &gt;&gt; numbers.txt</code></p></td>
+</tr>
+<tr>
+<td><p>3</p></td>
+<td><p>Stage changes</p></td>
+<td><p><code>git add numbers.txt</code></p></td>
+</tr>
+<tr>
+<td><p>4</p></td>
+<td><p>Commit changes</p></td>
+<td><p><code>git commit -m "Add 100 to numbers.txt"</code></p></td>
+</tr>
+<tr>
+<td><p>5</p></td>
+<td><p>Update remote</p></td>
+<td><p><code>git push origin main</code></p></td>
+</tr>
+<tr>
+<td><p>6</p></td>
+<td><p>Celebrate!</p></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+<ul>
+<li><p>Conflicts occur when two or more people change the same lines of the same file.</p></li>
+<li><p>The version control system does not allow people to overwrite each other’s changes blindly, but highlights conflicts so that they can be resolved.</p></li>
+</ul>

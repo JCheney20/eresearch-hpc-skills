@@ -1,0 +1,20 @@
+{
+  "generatedAt": "2026-09-03",
+  "sources": [
+    {
+      "repository": "https://github.com/swcarpentry/shell-novice",
+      "commit": "22c5a874725bd3048eb7cfceeafd0db3a5e49a2f",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "repository": "https://github.com/swcarpentry/git-novice",
+      "commit": "967bc0b38826039f6554845248c8c294ebff1f56",
+      "license": "CC-BY-4.0"
+    },
+    {
+      "repository": "https://github.com/chpc-tech-eval/scc",
+      "commit": "0d585e40a3a3e6d768c598b31443920c70a4ff9e",
+      "license": "Apache-2.0"
+    }
+  ]
+}

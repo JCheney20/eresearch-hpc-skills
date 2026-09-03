@@ -1,0 +1,1598 @@
+<h1 id="student-cluster-competition---tutorial-4">Student Cluster Competition - Tutorial 4</h1>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><p><a href="#checklist">Checklist</a></p></li>
+<li><p><a href="#cluster-monitoring">Cluster Monitoring</a></p>
+<ol>
+<li><p><a href="#install-docker-engine-containerd-and-docker-compose">Install Docker Engine, Containerd and Docker Compose</a></p></li>
+<li><p><a href="#installing-your-monitoring-stack">Installing your Monitoring Stack</a></p></li>
+<li><p><a href="#startup-and-test-the-monitoring-services">Startup and Test the Monitoring Services</a></p></li>
+<li><p><a href="#ssh-port-local-forwarding-tunnel">SSH Port Local Forwarding Tunnel</a></p></li>
+<li><p><a href="#create-a-dashboard-in-grafana">Create a Dashboard in Grafana</a></p></li>
+<li><p><a href="#success-state-next-steps-and-troubleshooting">Success State, Next Steps and Troubleshooting</a></p></li>
+</ol></li>
+<li><p><a href="#configuring-and-connecting-to-your-remote-jupyterlab-server">Configuring and Connecting to your Remote JupyterLab Server</a></p>
+<ol>
+<li><p><a href="#visualize-your-hpl-benchmark-results">Visualize Your HPL Benchmark Results</a></p></li>
+<li><p><a href="#visualize-your-qiskit-results">Visualize Your Qiskit Results</a></p></li>
+</ol></li>
+<li><p><a href="#automating-the-deployment-of-your-openstack-instances-using-terraform">Automating the Deployment of your OpenStack Instances Using Terraform</a></p>
+<ol>
+<li><p><a href="#install-and-initialize-terraform">Install and Initialize Terraform</a></p></li>
+<li><p><a href="#generate-cloudsyml-and-maintf-files">Generate <code>clouds.yml</code> and <code>main.tf</code> Files</a></p></li>
+<li><p><a href="#generate-deploy-and-apply-terraform-plan">Generate, Deploy and Apply Terraform Plan</a></p></li>
+</ol></li>
+<li><p><a href="#continuous-integration-using-circleci">Continuous Integration Using CircleCI</a></p>
+<ol>
+<li><p><a href="#prepare-github-repository">Prepare GitHub Repository</a></p></li>
+<li><p><a href="#reuse-providerstf-and-maintf-terraform-configurations">Reuse <code>providers.tf</code> and <code>main.tf</code> Terraform Configurations</a></p></li>
+<li><p><a href="#create-circleciconfigyml-file-and-push-project-to-github">Create <code>.circleci/config.yml</code> File and <code>push</code> Project to GitHub</a></p></li>
+<li><p><a href="#create-circleci-account-and-add-project">Create CircleCI Account and Add Project</a></p></li>
+<li><p><a href="#how-to-use-ansible-and-github-actions-to-run-hpl">How to use Ansible and GitHub Actions to run HPL</a></p></li>
+</ol></li>
+<li><p><a href="#slurm-scheduler-and-workload-manager">Slurm Scheduler and Workload Manager</a></p>
+<ol>
+<li><p><a href="#prerequisites">Prerequisites</a></p></li>
+<li><p><a href="#head-node-configuration-server">Head Node Configuration (Server)</a></p></li>
+<li><p><a href="#compute-node-configuration-clients">Compute Node Configuration (Clients)</a></p></li>
+</ol></li>
+<li><p><a href="#gromacs-application-benchmark">GROMACS Application Benchmark</a></p>
+<ol>
+<li><p><a href="#protein-visualization">Protein Visualization</a></p></li>
+<li><p><a href="#benchmark-2-15m-water">Benchmark 2 (1.5M Water)</a></p></li>
+</ol></li>
+<li><p><a href="#openmx-application-benchmark">OpenMX Application Benchmark</a></p>
+<ol>
+<li><p><a href="#pre-requisite">Pre-Requisite</a></p></li>
+<li><p><a href="#setup">Setup</a></p>
+<ol>
+<li><p><a href="#modify-makefile">Modify makefile</a></p>
+<ol>
+<li><p><a href="#a-intel-easy-difficulty">A. Intel (easy difficulty)</a></p></li>
+<li><p><a href="#b-mix-intelmkl--openmpi--gcc-medium-difficulty">B. Mix IntelMKL + openMPI + GCC (medium difficulty)</a></p></li>
+<li><p><a href="#c-own-high-performace-libraries-complex-difficulty">C. Own high performace libraries (complex difficulty)</a></p>
+<ol>
+<li><p><a href="#build-fftw">Build FFTW</a></p></li>
+<li><p><a href="#build-openblas">Build OpenBLAS</a></p></li>
+<li><p><a href="#scalapackscalable-linear-algebra-package">ScaLAPACK (Scalable Linear Algebra PACKage)</a></p></li>
+<li><p><a href="#setup-makefile">Setup makefile</a></p></li>
+</ol></li>
+</ol></li>
+</ol></li>
+<li><p><a href="#tasks">Tasks</a></p>
+<ol>
+<li><p><a href="#optimization">Optimization</a></p></li>
+</ol></li>
+</ol></li>
+<li><p><a href="#openfoam-application-benchmark">OpenFOAM Application Benchmark</a></p></li>
+</ol>
+<h1 id="checklist">Checklist</h1>
+<p>This tutorial demonstrates <em>cluster monitoring</em>, <em>data visualization</em>, <em>automated infrastructure as code deployment</em> and <em>workload scheduling</em>. These components are critical to a typical HPC environment.</p>
+<p>Monitoring is a widely used component in system administration (including enterprise datacentres and corporate networks). Monitoring allows administrators to be aware of what is happening on any system that is being monitored and is useful to proactively identify where any potential issues may be.</p>
+<p>Interpreting and understanding your results and data, is vital to making meaning implementations of said data. You will also automate the provisioning and deployment of your <em>“experimental”</em>, change management compute node. Lastly, a workload scheduler ensures that users” jobs are handled properly to fairly balance all scheduled jobs with the resources available at any time.</p>
+<p>You will also cover data interpretation and visualization for previously run benchmark applications.</p>
+<p>In this tutorial you will:</p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Setup a monitoring stack using Docker Compose</label></p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Install and setup the pre-requisites</label></p></li>
+<li><p><label><input type="checkbox" />Create all the files required for configuring the 3 containers to be launched</label></p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />The docker-compose.yml file describing the Node-Exporter, Prometheus and Grafana services</label></p></li>
+<li><p><label><input type="checkbox" />The prometheus.yml file describing the metrics to be scraped for each host involved</label></p></li>
+<li><p><label><input type="checkbox" />The prometheus-datasource.yaml file describing the Prometheus datasource for Grafana</label></p></li>
+</ul></li>
+<li><p><label><input type="checkbox" />Start the services</label></p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Verify that they are running and accessible (locally, and externally)</label></p></li>
+</ul></li>
+<li><p><label><input type="checkbox" />Create a dashboard in Grafana</label></p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Login to the Grafana endpoint (via your browser)</label></p></li>
+<li><p><label><input type="checkbox" />Import the appropriate Node-Exporter dashboard</label></p></li>
+<li><p><label><input type="checkbox" />Check that the dashboard is working as expected</label></p></li>
+</ul></li>
+</ul></li>
+<li><p><label><input type="checkbox" />Prepare, install and configure remote JupyterLab server</label></p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Connect to JupyterLab and visualize benchmarking results</label></p></li>
+</ul></li>
+<li><p><label><input type="checkbox" />Automate the provisioning and deployment of your Sebowa OpenStack infrastructure</label></p></li>
+<li><p><label><input type="checkbox" />Install the Slurm workload manager across your cluster.</label></p></li>
+<li><p><label><input type="checkbox" />Submit a test job to run on your cluster through the newly-configured workload manager.</label></p></li>
+</ul>
+<blockquote>
+<p>[!TIP] You’re going to be manipulating both your headnode, as well as your compute node(s) in this tutorial.</p>
+<p>You are <strong>strongly</strong> advised to make use of a terminal multiplexer, such as <code>tmux</code> before making a connection to your VMs. Once you’re logged into your head node, initiate a <code>tmux</code> session:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">tmux</span></span></code></pre></div>
+<p>Then split the window into two separate panes with <code>ctrl + b %</code>. SSH into your compute node on the other pane.</p>
+</blockquote>
+<h1 id="cluster-monitoring">Cluster Monitoring</h1>
+<p>Cluster monitoring is crucial for managing Linux machines. Effective monitoring helps detect and resolve issues promptly, provides insights into resource usage (CPU, memory, disk, network), aids in capacity planning, and ensures infrastructure scales with workload demands. By monitoring system performance and health, administrators can prevent downtime, reduce costs, and improve efficiency.</p>
+<ul>
+<li><p><strong>Traditional Approach Using <code>top</code> or <code>htop</code></strong></p>
+<p>Traditionally, Linux system monitoring involves command-line tools like <code>top</code> or <code>htop</code>. These tools offer real-time system performance insights, displaying active processes, resource usage, and system load. While invaluable for monitoring individual machines, they lack the ability to aggregate and visualize data across multiple nodes in a cluster, which is essential for comprehensive monitoring in larger environments.</p></li>
+<li><p><strong>Using Grafana, Prometheus, and Node Exporter</strong></p>
+<p>Modern solutions use Grafana, Prometheus, and Node Exporter for robust and scalable monitoring. Prometheus collects and stores metrics, Node Exporter provides system-level metrics, and Grafana visualizes this data. This combination enables comprehensive cluster monitoring with historical data analysis, alerting capabilities, and customizable visualizations, facilitating better decision-making and faster issue resolution.</p></li>
+<li><p><strong>What is Docker and Docker Compose and How We Will Use It</strong></p>
+<p>Docker is a platform for creating, deploying, and managing containerized applications. Docker Compose defines and manages multi-container applications using a YAML file. For cluster monitoring on a Rocky Linux head node, we will use Docker and Docker Compose to bundle Grafana, Prometheus, and Node Exporter into deployable containers. This approach simplifies installation and configuration, ensuring all components are up and running quickly and consistently, streamlining the deployment of the monitoring stack.</p></li>
+</ul>
+<blockquote>
+<p>[!NOTE] When the word <strong>Input:</strong> is mentioned, expect the next line to have commands that you need to copy and paste into your own terminal.</p>
+<p>Whenever the word <strong>Output:</strong> is mentioned <strong>DON’T</strong> copy and paste anything below this word as this is just the expected output.</p>
+<p>The following configuration is for your <strong>head node</strong>. You will be advised of the steps you need to take to monitor your <strong>compute node(s)</strong> at the end.</p>
+</blockquote>
+<h2 id="install-docker-engine-containerd-and-docker-compose">Install Docker Engine, Containerd and Docker Compose</h2>
+<p>You will need to have <code>docker</code>, <code>containerd</code> and <code>docker-compose</code> installed on all the nodes that you want to eventually monitor, i.e. your head node and compute node(s).</p>
+<ol>
+<li><p>Prerequisites and dependencies</p>
+<p>Refer to the following <a href="https://docs.docker.com/engine/install/rhel/#install-using-the-repository">RHEL Guide</a></p>
+<ul>
+<li><p>DNF / YUM</p></li>
+</ul>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The yum-utils package which provides the yum-config-manager utility</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> yum install <span class="at">-y</span> yum-utils</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Add and set up the repository for use.</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> yum-config-manager <span class="at">--add-repo</span> https://download.docker.com/linux/rhel/docker-ce.repo</span>
+<span id="cb2-6"><a href="#cb2-6" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p>APT</p></li>
+</ul>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Install required package dependencies</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install apt-transport-https ca-certificates curl software-properties-common <span class="at">-y</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Add the Docker repository</span></span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a> <span class="ex">curl</span> <span class="at">-fsSL</span> https://download.docker.com/linux/ubuntu/gpg <span class="kw">|</span> <span class="fu">sudo</span> apt-key add <span class="at">-</span></span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> add-apt-repository <span class="st">&quot;deb [arch=amd64] https://download.docker.com/linux/ubuntu </span><span class="va">$(</span><span class="ex">lsb_release</span> <span class="at">-cs</span><span class="va">)</span><span class="st"> stable&quot;</span></span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Installation</p>
+<ul>
+<li><p>DNF / YUM</p></li>
+</ul>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If prompted to accept the GPG key, verify that the fingerprint matches, accept it.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> yum install docker-ce docker-ce-cli containerd.io docker-buildx-plugin docker-compose-plugin</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p>APT</p></li>
+</ul>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt update</span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install docker-ce docker-ce-cli containerd.io <span class="at">-y</span></span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p>Arch</p></li>
+</ul>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pacman <span class="at">-S</span> docker</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a> <span class="co"># You need to start and enable docker, prior to installing containerd and docker-compose</span></span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> containerd docker-compose</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Start and Enable Docker:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start docker</span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> systemctl enable docker</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Install Docker-Compose on Ubuntu</p>
+<ul>
+<li><p>APT</p></li>
+</ul>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> curl <span class="at">-L</span> <span class="st">&quot;https://github.com/docker/compose/releases/download/</span><span class="va">$(</span><span class="ex">curl</span> <span class="at">-s</span> https://api.github.com/repos/docker/compose/releases/latest <span class="kw">|</span> <span class="fu">grep</span> <span class="at">-Po</span> <span class="st">&#39;&quot;tag_name&quot;: &quot;\K.*\d&#39;</span><span class="va">)</span><span class="st">/docker-compose-</span><span class="va">$(</span><span class="fu">uname</span> <span class="at">-s</span><span class="va">)</span><span class="st">-</span><span class="va">$(</span><span class="fu">uname</span> <span class="at">-m</span><span class="va">)</span><span class="st">&quot;</span> <span class="at">-o</span> /usr/local/bin/docker-compose</span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> chmod +x /usr/local/bin/docker-compose</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Verify that the Docker Engine installation was successful by running the <code>hello-world</code> image</p>
+<p>Download and deploy a test image and run it inside a container. When the container runs, it prints a confirmation message and exits.</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Check the versions of Docker</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">docker</span> <span class="at">--version</span></span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Download and deploy a test image</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> docker run hello-world</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a> <span class="co"># Check your version of Docker Compose</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">docker-compose</span> <span class="at">--version</span></span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>You have now successfully installed and started Docker Engine.</p></li>
+</ol>
+<h2 id="installing-your-monitoring-stack">Installing your Monitoring Stack</h2>
+<ol>
+<li><p>Create a suitable directory, e.g. <code>/opt/monitoring_stack</code></p>
+<p>This is where you’ll keep a number of important configuration files.</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir /opt/monitoring_stack/</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> /opt/monitoring_stack/</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Create and edit your monitoring configuration files</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /opt/monitoring_stack/docker-compose.yml</span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Add the following to the <code>docker-compose.yml</code> YAML file</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="dt">version</span><span class="er">:</span> <span class="dt">&#39;3&#39;</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">services</span><span class="er">:</span></span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a>   <span class="dt">node-exporter</span><span class="er">:</span></span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a>     <span class="dt">image</span><span class="er">:</span> <span class="dt">prom</span><span class="er">/</span><span class="dt">node-exporter</span></span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a>     <span class="dt">ports</span><span class="er">:</span></span>
+<span id="cb12-6"><a href="#cb12-6" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">&quot;9100:9100&quot;</span></span>
+<span id="cb12-7"><a href="#cb12-7" aria-hidden="true" tabindex="-1"></a>     <span class="dt">restart</span><span class="er">:</span> <span class="dt">always</span></span>
+<span id="cb12-8"><a href="#cb12-8" aria-hidden="true" tabindex="-1"></a>     <span class="dt">networks</span><span class="er">:</span></span>
+<span id="cb12-9"><a href="#cb12-9" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">monitoring-network</span></span>
+<span id="cb12-10"><a href="#cb12-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-11"><a href="#cb12-11" aria-hidden="true" tabindex="-1"></a>   <span class="dt">prometheus</span><span class="er">:</span></span>
+<span id="cb12-12"><a href="#cb12-12" aria-hidden="true" tabindex="-1"></a>     <span class="dt">image</span><span class="er">:</span> <span class="dt">prom</span><span class="er">/</span><span class="dt">prometheus</span></span>
+<span id="cb12-13"><a href="#cb12-13" aria-hidden="true" tabindex="-1"></a>     <span class="dt">ports</span><span class="er">:</span></span>
+<span id="cb12-14"><a href="#cb12-14" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">&quot;9090:9090&quot;</span></span>
+<span id="cb12-15"><a href="#cb12-15" aria-hidden="true" tabindex="-1"></a>     <span class="dt">restart</span><span class="er">:</span> <span class="dt">always</span></span>
+<span id="cb12-16"><a href="#cb12-16" aria-hidden="true" tabindex="-1"></a>     <span class="dt">volumes</span><span class="er">:</span></span>
+<span id="cb12-17"><a href="#cb12-17" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="er">/</span><span class="dt">opt</span><span class="er">/</span><span class="dt">monitoring_stack</span><span class="er">/</span><span class="dt">prometheus.yml</span><span class="er">:/</span><span class="dt">etc</span><span class="er">/</span><span class="dt">prometheus</span><span class="er">/</span><span class="dt">prometheus.yml</span></span>
+<span id="cb12-18"><a href="#cb12-18" aria-hidden="true" tabindex="-1"></a>     <span class="dt">networks</span><span class="er">:</span></span>
+<span id="cb12-19"><a href="#cb12-19" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">monitoring-network</span></span>
+<span id="cb12-20"><a href="#cb12-20" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-21"><a href="#cb12-21" aria-hidden="true" tabindex="-1"></a>   <span class="dt">grafana</span><span class="er">:</span></span>
+<span id="cb12-22"><a href="#cb12-22" aria-hidden="true" tabindex="-1"></a>     <span class="dt">image</span><span class="er">:</span> <span class="dt">grafana</span><span class="er">/</span><span class="dt">grafana</span></span>
+<span id="cb12-23"><a href="#cb12-23" aria-hidden="true" tabindex="-1"></a>     <span class="dt">ports</span><span class="er">:</span></span>
+<span id="cb12-24"><a href="#cb12-24" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">&quot;3000:3000&quot;</span></span>
+<span id="cb12-25"><a href="#cb12-25" aria-hidden="true" tabindex="-1"></a>     <span class="dt">restart</span><span class="er">:</span> <span class="dt">always</span></span>
+<span id="cb12-26"><a href="#cb12-26" aria-hidden="true" tabindex="-1"></a>     <span class="dt">environment</span><span class="er">:</span></span>
+<span id="cb12-27"><a href="#cb12-27" aria-hidden="true" tabindex="-1"></a>       <span class="dt">GF_SECURITY_ADMIN_PASSWORD</span><span class="er">:</span> <span class="er">&lt;</span><span class="dt">SET_YOUR_GRAFANA_PASSWORD</span><span class="er">&gt;</span></span>
+<span id="cb12-28"><a href="#cb12-28" aria-hidden="true" tabindex="-1"></a>     <span class="dt">volumes</span><span class="er">:</span></span>
+<span id="cb12-29"><a href="#cb12-29" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="er">/</span><span class="dt">opt</span><span class="er">/</span><span class="dt">monitoring_stack</span><span class="er">/</span><span class="dt">prometheus-datasource.yaml</span><span class="er">:/</span><span class="dt">etc</span><span class="er">/</span><span class="dt">grafana</span><span class="er">/</span><span class="dt">provisioning</span><span class="er">/</span><span class="dt">datasources</span><span class="er">/</span><span class="dt">prometheus-datasource.yaml</span></span>
+<span id="cb12-30"><a href="#cb12-30" aria-hidden="true" tabindex="-1"></a>     <span class="dt">networks</span><span class="er">:</span></span>
+<span id="cb12-31"><a href="#cb12-31" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">monitoring-network</span></span>
+<span id="cb12-32"><a href="#cb12-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb12-33"><a href="#cb12-33" aria-hidden="true" tabindex="-1"></a> <span class="dt">networks</span><span class="er">:</span></span>
+<span id="cb12-34"><a href="#cb12-34" aria-hidden="true" tabindex="-1"></a>   <span class="dt">monitoring-network</span><span class="er">:</span></span>
+<span id="cb12-35"><a href="#cb12-35" aria-hidden="true" tabindex="-1"></a>     <span class="dt">driver</span><span class="er">:</span> <span class="dt">bridge</span></span>
+<span id="cb12-36"><a href="#cb12-36" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Create and edit your Prometheus configuration files</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /opt/monitoring_stack/prometheus.yml</span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Add the following to your <code>prometheus.yml</code> YAML file</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="dt">global</span><span class="er">:</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a>   <span class="dt">scrape_interval</span><span class="er">:</span> <span class="dt">15s</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">scrape_configs</span><span class="er">:</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>   <span class="dt">-</span> <span class="dt">job_name</span><span class="er">:</span> <span class="dt">&#39;node-exporter&#39;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>     <span class="dt">static_configs</span><span class="er">:</span></span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">targets</span><span class="er">:</span> <span class="kw">[&#39;</span><span class="dt">node-exporter:9100&#39;</span><span class="kw">]</span></span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Configure your Prometheus data sources</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /opt/monitoring_stack/prometheus-datasource.yaml</span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Add the following to your <code>prometheus-datasource.yaml</code>.</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="dt">apiVersion</span><span class="er">:</span> <span class="dt">1</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">datasources</span><span class="er">:</span></span>
+<span id="cb16-3"><a href="#cb16-3" aria-hidden="true" tabindex="-1"></a>   <span class="dt">-</span> <span class="dt">name</span><span class="er">:</span> <span class="dt">Prometheus</span></span>
+<span id="cb16-4"><a href="#cb16-4" aria-hidden="true" tabindex="-1"></a>     <span class="dt">type</span><span class="er">:</span> <span class="dt">prometheus</span></span>
+<span id="cb16-5"><a href="#cb16-5" aria-hidden="true" tabindex="-1"></a>     <span class="dt">access</span><span class="er">:</span> <span class="dt">proxy</span></span>
+<span id="cb16-6"><a href="#cb16-6" aria-hidden="true" tabindex="-1"></a>     <span class="dt">url</span><span class="er">:</span> <span class="dt">http</span><span class="er">://</span><span class="dt">prometheus</span><span class="er">:</span><span class="dt">9090</span></span>
+<span id="cb16-7"><a href="#cb16-7" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<h2 id="startup-and-test-the-monitoring-services">Startup and Test the Monitoring Services</h2>
+<blockquote>
+<p>[!TIP] If you’ve successfully configured nftables, you will be required to open the following TCP ports 3000, 9090, 9100.</p>
+</blockquote>
+<p>Bring up your monitoring stack and verify that it has been configured correctly</p>
+<ul>
+<li><p>Bring up your monitoring stack</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> docker compose up <span class="at">-d</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Confirm the status of your Docker Containers</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> docker ps</span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Dump the metrics that are being monitored from your services</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Prometheus</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">curl</span> <span class="at">-s</span> localhost:9090/metrics <span class="kw">|</span> <span class="fu">head</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Node Exporter</span></span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a> <span class="ex">curl</span> <span class="at">-s</span> localhost:9100/metrics <span class="kw">|</span> <span class="fu">head</span></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a> <span class="co"># Grafana</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">curl</span> <span class="at">-s</span> localhost:3000 <span class="kw">|</span> <span class="fu">head</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ul>
+<p>Post the output of the above commands as comments to the <a href="https://github.com/chpc-tech-eval/chpc24-scc-nmu/discussions/158">Discussion</a> on GitHub.</p>
+<p>Congratulations on correctly configuring your monitoring services!</p>
+<h2 id="ssh-port-local-forwarding-tunnel">SSH Port Local Forwarding Tunnel</h2>
+<p>SSH port forwarding, also known as SSH tunneling, is a method of creating a secure connection between a local computer and a remote machine through an SSH (Secure Shell) connection. Local port forwarding allows you to forward a port on your local machine to a port on a remote machine. It is commonly used to access services behind a firewall or NAT.</p>
+<blockquote>
+<p>[!IMPORTANT] The following is included to demonstrate the concept of TCP Port Forwarding. In the next section, you are: * Opening a TCP Forwarding Port and listening on Port 3000 on your <strong>workstation</strong>, i.e. <a href="http://localhost:3000">http://localhost:3000</a> * You are then binding this <strong><em>SOCKET</em></strong> to TCP Port 3000 on your <strong>head node</strong>.</p>
+<p>The following diagram may facilitate the discussion and illustrate the scenario:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode css"><code class="sourceCode css"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">[</span><span class="ss">workstation</span><span class="in">:</span>3000] ---- SSH Forwarding Tunnel ----<span class="op">&gt;</span> <span class="ex">[</span><span class="ss">head node</span><span class="in">:</span>3000] ---- Grafana Service on head node</span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a># Connect to Grafana&#39;s <span class="in">(</span>head node<span class="in">)</span> service directly from your workstation</span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[</span><span class="ss">http</span><span class="in">:</span><span class="er">//localhost:3000] ---- SSH Forwarding Tunnel ----&gt; [Grafana (head node)]</span></span></code></pre></div>
+<p>Make sure that you understand the above concepts, as it will facilitate your understanding of the following considerations: * If you have successfully configured <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial2/README.md#wirguard-vpn-cluster-access">WireGuard</a></p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode css"><code class="sourceCode css"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">[</span><span class="ss">workstation</span><span class="in">:</span>3000] ---- WireGuard VPN ----<span class="op">&gt;</span> <span class="ex">[</span><span class="ss">head node</span><span class="in">:</span>3000] ---- Grafana Service on head node</span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a># Connect to Grafana&#39;s <span class="in">(</span>head node<span class="in">)</span> service directly from your workstation</span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[</span><span class="ss">http</span><span class="in">:</span><span class="er">//&lt;head node (private wiregaurd ip)&gt;:3000] ---- WireGuard VPN ----&gt; [Grafana (head node)]</span></span></code></pre></div>
+<ul>
+<li><p>And / or if you have successfully configured <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial2/README.md#zerotier">ZeroTier</a></p></li>
+</ul>
+<div class="sourceCode" id="cb22"><pre class="sourceCode css"><code class="sourceCode css"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">[</span><span class="ss">workstation</span><span class="in">:</span>3000] ---- ZeroTier VPN ----<span class="op">&gt;</span> <span class="ex">[</span><span class="ss">head node</span><span class="in">:</span>3000] ---- Grafana Service on head node</span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a># Connect to Grafana&#39;s <span class="in">(</span>head node<span class="in">)</span> service directly from your workstation</span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="ex">[</span><span class="ss">http</span><span class="in">:</span><span class="er">//&lt;head node (private zerotier ip)&gt;:3000] ---- ZeroTier VPN ----&gt; [Grafana (head node)]</span></span></code></pre></div>
+</blockquote>
+<blockquote>
+<p>[!CAUTION] You need to ensure that you have understood the above discussions. This section on port forwarding is included for situations where you do not have <code>sudo</code> rights on the machine you are working on and cannot open ports or install applications via <code>sudo</code>; in those cases, you can forward ports over SSH.</p>
+<p>Take the time now however, to ensure that all of your team members understand that there are a number of methods with which you can access remote services on your head node: * <a href="http://154.114.57.x:3000">http://154.114.57.x:3000</a> * <a href="http://localhost:3000">http://localhost:3000</a> * <a href="http://">http://</a><code>&lt;headnode wireguard ip&gt;</code>:3000 * <a href="http://">http://</a><code>&lt;headnode zerotier ip&gt;</code>:3000</p>
+</blockquote>
+<p>Once you have understood the above considerations, you may proceed to create a TCP Port Forwarding tunnel, to connect your workstation’s port, directly to your head node’s, over a tunnel.</p>
+<ol>
+<li><p>Create SSH Port Forwarding Tunnel on your local workstation</p>
+<p>Open a new terminal and run the tunnel command (replace 157.114.57.x with your unique IP):</p>
+<pre><code>ssh -L 3000:localhost:3000 rocky@157.114.57.x
+ </code></pre>
+<h2 id="create-a-dashboard-in-grafana">Create a Dashboard in Grafana</h2></li>
+<li><p>From a browser on your <strong>workstation</strong> navigate to the Grafana dashboard on your head node</p></li>
+<li><p>Go to a browser and login to Grafana:</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-4/001-grafana_login.png" /></p>
+<figcaption><p>Grafana Login.</p></figcaption>
+</figure></li>
+<li><p>Login to your Grafana dashboards</p>
+<pre><code>username: admin
+ password: &lt;YOUR_GRAFANA_PASSWORD&gt;
+ </code></pre></li>
+</ol>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-4/001-grafana_login.png" /></p>
+<figcaption><p>Grafana Login.</p></figcaption>
+</figure>
+<ol start="4" type="1">
+<li><p>Go to Dashboards</p></li>
+</ol>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-4/002-grafana_dashboards.png" /></p>
+<figcaption><p>Grafana Login.</p></figcaption>
+</figure>
+<ol start="5" type="1">
+<li><p>Click on New then Import</p></li>
+</ol>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-4/003-grafana_new.png" /></p>
+<figcaption><p>Grafana Login.</p></figcaption>
+</figure>
+<ol start="6" type="1">
+<li><p>Input: 1860 and click Load</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-4/004-grafana_import.png" /></p>
+<figcaption><p>Grafana Login.</p></figcaption>
+</figure></li>
+<li><p>Click on source: “Prometheus”</p></li>
+<li><p>Click on Import:</p></li>
+</ol>
+<h2 id="success-state-next-steps-and-troubleshooting">Success State, Next Steps and Troubleshooting</h2>
+<p>Congratulations on successfully deploying your monitoring stack and adding Grafana Dashboards to visualize this.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-4/005-grafana_done.png" /></p>
+<figcaption><p>Grafana Login.</p></figcaption>
+</figure>
+<p>If you’ve managed to successfully configure your dashboards for your head node, repeat the steps for deploying <strong>Node Exporter</strong> on your compute node(s).</p>
+<blockquote>
+<p>[!NOTE] Should you have any difficulties running the above configuration, use the alternative process below to deploy your monitoring stack. Click on the heading to reveal content. Installing your monitoring stack from pre-compiled binaries For this tutorial we will install from precompiled binaries.</p>
+</blockquote>
+<h3 id="prometheus">Prometheus</h3>
+<p>The installation and configuration of Prometheus should be done on your head node.</p>
+<ol start="6" type="1">
+<li><p>Create a Prometheus user without login access, this will be done manually as shown below:</p></li>
+</ol>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> useradd <span class="at">--no-create-home</span> <span class="at">--shell</span> /sbin/nologin prometheus</span></code></pre></div>
+<ol start="2" type="1">
+<li><p>Download the latest stable version of Prometheus from the official site using <code>wget</code></p></li>
+</ol>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/prometheus/prometheus/releases/download/v2.33.1/prometheus-2.33.1.linux-amd64.tar.gz</span></code></pre></div>
+<ol start="3" type="1">
+<li><p>List the files to verify Prometheus was downloaded</p></li>
+</ol>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ll</span></span></code></pre></div>
+<ol start="4" type="1">
+<li><p>Extract the downloaded archive and move prometheus binaries to the /usr/local/bin directory.</p></li>
+</ol>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-xvzf</span> prometheus-2.33.1.linux-amd64.tar.gz</span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> prometheus-2.33.1.linux-amd64</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mv prometheus promtool /usr/local/bin/</span></code></pre></div>
+<ol start="5" type="1">
+<li><p>Move back to the home directory and create directories for Prometheus.</p></li>
+</ol>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir /etc/prometheus</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir /var/lib/prometheus</span></code></pre></div>
+<ol start="6" type="1">
+<li><p>Set the correct ownership for the prometheus directories</p></li>
+</ol>
+<div class="sourceCode" id="cb30"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown prometheus:prometheus /etc/prometheus/</span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown prometheus:prometheus /var/lib/prometheus</span></code></pre></div>
+<ol start="7" type="1">
+<li><p>Move the configuration file and set the correct permissions</p></li>
+</ol>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> prometheus-2.33.1.linux-amd64</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mv consoles/ console_libraries/ prometheus.yml /etc/prometheus/</span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> chown <span class="at">-R</span> prometheus:prometheus /etc/prometheus/</span></code></pre></div>
+<ol start="8" type="1">
+<li><p>Configure Prometheus<br />
+Edit the <code>/etc/prometheus/prometheus.yml</code> file to configure your targets (compute node)</p>
+<p><em>Hint : Add the job configuration for the compute_node in the scrape_configs section of your Prometheus YAML configuration file. Ensure that all necessary configurations for this job are correctly placed within the relevant sections of the YAML file.</em>:</p></li>
+</ol>
+<div class="sourceCode" id="cb32"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">global</span><span class="kw">:</span></span>
+<span id="cb32-2"><a href="#cb32-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">scrape_interval</span><span class="kw">:</span><span class="at"> 15s</span></span>
+<span id="cb32-3"><a href="#cb32-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb32-4"><a href="#cb32-4" aria-hidden="true" tabindex="-1"></a><span class="fu">scrape_configs</span><span class="kw">:</span></span>
+<span id="cb32-5"><a href="#cb32-5" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;prometheus&quot;</span></span>
+<span id="cb32-6"><a href="#cb32-6" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_configs</span><span class="kw">:</span></span>
+<span id="cb32-7"><a href="#cb32-7" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;localhost:9090&quot;</span><span class="kw">]</span></span>
+<span id="cb32-8"><a href="#cb32-8" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="kw">-</span><span class="at"> </span><span class="fu">job_name</span><span class="kw">:</span><span class="at"> </span><span class="st">&quot;compute_node&quot;</span></span>
+<span id="cb32-9"><a href="#cb32-9" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">static_configs</span><span class="kw">:</span></span>
+<span id="cb32-10"><a href="#cb32-10" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> </span><span class="fu">targets</span><span class="kw">:</span><span class="at"> </span><span class="kw">[</span><span class="st">&quot;&lt;compute_node_ip&gt;:9100&quot;</span><span class="kw">]</span></span></code></pre></div>
+<ol start="9" type="1">
+<li><p>Create a service file to manage Prometheus with <code>systemctl</code>, the file can be created with the text editor <code>nano</code> (Can use any text editor of your choice)</p></li>
+</ol>
+<div class="sourceCode" id="cb33"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/systemd/system/prometheus.service</span></code></pre></div>
+<pre class="plaintext"><code>[Unit]
+Description=Prometheus
+Wants=network-online.target
+After=network-online.target
+
+[Service]
+User=prometheus
+Group=prometheus
+Type=simple
+Restart=on-failure
+RestartSec=5s
+ExecStart=/usr/local/bin/prometheus \
+ --config.file=/etc/prometheus/prometheus.yml \
+ --storage.tsdb.path=/var/lib/prometheus/ \
+ --web.console.templates=/etc/prometheus/consoles \
+ --web.console.libraries=/etc/prometheus/console_libraries
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+<ol start="10" type="1">
+<li><p>Reload the systemd daemon, start and enable the service</p></li>
+</ol>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable prometheus</span>
+<span id="cb35-3"><a href="#cb35-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start prometheus</span></code></pre></div>
+<ol start="11" type="1">
+<li><p>Check that your service is active by checking the status</p></li>
+</ol>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl status prometheus</span></code></pre></div>
+<blockquote>
+<p>[!TIP] If when you check the status and find that the service is not running, ensure SELinux or AppArmor is not restricting Prometheus from running. Try disabling SELinux/AppArmor temporarily to see if it resolves the issue:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> setenforce 0</span></code></pre></div>
+<p>Then repeat steps 10 and 11.</p>
+<p>If the prometheus service still fails to start properly, run the command <code>journalctl –u prometheus -f --no-pager</code> and review the output for errors.</p>
+</blockquote>
+<blockquote>
+<p>[!IMPORTANT] If you have a firewall running, add a TCP rule for port 9090</p>
+</blockquote>
+<p>Verify that your Prometheus configuration is working by navigating to <code>http://&lt;headnode_ip&gt;:9090</code> in your web browser to access the Prometheus web interface. Ensure that the <code>headnode_ip</code> is the public-facing IP.</p>
+<h3 id="node-exporter">Node Exporter</h3>
+<p>Node Exporter is a Prometheus exporter specifically designed for hardware and OS metrics exposed by Unix-like kernels. It collects detailed system metrics such as CPU usage, memory usage, disk I/O, and network statistics. These metrics are exposed via an HTTP endpoint, typically accessible at <code>&lt;node_ip&gt;:9100/metrics</code>. The primary role of Node Exporter is to provide a source of system-level metrics that Prometheus can scrape and store. This exporter is crucial for gaining insights into the health and performance of individual nodes within a network.</p>
+<p>The installation and configuration of Node Exporter will be done on the <strong>compute node(s)</strong>.</p>
+<ol start="11" type="1">
+<li><p>Create a Node Exporter User</p></li>
+</ol>
+<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> adduser <span class="at">-M</span> <span class="at">-r</span> <span class="at">-s</span> /sbin/nologin node_exporter</span></code></pre></div>
+<ol start="2" type="1">
+<li><p>Download and install Node Exporter; this is done using <code>wget</code> as before</p></li>
+</ol>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /usr/src/</span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-3"><a href="#cb39-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> wget https://github.com/prometheus/node_exporter/releases/download/v1.6.1/node_exporter-1.6.1.linux-amd64.tar.gz</span>
+<span id="cb39-4"><a href="#cb39-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb39-5"><a href="#cb39-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> tar xvf node_exporter-1.6.1.linux-amd64.tar.gz</span></code></pre></div>
+<ol start="3" type="1">
+<li><p>Next, move the node exporter binary file to the directory ‘/usr/local/bin” using the following command</p></li>
+</ol>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> node_exporter-<span class="pp">*</span>/node_exporter /usr/local/bin</span></code></pre></div>
+<ol start="4" type="1">
+<li><p>Create a service file to manage Node Exporter with <code>systemctl</code>; the file can be created with the text editor <code>nano</code> (or any text editor of your choice)</p></li>
+</ol>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/systemd/system/node_exporter.service</span></code></pre></div>
+<pre class="plaintext"><code>[Unit]
+Description=Node Exporter
+After=network.target
+
+[Service]
+User=node_exporter
+Group=node_exporter
+Type=simple
+ExecStart=/usr/local/bin/node_exporter
+
+[Install]
+WantedBy=multi-user.target
+</code></pre>
+<blockquote>
+<p>[!IMPORTANT] If firewalld is enabled and running, add a rule for port 9100</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--permanent</span> <span class="at">--zone</span><span class="op">=</span>public <span class="at">--add-port</span><span class="op">=</span>9100/tcp</span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> firewall-cmd <span class="at">--reload</span> </span></code></pre></div>
+</blockquote>
+<ol start="5" type="1">
+<li><p>Reload the systemd daemon, start and enable the service</p></li>
+</ol>
+<div class="sourceCode" id="cb44"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl daemon-reload</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable node_exporter </span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start node_exporter</span></code></pre></div>
+<ol start="6" type="1">
+<li><p>Check that your service is active by checking the status</p></li>
+</ol>
+<div class="sourceCode" id="cb45"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl status node_exporter</span></code></pre></div>
+<h4 id="ssh-tunneling">SSH Tunneling</h4>
+<p>In order to verify that Node Exporter is set up correctly, we need to access <code>&lt;node_ip&gt;:9100/metrics</code>. This can only be done through an SSH tunnel.</p>
+<p><strong>What is SSH Tunneling?</strong><br />
+SSH tunneling, also known as SSH port forwarding, is a method of securely forwarding network traffic from one network node to another via an encrypted SSH connection. It allows you to securely transmit data over untrusted networks by encrypting the traffic.</p>
+<p><strong>Why Use SSH Tunneling in This Scenario?</strong><br />
+In this setup, the compute node has only a private IP and is not directly accessible from the internet. The headnode, however, has both a public IP (accessible from the internet) and a private IP (in the same network as the compute node).</p>
+<p>Using SSH tunneling allows us to:</p>
+<ul>
+<li><p>Access Restricted Nodes: Since the compute node is only reachable from the headnode, we can create an SSH tunnel through the headnode to access the compute node.</p></li>
+<li><p>Secure Transmission: The tunnel encrypts the traffic between your local machine and the compute node, ensuring that any data sent through this tunnel is secure.</p></li>
+<li><p>Simplify Access: By tunneling the Node Exporter port (9100) from the compute node to your local machine, you can access the metrics as if they were running locally, making it easier to monitor and manage the compute node.</p>
+<ol start="6" type="1">
+<li><p>Set Up SSH Tunnel on Your Local Machine</p></li>
+</ol>
+<div class="sourceCode" id="cb46"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="at">-L</span> 9100:compute_node_ip:9100 user@headnode_ip <span class="at">-N</span></span>
+<span id="cb46-2"><a href="#cb46-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>ssh -L: This option specifies local port forwarding. It maps a port on your local machine (first 9100) to a port on a remote machine (second 9100 on compute_node_ip) via the SSH server (headnode).</p></li>
+<li><p>compute_node_ip:9100: The target address and port on the compute node where Node Exporter is running. <a href="mailto:user@headnode">user@headnode</a>_ip: The SSH connection details for the headnode.</p></li>
+<li><p>-N: Tells SSH to not execute any commands, just set up the tunnel.</p>
+<ol start="2" type="1">
+<li><p>By navigating to <a href="http://localhost:9100/metrics">http://localhost:9100/metrics</a> in your web browser, you can access the Node Exporter metrics from the compute node as if the service were running locally on your machine.</p></li>
+</ol></li>
+</ul>
+<h3 id="grafana">Grafana</h3>
+<p>Grafana is an open-source platform for monitoring and observability, known for its capability to create interactive and customizable dashboards. It integrates seamlessly with various data sources, including Prometheus. Through its user-friendly interface, Grafana allows users to build and execute queries to visualize data effectively. Beyond visualization, Grafana also supports alerting based on the visualized data, enabling users to set up notifications for specific conditions. This makes Grafana a powerful tool for both real-time monitoring and historical analysis of system performance.</p>
+<p>Now we return to the head node for the installation and configuration of Grafana 1. Add the Grafana repository by adding the following directives to this file:</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/yum.repos.d/grafana.repo</span></code></pre></div>
+<pre class="plaintext"><code>[grafana] 
+ name=grafana 
+ baseurl=https://rpm.grafana.com 
+ repo_gpgcheck=1 
+ enabled=1 
+ gpgcheck=1 
+ gpgkey=https://rpm.grafana.com/gpg.key 
+ sslverify=1 
+ sslcacert=/etc/pki/tls/certs/ca-bundle.crt 
+ exclude=*beta*
+</code></pre>
+<ol start="2" type="1">
+<li><p>Install Grafana</p></li>
+</ol>
+<div class="sourceCode" id="cb49"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf install grafana <span class="at">-y</span> </span></code></pre></div>
+<ol start="3" type="1">
+<li><p>Start and Enable Grafana</p></li>
+</ol>
+<div class="sourceCode" id="cb50"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl start grafana-server</span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl enable grafana-server</span></code></pre></div>
+<ol start="4" type="1">
+<li><p>Check the status of grafana-server</p></li>
+</ol>
+<div class="sourceCode" id="cb51"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> systemctl status grafana-server</span></code></pre></div>
+<blockquote>
+<p>[!IMPORTANT] If firewalld is enabled and running, add a rule for port 9100</p>
+<p>```bash sudo firewall-cmd –permanent –zone=public –add-port=3000/tcp sudo firewall-cmd –reload</p>
+</blockquote>
+<h1 id="configuring-and-connecting-to-your-remote-jupyterlab-server">Configuring and Connecting to your Remote JupyterLab Server</h1>
+<p><a href="https://jupyter.org/">Project Jupyter</a> provides powerful tools for scientific investigations due to their interactive and flexible nature. Here are some key reasons why they are favored in scientific research.</p>
+<ul>
+<li><p>Interactive Computing and Immediate Feedback</p>
+<p>Run code snippets and see the results immediately, which helps in quick iterations and testing of hypotheses. Directly plot graphs and visualize data within the notebook, which is crucial for data analysis.</p></li>
+<li><p>Documentation and Rich Narrative Text</p>
+<p>Combine code with Markdown text to explain the methodology, document findings, and write detailed notes. Embed images, videos, and LaTeX equations to enhance documentation and understanding.</p></li>
+<li><p>Reproducibility</p>
+<p>Share notebooks with others to ensure that they can reproduce the results by running the same code. Use tools like Git to version control the notebooks, ensuring a record of changes and collaborative development.</p></li>
+<li><p>Data Analysis and Visualization</p>
+<p>Utilize a wide range of Python libraries such as NumPy, Pandas, Matplotlib, and Seaborn for data manipulation and visualization. Perform exploratory data analysis (EDA) seamlessly with powerful plotting libraries.</p></li>
+</ul>
+<p>Jupyter Notebooks provide a versatile and powerful environment for conducting scientific investigations, facilitating both the analysis and the clear communication of results.</p>
+<ol start="4" type="1">
+<li><p>Start by installing all the prerequisites</p>
+<p>You would have already installed most of these from <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial3/README.md##qiskit-quantum-volume">Qiskit Benchmark</a> in tutorial 3.</p>
+<ul>
+<li><p>DNF / YUM</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># RHEL, Rocky, Alma, CentOS Stream</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install python python-pip</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>APT</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install python python-pip</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Pacman</p>
+<div class="sourceCode" id="cb54"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> python python-pip</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ul></li>
+<li><p>Open TCP port 8889 on your nftables firewall, and restart the service</p>
+<div class="sourceCode" id="cb55"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> nano /etc/nftables/hn.nft</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> systemctl restart nftables</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<blockquote>
+<p>[!TIP] There are a number of plotting utilities available in Python. Each with their own advantages and disadvantages. You will be using <a href="https://plotly.com/python/ipython-notebook-tutorial/">Plotly</a> in the following exercises.</p>
+</blockquote>
+<h2 id="visualize-your-hpl-benchmark-results">Visualize Your HPL Benchmark Results</h2>
+<p>You will now visualize the results from the <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial3/README.md#top500-list">table you prepared of Rmax (GFlops/s)</a> scores for different configurations of HPL.</p>
+<ol start="4" type="1">
+<li><p>Create and Activate a New Python Virtual Environment</p>
+<p>Separate your python projects and ensure that they exist in their own, clean environments:</p>
+<div class="sourceCode" id="cb56"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> venv hplScores</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a> <span class="bu">source</span> hplScores/bin/activate</span>
+<span id="cb56-3"><a href="#cb56-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Install Project Jupyter and Plotly plotting utilities and dependencies</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install jupyterlab ipywidgets plotly jupyter-dash</span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Start the JupyterLab server</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="ex">jupyter</span> lab <span class="at">--ip</span> 0.0.0.0 <span class="at">--port</span> 8889 <span class="at">--no-browser</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p><code>--ip</code> binds to all interfaces on your head node, including the public facing address</p></li>
+<li><p><code>--port</code> bind to the port that you granted access to in <code>nftables</code></p></li>
+<li><p>–no-browser, do not try to launch a browser directly on your head node.</p></li>
+</ul></li>
+<li><p>Carefully copy your <code>&lt;TOKEN&gt;</code> from the command line after successfully launching your JupyterLab server.</p>
+<div class="sourceCode" id="cb59"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Look for a line similar to the one below, and carefully copy your &lt;TOKEN&gt;</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">http://127.0.0.1:8889/lab?token=</span><span class="op">&lt;</span>TOKEN<span class="op">&gt;</span></span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Open a browser on your workstation and navigate to your JupyterLab server on your head node:</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="ex">http://</span><span class="op">&lt;</span>headnode_public_ip<span class="op">&gt;</span>:8889</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Login to your JupyterLab server using your <code>&lt;TOKEN&gt;</code>.</p></li>
+<li><p>Create a new Python Notebook and plot your HPL results:</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="im">import</span> plotly.express <span class="im">as</span> px</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a> x<span class="op">=</span>[<span class="st">&quot;Head [&lt;treads&gt;]&quot;</span>, <span class="st">&quot;Compute Repo MPI and BLAS [&lt;threads&gt;]&quot;</span>, <span class="st">&quot;Compute Compiled MPI and BLAS [&lt;threads&gt;]&quot;</span>, <span class="st">&quot;Compute Intel oneAPI Toolkits&quot;</span>, <span class="st">&quot;Two Compute Nodes&quot;</span>, <span class="st">&quot;etc...&quot;</span>]</span>
+<span id="cb61-3"><a href="#cb61-3" aria-hidden="true" tabindex="-1"></a> y<span class="op">=</span>[<span class="op">&lt;</span>gflops_headnode<span class="op">&gt;</span>, <span class="op">&lt;</span>gflops_compute<span class="op">&gt;</span>, <span class="op">&lt;</span>gflops_compute_compiled_mpi_blas<span class="op">&gt;</span>, <span class="op">&lt;</span>gflops_compute_intel_oneapi<span class="op">&gt;</span>, <span class="op">&lt;</span>gflops_two_compute<span class="op">&gt;</span>, <span class="op">&lt;</span>etc..<span class="op">&gt;</span>]</span>
+<span id="cb61-4"><a href="#cb61-4" aria-hidden="true" tabindex="-1"></a> fig <span class="op">=</span> px.bar(x, y)</span>
+<span id="cb61-5"><a href="#cb61-5" aria-hidden="true" tabindex="-1"></a> fig.show()</span>
+<span id="cb61-6"><a href="#cb61-6" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Click on the camera icon to download and save your image. Post your results as a comment, replying to this <a href="https://github.com/chpc-tech-eval/chpc24-scc-nmu/discussions/114">GitHub discussion thread</a>.</p></li>
+</ol>
+<h2 id="visualize-your-qiskit-results">Visualize Your Qiskit Results</h2>
+<p>You are now going to extend your <code>qv_experiment</code> and plot your results by drawing a graph of <em>“Number of Qubits vs Simulation Time to Solution”</em>:</p>
+<ol start="4" type="1">
+<li><p>Create and Activate a New Python Virtual Environment</p>
+<p>Separate your python projects and ensure that they exist in their own, clean environments:</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> venv</span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a> <span class="bu">source</span> QiskitAer/bin/activate</span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>You may need to install additional dependencies</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install matplotlib jupyterlab</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Append the following to your <code>qv_experiment.py</code> script:</p>
+<div class="sourceCode" id="cb64"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="co"># number of qubits, for your system see how much higher that 30 your can go...</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a> num_qubits <span class="op">=</span> np.arrange(<span class="dv">2</span>, <span class="dv">10</span>)</span>
+<span id="cb64-3"><a href="#cb64-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-4"><a href="#cb64-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># QV Depth</span></span>
+<span id="cb64-5"><a href="#cb64-5" aria-hidden="true" tabindex="-1"></a> qv_depth <span class="op">=</span> <span class="dv">5</span></span>
+<span id="cb64-6"><a href="#cb64-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-7"><a href="#cb64-7" aria-hidden="true" tabindex="-1"></a> <span class="co"># For bonus points submit results with up to 20 or even 30 shots</span></span>
+<span id="cb64-8"><a href="#cb64-8" aria-hidden="true" tabindex="-1"></a> <span class="co"># Note that this will be more demanding on your system</span></span>
+<span id="cb64-9"><a href="#cb64-9" aria-hidden="true" tabindex="-1"></a> num_shots <span class="op">=</span> <span class="dv">10</span></span>
+<span id="cb64-10"><a href="#cb64-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-11"><a href="#cb64-11" aria-hidden="true" tabindex="-1"></a> <span class="co"># Array for storing the output results</span></span>
+<span id="cb64-12"><a href="#cb64-12" aria-hidden="true" tabindex="-1"></a> result_array <span class="op">=</span> [[], []]</span>
+<span id="cb64-13"><a href="#cb64-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-14"><a href="#cb64-14" aria-hidden="true" tabindex="-1"></a> <span class="co"># iterate over qv depth and number of qubits</span></span>
+<span id="cb64-15"><a href="#cb64-15" aria-hidden="true" tabindex="-1"></a> <span class="cf">for</span> i <span class="kw">in</span> num_qubits:</span>
+<span id="cb64-16"><a href="#cb64-16" aria-hidden="true" tabindex="-1"></a>   result_array[i] <span class="op">=</span> quant_vol(qubits<span class="op">=</span>i, shots<span class="op">=</span>num_shots, depth<span class="op">=</span>qv_depth)</span>
+<span id="cb64-17"><a href="#cb64-17" aria-hidden="true" tabindex="-1"></a>   <span class="co"># for debugging purposes you can optionally print the output</span></span>
+<span id="cb64-18"><a href="#cb64-18" aria-hidden="true" tabindex="-1"></a>   <span class="bu">print</span>(i, result_array[i])</span>
+<span id="cb64-19"><a href="#cb64-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb64-20"><a href="#cb64-20" aria-hidden="true" tabindex="-1"></a> <span class="im">import</span> matplotlib.pyplot <span class="im">as</span> plt</span>
+<span id="cb64-21"><a href="#cb64-21" aria-hidden="true" tabindex="-1"></a> plt.xlabel(<span class="st">&#39;Number of qubits&#39;</span>)</span>
+<span id="cb64-22"><a href="#cb64-22" aria-hidden="true" tabindex="-1"></a> plt.ylabel(<span class="st">&#39;Time (sec)&#39;</span>)</span>
+<span id="cb64-23"><a href="#cb64-23" aria-hidden="true" tabindex="-1"></a> plt.plot(num_qubits, results_array)</span>
+<span id="cb64-24"><a href="#cb64-24" aria-hidden="true" tabindex="-1"></a> plt.title(<span class="st">&#39;Quantum Volume Experiment with depth=&#39;</span> <span class="op">+</span> <span class="bu">str</span>(qv_depth))</span>
+<span id="cb64-25"><a href="#cb64-25" aria-hidden="true" tabindex="-1"></a> plt.savefig(<span class="st">&#39;qv_experiment.png&#39;</span>)</span>
+<span id="cb64-26"><a href="#cb64-26" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Run the benchmark by executing the script you’ve just written:</p>
+<div class="sourceCode" id="cb65"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> qv_experiment.py</span>
+<span id="cb65-2"><a href="#cb65-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<h1 id="automating-the-deployment-of-your-openstack-instances-using-terraform">Automating the Deployment of your OpenStack Instances Using Terraform</h1>
+<p>Terraform is a piece of software that allows one to write out their cloud infrastructure and deployments as code, <a href="https://en.wikipedia.org/wiki/Infrastructure_as_code">IaC</a>. This allows the deployments of your cloud virtual machine instances to be shared, iterated, automated as needed and for software development practices to be applied to your infrastructure.</p>
+<p>In this section of the tutorial, you will be deploying an additional compute node from your <code>head node</code> using Terraform.</p>
+<blockquote>
+<p>[!CAUTION] In the following section, <strong>you must request additional resources from the instructors</strong>. This additional node will be experimental for testing your changes to your cluster before committing them to your active compute nodes. You will be deleting and reinitializing this instance often. Make sure you understand how to <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial1/README.md#troubleshooting">Delete Instance</a>.</p>
+</blockquote>
+<h2 id="install-and-initialize-terraform">Install and Initialize Terraform</h2>
+<p>You will now prepare, install and initialize Terraform on your head node. You will define and configure a <code>providers.tf</code> file, to configure OpenStack instances (as Sebowa is an OpenStack based cloud).</p>
+<ol start="4" type="1">
+<li><p>Use your operating system’s package manager to install Terraform</p>
+<p>This could be your workstation or one of your VMs. The machine must be connected to the internet and have access to your OpenStack workspace, i.e. <a href="https://sebowa.nicis.ac.za">https://sebowa.nicis.ac.za</a></p>
+<ul>
+<li><p>DNF / YUM</p></li>
+</ul>
+<div class="sourceCode" id="cb66"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> yum update <span class="at">-y</span></span>
+<span id="cb66-2"><a href="#cb66-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-3"><a href="#cb66-3" aria-hidden="true" tabindex="-1"></a> <span class="co"># Install package to manage repository configurations</span></span>
+<span id="cb66-4"><a href="#cb66-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> yum install <span class="at">-y</span> dnf-plugins-core</span>
+<span id="cb66-5"><a href="#cb66-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-6"><a href="#cb66-6" aria-hidden="true" tabindex="-1"></a> <span class="co"># Add the HashiCorp Repo</span></span>
+<span id="cb66-7"><a href="#cb66-7" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf config-manager <span class="at">--add-repo</span> https://rpm.releases.hashicorp.com/RHEL/hashicorp.repo</span>
+<span id="cb66-8"><a href="#cb66-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb66-9"><a href="#cb66-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install <span class="at">-y</span> terraform</span>
+<span id="cb66-10"><a href="#cb66-10" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p>APT</p></li>
+</ul>
+<div class="sourceCode" id="cb67"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Update package repository</span></span>
+<span id="cb67-2"><a href="#cb67-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt-get update</span>
+<span id="cb67-3"><a href="#cb67-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt-get install <span class="at">-y</span> gnupg software-properties-common</span>
+<span id="cb67-4"><a href="#cb67-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-5"><a href="#cb67-5" aria-hidden="true" tabindex="-1"></a> <span class="co"># Add HashiCorp GPG Keys</span></span>
+<span id="cb67-6"><a href="#cb67-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">wget</span> <span class="at">-O-</span> https://apt.releases.hashicorp.com/gpg <span class="kw">|</span> <span class="ex">gpg</span> <span class="at">--dearmor</span> <span class="kw">|</span> <span class="fu">sudo</span> tee /usr/share/keyrings/hashicorp-archive-keyring.gpg</span>
+<span id="cb67-7"><a href="#cb67-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb67-8"><a href="#cb67-8" aria-hidden="true" tabindex="-1"></a> <span class="co"># Add the official HashiCorp Linux Repo</span></span>
+<span id="cb67-9"><a href="#cb67-9" aria-hidden="true" tabindex="-1"></a> <span class="bu">echo</span> <span class="st">&quot;deb [signed-by=/usr/share/keyrings/hashicorp-archive-keyring.gpg] https://apt.releases.hashicorp.com </span><span class="va">$(</span><span class="ex">lsb_release</span> <span class="at">-cs</span><span class="va">)</span><span class="st"> main&quot;</span> <span class="kw">|</span> <span class="fu">sudo</span> tee /etc/apt/sources.list.d/hashicorp.list</span>
+<span id="cb67-10"><a href="#cb67-10" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p>Pacman</p></li>
+</ul>
+<div class="sourceCode" id="cb68"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch</span></span>
+<span id="cb68-2"><a href="#cb68-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> terraform</span>
+<span id="cb68-3"><a href="#cb68-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Create a Terraform directory, descend into it and Edit the <code>providers.tf</code> file</p>
+<div class="sourceCode" id="cb69"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> terraform</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> terraform</span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a> <span class="ex">vim</span> providers.tf</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>You must specify a <a href="https://registry.terraform.io/browse/providers">Terraform Provider</a></p>
+<p>These can vary from MS Azure, AWS, Google, Kubernetes etc… We will be implementing an OpenStack provider as this is what is implemented on the Sebowa cloud platform. Add the following to the <code>providers.tf</code> file.</p>
+<div class="sourceCode" id="cb70"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="dt">terraform</span> <span class="er">{</span></span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a>   <span class="dt">required_providers</span> <span class="er">{</span></span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a>     <span class="dt">openstack</span> <span class="op">=</span> <span class="op">{</span></span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="op">       </span><span class="dt">source</span><span class="op"> =</span> <span class="st">&quot;terraform-provider-openstack/openstack&quot;</span></span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a><span class="op">       </span><span class="dt">version</span><span class="op"> =</span> <span class="st">&quot;1.46.0&quot;</span></span>
+<span id="cb70-6"><a href="#cb70-6" aria-hidden="true" tabindex="-1"></a><span class="op">     }</span></span>
+<span id="cb70-7"><a href="#cb70-7" aria-hidden="true" tabindex="-1"></a>   <span class="er">}</span></span>
+<span id="cb70-8"><a href="#cb70-8" aria-hidden="true" tabindex="-1"></a> <span class="er">}</span></span>
+<span id="cb70-9"><a href="#cb70-9" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Initialize Terraform</p>
+<p>From the folder with your provider definition, execute the following command:</p>
+<div class="sourceCode" id="cb71"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> init</span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<h2 id="generate-clouds.yml-and-main.tf-files">Generate <code>clouds.yml</code> and <code>main.tf</code> Files</h2>
+<p>Generate and configure the <code>cloud.yml</code> file that will authenticate you against your Sebowa OpenStack workspace, and the <code>main.tf</code>files that will define how your infrastructure should be provisioned.</p>
+<ol start="4" type="1">
+<li><p>Generate OpenStack API Credentials</p>
+<p>From <em>your</em> team’s Sebowa workspace, navigate to <code>Identity</code> → <code>Application Credentials</code>, and generate a set of OpenStack credentials in order to allow you to access and authenticate against your workspace.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-4/006-openstack_application_creds.png" /></p>
+<figcaption><p>OpenStack Application Credentials.</p></figcaption>
+</figure></li>
+<li><p>Download and Copy the <code>clouds.yml</code> File</p>
+<p>Copy the <code>clouds.yml</code> file to the folder where you initialized terraform. The contents of the of which, should be <em>similar</em> to:</p>
+<pre class="config"><code># This is a clouds.yaml file, which can be used by OpenStack tools as a source
+ # of configuration on how to connect to a cloud. If this is your only cloud,
+ # just put this file in ~/.config/openstack/clouds.yaml and tools like
+ # python-openstackclient will just work with no further config. (You will need
+ # to add your password to the auth section)
+ # If you have more than one cloud account, add the cloud entry to the clouds
+ # section of your existing file and you can refer to them by name with
+ # OS_CLOUD=openstack or --os-cloud=openstack
+ clouds:
+   openstack:
+     auth:
+       auth_url: https://sebowa.nicis.ac.za:5000
+       application_credential_id: &quot;&lt;YOUR TEAM&#39;s APPLICATION CREDENTIAL ID&quot;
+       application_credential_secret: &quot;&lt;YOUR TEAM&#39;s APPLICATION CREDENTIAL SECRET&gt;&quot;
+     region_name: &quot;RegionOne&quot;
+     interface: &quot;public&quot;
+     identity_api_version: 3
+     auth_type: &quot;v3applicationcredential&quot;
+ </code></pre></li>
+<li><p>Create <code>main.tf</code> Terraform File Inside your <code>terraform</code> folder, you must define a <code>main.tf</code> file. This file is used to identify the provider to be implemented as well as the compute resource configuration details of the instance we would like to launch.</p>
+<p>You will need to define your own <code>main.tf</code> file, but below is an example of one such definition:</p>
+<pre class="config"><code>provider &quot;openstack&quot; {
+   cloud = &quot;openstack&quot;
+ }
+ resource &quot;openstack_compute_instance_v2&quot; &quot;terraform-demo-instance&quot; {
+   name = &quot;scc24-arch-cn03&quot;
+   image_id = &quot;33b938c8-6c07-45e3-8f2a-cc8dcb6699de&quot;
+   flavor_id = &quot;4a126f4f-7df6-4f95-b3f3-77dbdd67da34&quot;
+   key_pair = &quot;nlisa at mancave&quot;
+   security_groups = [&quot;default&quot;, &quot;ssc24_sq&quot;]
+
+   network {
+     name = &quot;nlisa-vxlan&quot;
+   }
+ }
+ </code></pre></li>
+</ol>
+<blockquote>
+<p>[!NOTE] You must specify your own variables for <code>name</code>, <code>image_id</code>, <code>flavor_id</code>, <code>key_pair</code> and <code>network.name</code>.</p>
+</blockquote>
+<h2 id="generate-deploy-and-apply-terraform-plan">Generate, Deploy and Apply Terraform Plan</h2>
+<ol start="4" type="1">
+<li><p>Generate and Deploy Terraform Plan Create a Terraform plan based on the current configuration. This plan will be used to implement changes to your Sebowa OpenStack cloud workspace, and can be reviewed before applying those changes. Generate a plan and write it to disk:</p>
+<div class="sourceCode" id="cb74"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> plan <span class="at">-out</span> ~/terraform/plan</span>
+<span id="cb74-2"><a href="#cb74-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Once you are satisfied with the proposed changes, deploy the terraform plan:</p>
+<div class="sourceCode" id="cb75"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb75-1"><a href="#cb75-1" aria-hidden="true" tabindex="-1"></a><span class="ex">terraform</span> apply ~terraform/plan</span>
+<span id="cb75-2"><a href="#cb75-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Verify New Instance Successfully Created by Terraform Finally confirm that your new instance has been successfully created. On your Sebowa OpenStack workspace, navigate to <code>Project</code> → <code>Compute</code> → <code>Instances</code>.</p></li>
+</ol>
+<blockquote>
+<p>[!TIP] To avoid losing your team’s progress, it would be a good idea to create a GitHub repo in order for you to commit and push your various scripts and configuration files.</p>
+</blockquote>
+<h1 id="continuous-integration-using-circleci">Continuous Integration Using CircleCI</h1>
+<p>Circle CI is a Continuous Integration and Continuous Delivery platform that can be utilized to implement DevOps practices. It helps teams build, test, and deploy applications quickly and reliably.</p>
+<p>In this section of the tutorial, you’re going to expand on OpenStack instance automation with CircleCI <code>Workflows</code> and <code>Pipelines</code>. For this tutorial, you will use your GitHub account to integrate directly with CircleCI.</p>
+<h2 id="prepare-github-repository">Prepare GitHub Repository</h2>
+<p>You will be integrating GitHub into CircleCI workflows, wherein every time you commit changes to your <code>deploy_compute</code> GitHub repository, CircleCI will instantiate and trigger Terraform to create a new compute node VM on Sebowa.</p>
+<ol start="4" type="1">
+<li><p>Create GitHub Repository If you haven’t already done so, sign up for a <a href="https://github.com/">GitHub Account</a>. Then create an empty private repository with a suitable name, i.e. <code>deploy_compute_node</code>:</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-4/007-github_create_new_repo.png" /></p>
+<figcaption><p>Github Create</p></figcaption>
+</figure></li>
+<li><p>Add your team members to the repository to provide them with access: <span class="box"><img src="/content/assets/chpc-scc-tutorial-4/008-github_manage_access.png" /></span></p></li>
+<li><p>If you haven’t already done so, add your SSH key to your GitHub account by following the instructions from <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/README.md#steps-to-follow-when-editing-existing-content">Steps to follow when editing existing content</a>.</p></li>
+</ol>
+<blockquote>
+<p>[!TIP] You will be using your head node to orchestrate and configure your infrastructure. Pay careful attention to ensure that you copy over your <strong>head node</strong>‘s public SSH key. Administrating and managing your compute nodes in this manner requires you to think about them as “cattle” and not “pets”.</p>
+</blockquote>
+<h2 id="reuse-providers.tf-and-main.tf-terraform-configurations">Reuse <code>providers.tf</code> and <code>main.tf</code> Terraform Configurations</h2>
+<ol start="4" type="1">
+<li><p>On your head node, create a folder that is going to be used to initialize the GitHub repository:</p>
+<div class="sourceCode" id="cb76"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb76-1"><a href="#cb76-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> ~/deploy_compute_node</span>
+<span id="cb76-2"><a href="#cb76-2" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> ~/deploy_compute_node</span>
+<span id="cb76-3"><a href="#cb76-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Copy the <code>providers.tf</code> and <code>main.tf</code> files you had previously generated:</p>
+<div class="sourceCode" id="cb77"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb77-1"><a href="#cb77-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> ~/terraform/providers.tf ./</span>
+<span id="cb77-2"><a href="#cb77-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">cp</span> ~/terraform/main.tf ./</span>
+<span id="cb77-3"><a href="#cb77-3" aria-hidden="true" tabindex="-1"></a> <span class="ex">vim</span> main.tf</span>
+<span id="cb77-4"><a href="#cb77-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<h2 id="create-.circleciconfig.yml-file-and-push-project-to-github">Create <code>.circleci/config.yml</code> File and <code>push</code> Project to GitHub</h2>
+<p>The <code>.circle/config.yml</code> configuration file is where you define your build, test and deployment process. From your head node, you are going to be <code>pushing</code> your Infrastructure as Code to your private GitHub repository. This will then automatically trigger the CircleCI deployment of a Docker container which has been tailored for Terraform operations and instructions that will deploy your Sebowa OpenStack compute node instance.</p>
+<ol start="4" type="1">
+<li><p>Create and edit <code>.circleci/config.yml</code>:</p>
+<div class="sourceCode" id="cb78"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb78-1"><a href="#cb78-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> .circleci</span>
+<span id="cb78-2"><a href="#cb78-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">vim</span> .circleci/config.yml <span class="co"># Remember that if you are not comfortable using Vim, install and make use of Nano</span></span>
+<span id="cb78-3"><a href="#cb78-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Copy the following configuration into <code>.circle/config.yml</code>:</p>
+<div class="sourceCode" id="cb79"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a><span class="dt">version</span><span class="er">:</span> <span class="dt">2.1</span></span>
+<span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-3"><a href="#cb79-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">jobs</span><span class="er">:</span></span>
+<span id="cb79-4"><a href="#cb79-4" aria-hidden="true" tabindex="-1"></a>   <span class="dt">deploy</span><span class="er">:</span></span>
+<span id="cb79-5"><a href="#cb79-5" aria-hidden="true" tabindex="-1"></a>     <span class="dt">docker</span><span class="er">:</span></span>
+<span id="cb79-6"><a href="#cb79-6" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">image</span><span class="er">:</span> <span class="dt">hashicorp</span><span class="er">/</span><span class="dt">terraform</span><span class="er">:</span><span class="dt">latest</span></span>
+<span id="cb79-7"><a href="#cb79-7" aria-hidden="true" tabindex="-1"></a>     <span class="dt">steps</span><span class="er">:</span></span>
+<span id="cb79-8"><a href="#cb79-8" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">checkout</span></span>
+<span id="cb79-9"><a href="#cb79-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-10"><a href="#cb79-10" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">run</span><span class="er">:</span></span>
+<span id="cb79-11"><a href="#cb79-11" aria-hidden="true" tabindex="-1"></a>           <span class="dt">name</span><span class="er">:</span> <span class="dt">Create</span> <span class="dt">clouds.yaml</span></span>
+<span id="cb79-12"><a href="#cb79-12" aria-hidden="true" tabindex="-1"></a>           <span class="dt">command</span><span class="er">:</span> <span class="er">|</span></span>
+<span id="cb79-13"><a href="#cb79-13" aria-hidden="true" tabindex="-1"></a>             <span class="dt">mkdir</span> <span class="dt">-p</span> <span class="er">~/</span><span class="dt">.config</span><span class="er">/</span><span class="dt">openstack</span></span>
+<span id="cb79-14"><a href="#cb79-14" aria-hidden="true" tabindex="-1"></a>             <span class="dt">echo</span> <span class="dt">&quot;clouds:</span></span>
+<span id="cb79-15"><a href="#cb79-15" aria-hidden="true" tabindex="-1"></a>               <span class="dt">openstack</span><span class="er">:</span></span>
+<span id="cb79-16"><a href="#cb79-16" aria-hidden="true" tabindex="-1"></a>                 <span class="dt">auth</span><span class="er">:</span></span>
+<span id="cb79-17"><a href="#cb79-17" aria-hidden="true" tabindex="-1"></a>                   <span class="dt">auth_url</span><span class="er">:</span> <span class="dt">https</span><span class="er">://</span><span class="dt">sebowa.nicis.ac.za</span><span class="er">:</span><span class="dt">5000</span></span>
+<span id="cb79-18"><a href="#cb79-18" aria-hidden="true" tabindex="-1"></a>                   <span class="dt">application_credential_id</span><span class="er">:</span> <span class="er">${</span><span class="dt">application_credential_id</span><span class="er">}</span></span>
+<span id="cb79-19"><a href="#cb79-19" aria-hidden="true" tabindex="-1"></a>                   <span class="dt">application_credential_secret</span><span class="er">:</span> <span class="er">${</span><span class="dt">application_credential_secret</span><span class="er">}</span></span>
+<span id="cb79-20"><a href="#cb79-20" aria-hidden="true" tabindex="-1"></a>                 <span class="dt">region_name</span><span class="er">:</span> <span class="dt">&quot;RegionOne&quot;</span></span>
+<span id="cb79-21"><a href="#cb79-21" aria-hidden="true" tabindex="-1"></a>                 <span class="dt">interface</span><span class="er">:</span> <span class="dt">&quot;public&quot;</span></span>
+<span id="cb79-22"><a href="#cb79-22" aria-hidden="true" tabindex="-1"></a>                 <span class="dt">identity_api_version</span><span class="er">:</span> <span class="dt">3</span></span>
+<span id="cb79-23"><a href="#cb79-23" aria-hidden="true" tabindex="-1"></a>                 <span class="dt">auth_type</span><span class="er">:</span> <span class="dt">&quot;v3applicationcredential&quot;&quot; &gt; ~/.config/openstack/clouds.yaml</span></span>
+<span id="cb79-24"><a href="#cb79-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-25"><a href="#cb79-25" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">run</span><span class="er">:</span></span>
+<span id="cb79-26"><a href="#cb79-26" aria-hidden="true" tabindex="-1"></a>           <span class="dt">name</span><span class="er">:</span> <span class="dt">Terraform</span> <span class="dt">Init</span></span>
+<span id="cb79-27"><a href="#cb79-27" aria-hidden="true" tabindex="-1"></a>           <span class="dt">command</span><span class="er">:</span> <span class="dt">terraform</span> <span class="dt">init</span></span>
+<span id="cb79-28"><a href="#cb79-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-29"><a href="#cb79-29" aria-hidden="true" tabindex="-1"></a>       <span class="dt">-</span> <span class="dt">run</span><span class="er">:</span></span>
+<span id="cb79-30"><a href="#cb79-30" aria-hidden="true" tabindex="-1"></a>           <span class="dt">name</span><span class="er">:</span> <span class="dt">Terraform</span> <span class="dt">Apply</span></span>
+<span id="cb79-31"><a href="#cb79-31" aria-hidden="true" tabindex="-1"></a>           <span class="dt">command</span><span class="er">:</span> <span class="dt">terraform</span> <span class="dt">apply</span> <span class="dt">-auto-approve</span></span>
+<span id="cb79-32"><a href="#cb79-32" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb79-33"><a href="#cb79-33" aria-hidden="true" tabindex="-1"></a> <span class="dt">workflows</span><span class="er">:</span></span>
+<span id="cb79-34"><a href="#cb79-34" aria-hidden="true" tabindex="-1"></a>   <span class="dt">version</span><span class="er">:</span> <span class="dt">2</span></span>
+<span id="cb79-35"><a href="#cb79-35" aria-hidden="true" tabindex="-1"></a>   <span class="dt">deploy_workflow</span><span class="er">:</span></span>
+<span id="cb79-36"><a href="#cb79-36" aria-hidden="true" tabindex="-1"></a>   <span class="dt">jobs</span><span class="er">:</span></span>
+<span id="cb79-37"><a href="#cb79-37" aria-hidden="true" tabindex="-1"></a>     <span class="dt">-</span> <span class="dt">deploy</span></span>
+<span id="cb79-38"><a href="#cb79-38" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p><strong>Version</strong>: Specifies the configuration version.</p></li>
+<li><p><strong>Jobs</strong>: Defines the individual steps in the build process, where we’ve defined a <code>build</code> job that runs inside the latest Terraform Docker container from Hashicorp.</p></li>
+<li><p><strong>Steps</strong>: The steps to execute within the job:</p>
+<ul>
+<li><p><code>checkout</code>: Clone and checkout the code from the repository.</p></li>
+<li><p><code>run</code>: Executes a number of shell commands to create the <code>clouds.yaml</code> file, then initialize and apply the Terraform configuration.</p></li>
+</ul></li>
+<li><p><strong>Workflows</strong>: Defines the workflow(s) that CircleCI will follow, where in this instance there is a single workflow specified <code>deploy_workflow</code>, that runs the <code>deploy</code> job.</p></li>
+</ul></li>
+<li><p><code>Init</code>ialize the Git Repository, <code>add</code> the files you’ve just created and <code>push</code> to GitHub: Following the instructions from the previous section where you created a new GitHub repo, execute the following commands from your head node, inside the <code>deploy_compute_node</code> folder:</p>
+<div class="sourceCode" id="cb80"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb80-1"><a href="#cb80-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/deploy_compute_node</span>
+<span id="cb80-2"><a href="#cb80-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> init</span>
+<span id="cb80-3"><a href="#cb80-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> add .</span>
+<span id="cb80-4"><a href="#cb80-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> commit <span class="at">-m</span> <span class="st">&quot;Initial Commit.&quot;</span> <span class="co"># You may be asked to configure you Name and Email. Follow the instructions on the screen before proceeding.</span></span>
+<span id="cb80-5"><a href="#cb80-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> branch <span class="at">-M</span> main</span>
+<span id="cb80-6"><a href="#cb80-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> remote add origin git@github.com:<span class="op">&lt;</span>TEAM_NAME<span class="op">&gt;</span>/deploy_compute_node.git</span>
+<span id="cb80-7"><a href="#cb80-7" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> push <span class="at">-u</span> origin main</span>
+<span id="cb80-8"><a href="#cb80-8" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>The new files should now be available on GitHub.</p></li>
+</ol>
+<h2 id="create-circleci-account-and-add-project">Create CircleCI Account and Add Project</h2>
+<p>Navigate to <a href="https://circleci.com">CircleCI.com</a> to create an account, link and add a new GitHub project. 1. Create a new organization and give it a suitable name <span class="box"><img src="/content/assets/chpc-scc-tutorial-4/009-circleci_create_organization.png" /></span> 1. Once you’ve logged into your workspace, go to projects and create a new project <span class="box"><img src="/content/assets/chpc-scc-tutorial-4/010-circleci_create_project00.png" /></span> 1. Create a new IaC Project <span class="box"><img src="/content/assets/chpc-scc-tutorial-4/011-circleci_create_project01.png" /></span> 1. If your repository is on GitHub, create a corresponding project <span class="box"><img src="/content/assets/chpc-scc-tutorial-4/012-circleci_create_project02.png" /></span> 1. Pick a project name and a repository to associate it to <span class="box"><img src="/content/assets/chpc-scc-tutorial-4/013-circleci_create_project03.png" /></span> 1. Push the configuration to GitHub to trigger workflow <span class="box"><img src="/content/assets/chpc-scc-tutorial-4/014-circleci_successful_deploy.png" /></span></p>
+<blockquote>
+<p>[!IMPORTANT] You’re going to need to delete your experimental compute node instance on your Sebowa OpenStack workspace, each time you want to test or run the CircleCI integration. It has been included here for demonstration purposes, so that you may begin to see the power and utility of CI/CD and automation.</p>
+<p>Navigate to your Sebowa OpenStack workspace to ensure that they deployment was successful.</p>
+<p>Consider how you could streamline this process even further using preconfigured instance snapshots, as well as Ansible after your instances have been deployed.</p>
+</blockquote>
+<h1 id="how-to-use-ansible-and-github-actions-to-run-hpl">How to use Ansible and GitHub Actions to run HPL</h1>
+<p>To run the High-Performance Linpack (HPL) benchmark using Ansible and GitHub Actions, you can follow these steps:</p>
+<h2 id="step-1-set-up-a-github-repo"><strong>Step 1: Set up a GitHub Repo</strong></h2>
+<ol start="4" type="1">
+<li><p>Create a GitHub repository or navigate to an existing repository.</p></li>
+<li><p>In your repo, navigate to <strong>Settings</strong> → <strong>Security</strong> → <strong>Secrets and variables</strong> → <strong>Actions</strong>.</p></li>
+<li><p>Click on <strong>New repository secret</strong>. For the title, enter <code>SSH_PRIVATE_KEY</code>, and for the secret, paste the private key you use to connect to the cluster.</p></li>
+</ol>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-4/015-setting_up_secrets.png" /></p>
+<figcaption><p>Creating Github Actions secretes</p></figcaption>
+</figure>
+<h2 id="step-2-create-a-bash-script-ansible-playbook-and-an-inventory-file"><strong>Step 2: Create a Bash script, Ansible playbook and an Inventory file</strong></h2>
+<p>Click on <strong>&lt;&gt;Code</strong> in the navigation bar on top of the page.</p>
+<h3 id="bash-script">Bash script</h3>
+<ol start="4" type="1">
+<li><p>Create a file called : <code>ansible/run_hpl.sh</code></p></li>
+<li><p>Example of file contents:</p></li>
+</ol>
+<div class="sourceCode" id="cb81"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb81-1"><a href="#cb81-1" aria-hidden="true" tabindex="-1"></a><span class="co">#!/bin/bash</span></span>
+<span id="cb81-2"><a href="#cb81-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-3"><a href="#cb81-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Navigate to the directory that contains your hpl binary file</span></span>
+<span id="cb81-4"><a href="#cb81-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> /home/rocky/hpl/bin/compile_BLAS_MPI/</span>
+<span id="cb81-5"><a href="#cb81-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb81-6"><a href="#cb81-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Run the HPL benchmark with srun</span></span>
+<span id="cb81-7"><a href="#cb81-7" aria-hidden="true" tabindex="-1"></a><span class="ex">srun</span> <span class="at">-n16</span> ./xhpl</span></code></pre></div>
+<h3 id="ansible-playbook">Ansible playbook</h3>
+<ol start="4" type="1">
+<li><p>Create a file called <code>ansible/playbook.yml</code></p></li>
+<li><p>Example of file contents:</p></li>
+</ol>
+<div class="sourceCode" id="cb82"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb82-1"><a href="#cb82-1" aria-hidden="true" tabindex="-1"></a><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run HPL benchmark</span></span>
+<span id="cb82-2"><a href="#cb82-2" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">hosts</span><span class="kw">:</span><span class="at"> all</span></span>
+<span id="cb82-3"><a href="#cb82-3" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">tasks</span><span class="kw">:</span></span>
+<span id="cb82-4"><a href="#cb82-4" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Copy the run_hpl.sh script to remote machine</span></span>
+<span id="cb82-5"><a href="#cb82-5" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">copy</span><span class="kw">:</span></span>
+<span id="cb82-6"><a href="#cb82-6" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">src</span><span class="kw">:</span><span class="at"> run_hpl.sh</span><span class="co">  # Path to the script in the repo</span></span>
+<span id="cb82-7"><a href="#cb82-7" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">dest</span><span class="kw">:</span><span class="at"> /home/rocky/run_hpl.sh</span><span class="co">  # Destination path on the remote machine</span></span>
+<span id="cb82-8"><a href="#cb82-8" aria-hidden="true" tabindex="-1"></a><span class="at">        </span><span class="fu">mode</span><span class="kw">:</span><span class="at"> </span><span class="st">&#39;0755&#39;</span><span class="co">  # Make the script executable</span></span>
+<span id="cb82-9"><a href="#cb82-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb82-10"><a href="#cb82-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run HPL benchmark</span></span>
+<span id="cb82-11"><a href="#cb82-11" aria-hidden="true" tabindex="-1"></a><span class="fu">      shell</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb82-12"><a href="#cb82-12" aria-hidden="true" tabindex="-1"></a>        source /home/rocky/.profile</span>
+<span id="cb82-13"><a href="#cb82-13" aria-hidden="true" tabindex="-1"></a>        /home/rocky/run_hpl.sh</span>
+<span id="cb82-14"><a href="#cb82-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">become</span><span class="kw">:</span><span class="at"> </span><span class="ch">yes</span></span></code></pre></div>
+<h3 id="ansible-inventory-file">Ansible Inventory File</h3>
+<ol start="4" type="1">
+<li><p>Create a file called <code>ansible/inventory</code></p></li>
+<li><p>Example of file contents:</p></li>
+</ol>
+<div class="sourceCode" id="cb83"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="kw">[</span><span class="at">headnode</span><span class="kw">]</span></span>
+<span id="cb83-2"><a href="#cb83-2" aria-hidden="true" tabindex="-1"></a><span class="co"># Only the head node&#39;s IP</span></span>
+<span id="cb83-3"><a href="#cb83-3" aria-hidden="true" tabindex="-1"></a><span class="at">154.114.57.146 ansible_user=rocky</span></span></code></pre></div>
+<h2 id="step-3-create-a-github-actions-workflow"><strong>Step 3: Create a Github Actions Workflow</strong></h2>
+<ol start="4" type="1">
+<li><p>Click on <strong>&lt;&gt;Code</strong> in the navigation bar on top of the page.</p></li>
+<li><p>Create a file called: <code>.github/workflows/run_hpl.yml</code></p></li>
+<li><p>Example of file contents:</p></li>
+</ol>
+<div class="sourceCode" id="cb84"><pre class="sourceCode yaml"><code class="sourceCode yaml"><span id="cb84-1"><a href="#cb84-1" aria-hidden="true" tabindex="-1"></a><span class="fu">name</span><span class="kw">:</span><span class="at"> Run Ansible Playbook</span></span>
+<span id="cb84-2"><a href="#cb84-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-3"><a href="#cb84-3" aria-hidden="true" tabindex="-1"></a><span class="fu">on</span><span class="kw">:</span></span>
+<span id="cb84-4"><a href="#cb84-4" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">push</span><span class="kw">:</span></span>
+<span id="cb84-5"><a href="#cb84-5" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">branches</span><span class="kw">:</span></span>
+<span id="cb84-6"><a href="#cb84-6" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="kw">-</span><span class="at"> main</span></span>
+<span id="cb84-7"><a href="#cb84-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-8"><a href="#cb84-8" aria-hidden="true" tabindex="-1"></a><span class="fu">jobs</span><span class="kw">:</span></span>
+<span id="cb84-9"><a href="#cb84-9" aria-hidden="true" tabindex="-1"></a><span class="at">  </span><span class="fu">ansible</span><span class="kw">:</span></span>
+<span id="cb84-10"><a href="#cb84-10" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">runs-on</span><span class="kw">:</span><span class="at"> ubuntu-latest</span></span>
+<span id="cb84-11"><a href="#cb84-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-12"><a href="#cb84-12" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="fu">steps</span><span class="kw">:</span></span>
+<span id="cb84-13"><a href="#cb84-13" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Checkout repository</span></span>
+<span id="cb84-14"><a href="#cb84-14" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">uses</span><span class="kw">:</span><span class="at"> actions/checkout@v3</span></span>
+<span id="cb84-15"><a href="#cb84-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-16"><a href="#cb84-16" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Set up SSH</span></span>
+<span id="cb84-17"><a href="#cb84-17" aria-hidden="true" tabindex="-1"></a><span class="fu">      run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb84-18"><a href="#cb84-18" aria-hidden="true" tabindex="-1"></a>        # Ensure the .ssh directory exists</span>
+<span id="cb84-19"><a href="#cb84-19" aria-hidden="true" tabindex="-1"></a>        mkdir -p ~/.ssh</span>
+<span id="cb84-20"><a href="#cb84-20" aria-hidden="true" tabindex="-1"></a>        chmod 700 ~/.ssh</span>
+<span id="cb84-21"><a href="#cb84-21" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-22"><a href="#cb84-22" aria-hidden="true" tabindex="-1"></a>        # Write the private key to the correct location</span>
+<span id="cb84-23"><a href="#cb84-23" aria-hidden="true" tabindex="-1"></a>        echo &quot;${{ secrets.SSH_PRIVATE_KEY }}&quot; &gt; ~/.ssh/id_rsa</span>
+<span id="cb84-24"><a href="#cb84-24" aria-hidden="true" tabindex="-1"></a>        chmod 600 ~/.ssh/id_rsa</span>
+<span id="cb84-25"><a href="#cb84-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-26"><a href="#cb84-26" aria-hidden="true" tabindex="-1"></a>        # Add known hosts to the .ssh directory</span>
+<span id="cb84-27"><a href="#cb84-27" aria-hidden="true" tabindex="-1"></a>        echo &quot;${{ secrets.KNOWN_HOSTS }}&quot; &gt; ~/.ssh/known_hosts</span>
+<span id="cb84-28"><a href="#cb84-28" aria-hidden="true" tabindex="-1"></a>        chmod 644 ~/.ssh/known_hosts</span>
+<span id="cb84-29"><a href="#cb84-29" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-30"><a href="#cb84-30" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Test SSH Connection</span></span>
+<span id="cb84-31"><a href="#cb84-31" aria-hidden="true" tabindex="-1"></a><span class="fu">      run</span><span class="kw">: </span><span class="ch">|</span></span>
+<span id="cb84-32"><a href="#cb84-32" aria-hidden="true" tabindex="-1"></a>        ssh -i ~/.ssh/id_rsa -o StrictHostKeyChecking=no rocky@154.114.57.146 &quot;echo Connected!&quot;</span>
+<span id="cb84-33"><a href="#cb84-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb84-34"><a href="#cb84-34" aria-hidden="true" tabindex="-1"></a><span class="at">    </span><span class="kw">-</span><span class="at"> </span><span class="fu">name</span><span class="kw">:</span><span class="at"> Run Ansible Playbook</span></span>
+<span id="cb84-35"><a href="#cb84-35" aria-hidden="true" tabindex="-1"></a><span class="at">      </span><span class="fu">run</span><span class="kw">:</span><span class="at"> ansible-playbook ansible/playbook.yml -i ansible/inventory</span></span></code></pre></div>
+<ol start="5" type="1">
+<li><p><strong>Commit changes</strong> and push.</p></li>
+</ol>
+<h2 id="final-remarks"><strong>Final Remarks</strong></h2>
+<p>After pushing the workflow file, the HPL benchmark will run on all nodes if Slurm and OpenMPI are configured correctly. To confirm that the benchmark is running, check your cluster monitoring software (Grafana) or use <code>htop</code>/<code>btop</code> on the compute nodes.</p>
+<p>The GitHub Actions workflow is triggered on push events, which means that if any code is pushed to the repository, the HPL benchmark will run.</p>
+<h1 id="slurm-scheduler-and-workload-manager">Slurm Scheduler and Workload Manager</h1>
+<p>The Slurm Workload Manager (formerly known as Simple Linux Utility for Resource Management), is a free and open-source job scheduler for Linux, used by many of the world’s supercomputers/computer clusters. It allows you to manage the resources of a cluster by deciding how users get access for some duration of time so they can perform work. To find out more, please visit the <a href="https://slurm.schedmd.com/documentation.html">Slurm Website</a>.</p>
+<h2 id="prerequisites">Prerequisites</h2>
+<ol start="5" type="1">
+<li><p>Make sure the clocks, i.e. chrony daemons, are synchronized across the cluster.</p></li>
+<li><p>Generate a <strong>SLURM</strong> and <strong>MUNGE</strong> user on all of your nodes:</p>
+<ul>
+<li><p><strong>If you have Ansible User Module working</strong></p>
+<ul>
+<li><p>Create the users as shown in tutorial 2 <strong>Do NOT add them to the sysadmin group</strong>.</p></li>
+</ul></li>
+<li><p><strong>If you do NOT have your Ansible User Module working</strong></p>
+<ul>
+<li><p><code>useradd slurm</code></p></li>
+<li><p>Ensure that users and groups (UIDs and GIDs) are synchronized across the cluster. Read up on the appropriate <a href="https://linuxize.com/post/etc-shadow-file/">/etc/shadow</a> and <a href="https://www.cyberciti.biz/faq/understanding-etcpasswd-file-format/">/etc/password</a> files.</p></li>
+</ul></li>
+</ul></li>
+</ol>
+<h2 id="head-node-configuration-server">Head Node Configuration (Server)</h2>
+<ol start="4" type="1">
+<li><p>Install the <a href="https://dun.github.io/munge/">MUNGE</a> package. MUNGE is an authentication service that makes sure user credentials are valid and is specifically designed for HPC use.</p>
+<p>First, we will enable the <strong>EPEL</strong> <em>(Extra Packages for Enterprise Linux)</em> repository for <code>dnf</code>, which contains extra software that we require for MUNGE and Slurm:</p>
+<div class="sourceCode" id="cb85"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb85-1"><a href="#cb85-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf install epel-release</span>
+<span id="cb85-2"><a href="#cb85-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>Then we can install MUNGE, pulling the development source code from the <code>crb</code> “CodeReady Builder” repository:</p>
+<div class="sourceCode" id="cb86"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb86-1"><a href="#cb86-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf config-manager <span class="at">--set-enabled</span> crb</span>
+<span id="cb86-2"><a href="#cb86-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">sudo</span> dnf install munge munge-libs munge-devel</span>
+<span id="cb86-3"><a href="#cb86-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Generate a MUNGE key for client authentication:</p>
+<div class="sourceCode" id="cb87"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb87-1"><a href="#cb87-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> /usr/sbin/create-munge-key <span class="at">-r</span></span>
+<span id="cb87-2"><a href="#cb87-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">sudo</span> chown munge:munge /etc/munge/munge.key</span>
+<span id="cb87-3"><a href="#cb87-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">sudo</span> chmod 600 /etc/munge/munge.key</span>
+<span id="cb87-4"><a href="#cb87-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Using <code>scp</code>, copy the MUNGE key to your compute node to allow it to authenticate:</p>
+<ol start="5" type="1">
+<li><p>SSH into your compute node and create the directory <code>/etc/munge</code>. Then exit back to the head node.</p></li>
+<li><p>Since, munge has not yet been installed on your compute node, first transfer the file to a temporary location</p></li>
+</ol>
+<div class="sourceCode" id="cb88"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb88-1"><a href="#cb88-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp /etc/munge/munge.key /tmp/munge.key <span class="kw">&amp;&amp;</span> <span class="fu">sudo</span> chown user:user /tmp/munge.key</span>
+<span id="cb88-2"><a href="#cb88-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p><strong>Replace user with the name of the user that you are running these commands as</strong></p>
+<ol start="3" type="1">
+<li><p>Move the file to your compute node</p></li>
+</ol>
+<div class="sourceCode" id="cb89"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb89-1"><a href="#cb89-1" aria-hidden="true" tabindex="-1"></a><span class="fu">scp</span> /etc/munge/munge.key <span class="op">&lt;</span>compute_node_name_or_ip<span class="op">&gt;</span>:/etc/tmp/munge.key</span>
+<span id="cb89-2"><a href="#cb89-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ol start="4" type="1">
+<li><p>Move the file to the correct location</p></li>
+</ol>
+<div class="sourceCode" id="cb90"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb90-1"><a href="#cb90-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ssh</span> <span class="op">&lt;</span>computenode hostname or ip<span class="op">&gt;</span> <span class="st">&#39;sudo mv /tmp/munge.key /etc/munge/munge.key&#39;</span></span>
+<span id="cb90-2"><a href="#cb90-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p><strong>Start</strong> and <strong>enable</strong> the <code>munge</code> service</p>
+<p>Test munge encryption/decryption between the current node and a different node <code>bash    munge -n | ssh &lt;different node hostname or ip&gt; unmunge</code></p></li>
+<li><p>Install dependency packages:</p>
+<div class="sourceCode" id="cb91"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb91-1"><a href="#cb91-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf install gcc openssl openssl-devel pam-devel numactl numactl-devel hwloc lua readline-devel ncurses-devel man2html libibmad libibumad rpm-build perl-Switch libssh2-devel mariadb-devel perl-ExtUtils-MakeMaker rrdtool-devel lua-devel hwloc-devel pmix pmix-devel dbus-devel</span>
+<span id="cb91-2"><a href="#cb91-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Download the 25.11.6 version of the Slurm source code tarball (.tar.bz2) from <a href="https://download.schedmd.com/slurm/">https://download.schedmd.com/slurm/</a>. Copy the URL for <code>slurm-25.11.6.bz2</code> from your browser and use the <code>wget</code> command to easily download files directly to your VM.</p></li>
+<li><p>Environment variables are a convenient way to store a name and value for easier recovery when they’re needed. Export the version of the tarball you downloaded to the environment variable VERSION. This will make installation easier as you will see how we reference the environment variable instead of typing out the version number at every instance.</p>
+<div class="sourceCode" id="cb92"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb92-1"><a href="#cb92-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">VERSION</span><span class="op">=</span>25.11.6</span>
+<span id="cb92-2"><a href="#cb92-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Build RPM packages for Slurm for installation</p>
+<div class="sourceCode" id="cb93"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb93-1"><a href="#cb93-1" aria-hidden="true" tabindex="-1"></a><span class="ex">rpmbuild</span> <span class="at">--define</span> <span class="st">&quot;_annobin_gcc_plugin %{nil}&quot;</span> <span class="at">--define</span> <span class="st">&quot;_with_pmix --with-pmix=/usr&quot;</span> <span class="at">-ta</span> slurm-<span class="va">$VERSION</span>.tar.bz2</span>
+<span id="cb93-2"><a href="#cb93-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>This should successfully generate Slurm RPMs in the <code>~/rpmbuild/RPMS/x86_64</code> directory.</p></li>
+<li><p>Copy these RPMs to your compute node to install later, using <code>scp</code>.</p></li>
+<li><p>Install Slurm server</p>
+<div class="sourceCode" id="cb94"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb94-1"><a href="#cb94-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf localinstall ~/rpmbuild/RPMS/x86_64/slurm-<span class="va">$VERSION</span><span class="pp">*</span>.rpm <span class="dt">\</span></span>
+<span id="cb94-2"><a href="#cb94-2" aria-hidden="true" tabindex="-1"></a>                         ~/rpmbuild/RPMS/x86_64/slurm-devel-<span class="va">$VERSION</span><span class="pp">*</span>.rpm <span class="dt">\</span></span>
+<span id="cb94-3"><a href="#cb94-3" aria-hidden="true" tabindex="-1"></a>                         ~/rpmbuild/RPMS/x86_64/slurm-example-configs-<span class="va">$VERSION</span><span class="pp">*</span>.rpm <span class="dt">\</span></span>
+<span id="cb94-4"><a href="#cb94-4" aria-hidden="true" tabindex="-1"></a>                         ~/rpmbuild/RPMS/x86_64/slurm-perlapi-<span class="va">$VERSION</span><span class="pp">*</span>.rpm <span class="dt">\</span></span>
+<span id="cb94-5"><a href="#cb94-5" aria-hidden="true" tabindex="-1"></a>                         ~/rpmbuild/RPMS/x86_64/slurm-slurmctld-<span class="va">$VERSION</span><span class="pp">*</span>.rpm</span>
+<span id="cb94-6"><a href="#cb94-6" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Setup Slurm server</p>
+<div class="sourceCode" id="cb95"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb95-1"><a href="#cb95-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cp /etc/slurm/slurm.conf.example /etc/slurm/slurm.conf</span>
+<span id="cb95-2"><a href="#cb95-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>Edit this file (<code>/etc/slurm/slurm.conf</code>) and set appropriate values for:</p>
+<div class="sourceCode" id="cb96"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb96-1"><a href="#cb96-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ClusterName</span><span class="op">=</span>      <span class="co">#Name of your cluster (whatever you want)</span></span>
+<span id="cb96-2"><a href="#cb96-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">ControlMachine</span><span class="op">=</span>   <span class="co">#DNS name of the head node</span></span>
+<span id="cb96-3"><a href="#cb96-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>Populate the node’s specification at the bottom with the following lines:</p>
+<div class="sourceCode" id="cb97"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb97-1"><a href="#cb97-1" aria-hidden="true" tabindex="-1"></a><span class="dt">NodeName</span><span class="op">=</span><span class="er">&lt;</span><span class="dt">computenode</span><span class="er">&gt;</span> <span class="dt">Sockets</span><span class="op">=</span><span class="er">&lt;</span><span class="dt">num_sockets</span><span class="er">&gt;</span> <span class="dt">CoresPerSocket</span><span class="op">=</span><span class="er">&lt;</span><span class="dt">num_cpu_cores</span><span class="er">&gt;</span> <span class="dt">ThreadsPerCore</span><span class="op">=</span><span class="er">&lt;</span><span class="dt">num_threads_per_core</span><span class="er">&gt;</span> <span class="dt">State</span><span class="op">=</span><span class="dt">UNKNOWN</span></span>
+<span id="cb97-2"><a href="#cb97-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>The <code>&lt;computenode&gt;</code> value needs to be replaced with the DNS names of your compute nodes. This can either be a comma-seperated list (e.g. <code>compute_node_1,compute_node_2,compute_node_3</code>), a hostlist expression (e.g. <code>compute_node_[1-3]</code>), or individual specification lines per compute node.</p>
+<p>Compute nodes then need to be grouped into partitions:</p>
+<div class="sourceCode" id="cb98"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb98-1"><a href="#cb98-1" aria-hidden="true" tabindex="-1"></a><span class="dt">PartitionName</span><span class="op">=</span><span class="dt">debug</span> <span class="dt">Nodes</span><span class="op">=</span><span class="dt">ALL</span> <span class="dt">Default</span><span class="op">=</span><span class="dt">YES</span> <span class="dt">MaxTime</span><span class="op">=</span><span class="dt">INFINITE</span> <span class="dt">State</span><span class="op">=</span><span class="dt">UP</span></span>
+<span id="cb98-2"><a href="#cb98-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p><strong>To check how many cores your compute node has, run <code>lscpu</code> on the compute node.</strong> You will get output including <code>CPU(s)</code>, <code>Thread(s) per core</code>, <code>Core(s) per socket</code> and more that will help you determine what to use for the Slurm configuration. Use <code>free -m</code> to get details on the amount of memory in MiB available on your compute node.</p>
+<p><strong>Hint: if you overspec your compute resources in the definition file then Slurm will not be able to use the nodes.</strong></p></li>
+<li><p>Create Necessary Directories and Set Permissions:</p>
+<div class="sourceCode" id="cb99"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb99-1"><a href="#cb99-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> mkdir <span class="at">-p</span> /var/spool/slurm/ctld /var/spool/slurm/d /var/log/slurm</span>
+<span id="cb99-2"><a href="#cb99-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> chown <span class="at">-R</span> slurm:slurm /var/spool/slurm/ctld /var/spool/slurm/d /var/log/slurm</span>
+<span id="cb99-3"><a href="#cb99-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p><strong>Start</strong> and <strong>enable</strong> the <code>slurmctld</code> service on the head node.</p></li>
+</ol>
+<h2 id="compute-node-configuration-clients">Compute Node Configuration (Clients)</h2>
+<ol start="4" type="1">
+<li><p>Setup MUNGE:</p>
+<div class="sourceCode" id="cb100"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb100-1"><a href="#cb100-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf install munge munge-libs</span>
+<span id="cb100-2"><a href="#cb100-2" aria-hidden="true" tabindex="-1"></a>   <span class="fu">sudo</span> scp /etc/munge/munge.key <span class="op">&lt;</span>compute_node_name_or_ip<span class="op">&gt;</span>:/etc/munge/munge.key</span>
+<span id="cb100-3"><a href="#cb100-3" aria-hidden="true" tabindex="-1"></a>   <span class="fu">sudo</span> chown munge:munge /etc/munge/munge.key</span>
+<span id="cb100-4"><a href="#cb100-4" aria-hidden="true" tabindex="-1"></a>   <span class="fu">sudo</span> chmod 400 /etc/munge/munge.key</span>
+<span id="cb100-5"><a href="#cb100-5" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Install Slurm Client</p></li>
+</ol>
+<div class="sourceCode" id="cb101"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb101-1"><a href="#cb101-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf localinstall ~/rpmbuild/RPMS/x86_64/slurm-<span class="va">$VERSION</span><span class="pp">*</span>.rpm <span class="dt">\</span></span>
+<span id="cb101-2"><a href="#cb101-2" aria-hidden="true" tabindex="-1"></a>                   ~/rpmbuild/RPMS/x86_64/slurm-slurmd-<span class="va">$VERSION</span><span class="pp">*</span>.rpm <span class="dt">\</span></span>
+<span id="cb101-3"><a href="#cb101-3" aria-hidden="true" tabindex="-1"></a>                   ~/rpmbuild/RPMS/x86_64/slurm-pam_slurm-<span class="va">$VERSION</span><span class="pp">*</span>.rpm</span></code></pre></div>
+<ol start="3" type="1">
+<li><p>Copy <code>/etc/slurm/slurm.conf</code> from head node to compute node.</p></li>
+<li><p>Create necessary directories: <code>bash  sudo mkdir -p /var/spool/slurm/d  sudo chown slurm:slurm /var/spool/slurm/d</code></p></li>
+<li><p><strong>Start</strong> and <strong>enable</strong> the <code>slurmd</code> service.</p></li>
+</ol>
+<p>Return to your head node. To demonstrate that your scheduler is working you can run the following command as your normal user:</p>
+<div class="sourceCode" id="cb102"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb102-1"><a href="#cb102-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sinfo</span></span></code></pre></div>
+<p>You should see your compute node in an idle state.</p>
+<p>Slurm allows for jobs to be submitted in <em>batch</em> (set-and-forget) or <em>interactive</em> (real-time response to the user) modes. Start an interactive session on your compute node via the scheduler with</p>
+<div class="sourceCode" id="cb103"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb103-1"><a href="#cb103-1" aria-hidden="true" tabindex="-1"></a><span class="ex">srun</span> <span class="at">-N</span> 1 <span class="at">--pty</span> bash</span></code></pre></div>
+<p>You should automatically be logged into your compute node. This is done via Slurm. Re-run <code>sinfo</code> now and also run the command <code>squeue</code>. Here you will see that your compute node is now allocated to this job.</p>
+<p>To finish, type <code>exit</code> and you’ll be placed back on your head node. If you run <code>squeue</code> again, you will now see that the list is empty.</p>
+<p>To confirm that your node configuration is correct, you can run the following command on the head node:</p>
+<div class="sourceCode" id="cb104"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb104-1"><a href="#cb104-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sinfo</span> <span class="at">-alN</span></span></code></pre></div>
+<p>The <code>S:C:T</code> column means “sockets, cores, threads” and your numbers for your compute node should match the settings that you made in the <code>slurm.conf</code> file.</p>
+<h1 id="gromacs-application-benchmark">GROMACS Application Benchmark</h1>
+<p>You will now be extending some of your earlier work from <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial3/README.md#gromacs-adh-cubic">Tutorial 3</a>.</p>
+<h2 id="protein-visualization">Protein Visualization</h2>
+<blockquote>
+<p>[!NOTE] You will need to work on your or laptop to complete this section, not on your head node nor compute node.</p>
+</blockquote>
+<p>You are able to score bonus points for this tutorial by submitting a visualisation of your <strong>adh_cubic</strong> benchmark run. Follow the instructions below to accomplish this and upload the visualization.</p>
+<p>Download and install the VMD visualization tool by selecting the correct version for your operating system. For example, for a Windows machine with an Nvidia GPU select the “Windows OpenGL, CUDA” option. You may need to register on the website.</p>
+<pre class="http"><code>https://www.ks.uiuc.edu/Development/Download/download.cgi?PackageName=VMD
+</code></pre>
+<p>Use the <code>WinSCP</code> application for Windows, or the <code>scp</code> command for Linux to copy the output file <code>confout.gro</code> of the <strong>adh_cubic</strong> benchmark from your cluster to your PC. Attempting to visualise the larger “1.5M_water” simulation is not necessary and not recommended due to memory limitations of most PCs.</p>
+<ol start="3" type="1">
+<li><p>Open VMD, select <strong>File</strong> then <strong>New Module…</strong>, click <strong>Browse…</strong> and select your <code>.gro</code> file.</p></li>
+<li><p>Ensure the filetype was detected as <strong>Gromacs GRO</strong> then click <strong>Load</strong>. In the main VMD window you will see that 134177 particles have been loaded. You should also see the display window has been populated with your simulation particle data.</p>
+<p>You can manipulate the data with your mouse cursor: zoom with the mouse wheel or rotate it by dragging with the left mouse button held down. This visualisation presents a naturally occurring protein (blue/green) found in the human body, suspended in a solution of water molecules (red/white).</p></li>
+<li><p>From the main VMD window, select <strong>Graphics</strong> then <strong>Representations..</strong>.</p></li>
+<li><p>Under <strong>Selected Atoms</strong>, replace <strong>all</strong> with <strong>not resname SOL</strong> and click <strong>apply</strong>. You will notice the water solution around your protein has been removed, allowing you to better examine the protein.</p></li>
+<li><p>In the same window, select the dropdown <strong>Drawing Method</strong> and try out a few different options. Select <strong>New Cartoon</strong> before moving on.</p></li>
+<li><p>From the main VMD window, once again select <strong>Graphics</strong> then <strong>Colors</strong>. Under <strong>Categories</strong>, select <strong>Display</strong>, then <strong>Background</strong>, followed by <strong>8 white</strong>.</p></li>
+<li><p>Finally, you are ready to render a snapshot of your visualisation. From the main window, select <strong>File</strong> then <strong>Render…</strong>, ensure <strong>Snapshot…</strong> is selected and enter an appropriate filename. Click <strong>Start Rendering</strong>.</p></li>
+</ol>
+<p>Simulations like this are used to to develop and prototype experimental pharmaceutical drug designs. By visualising the output, researchers are able to better interpret simulation results.</p>
+<blockquote>
+<p>[!TIP] Copy the resulting <code>.bmp</code> file(s) from yout cluster to your local computer or laptop and demonstrate this to your instructors for bonus points.</p>
+</blockquote>
+<h1 id="openmx-application-benchmark">OpenMX Application Benchmark</h1>
+<p>OpenMX (Open source package for Material eXplorer) is an open-source software package for first-principles electronic structure calculations of materials based on density functional theory. OpenMX implements functionalities frequently required in materials research, such as structural optimization, molecular dynamics, calculations under electric fields, charge doping, electrical transport calculations, core-level excitations, Wannier functions, and various charge and bonding analyses.</p>
+<h2 id="pre-requisite">Pre-Requisite</h2>
+<ol start="3" type="1">
+<li><p>MPI - IntelMPI or openMPI or similar</p></li>
+<li><p>Math Libraries - choose one</p>
+<p>A. IntelMKL</p>
+<p>B. IntelMKL Mix</p>
+<p>C. OpenBLAS and FFTW and Scalapack</p></li>
+</ol>
+<blockquote>
+<p>[!TIP] IntelOneAPI includes everything needed for a complete build.</p>
+</blockquote>
+<h2 id="setup">Setup</h2>
+<div class="sourceCode" id="cb106"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb106-1"><a href="#cb106-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download OpenMX4</span></span>
+<span id="cb106-2"><a href="#cb106-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://www.openmx-square.org/openmx4.0.tar.gz</span>
+<span id="cb106-3"><a href="#cb106-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb106-4"><a href="#cb106-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract OpenMX4</span></span>
+<span id="cb106-5"><a href="#cb106-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf openmx4.0.tar.gz</span></code></pre></div>
+<ul>
+<li><p>Download <code>jobs</code> and <code>patch4.0.1</code> from the scc site. You can clone the ssc site and copy what you need, or just download the files and scp copy to your cluster.</p></li>
+</ul>
+<div class="sourceCode" id="cb107"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb107-1"><a href="#cb107-1" aria-hidden="true" tabindex="-1"></a><span class="co"># copy patch and jobs to source folder</span></span>
+<span id="cb107-2"><a href="#cb107-2" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> ./patch4.0.1.tar.gz openmx4.0/source</span>
+<span id="cb107-3"><a href="#cb107-3" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> ./jobs.tar.gz openmx4.0/work</span>
+<span id="cb107-4"><a href="#cb107-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb107-5"><a href="#cb107-5" aria-hidden="true" tabindex="-1"></a><span class="co"># move to work</span></span>
+<span id="cb107-6"><a href="#cb107-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> openmx4.0/work</span>
+<span id="cb107-7"><a href="#cb107-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb107-8"><a href="#cb107-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract jobs</span></span>
+<span id="cb107-9"><a href="#cb107-9" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf jobs.tar.gz</span>
+<span id="cb107-10"><a href="#cb107-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb107-11"><a href="#cb107-11" aria-hidden="true" tabindex="-1"></a><span class="co"># move to source</span></span>
+<span id="cb107-12"><a href="#cb107-12" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../source</span>
+<span id="cb107-13"><a href="#cb107-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb107-14"><a href="#cb107-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract patch</span></span>
+<span id="cb107-15"><a href="#cb107-15" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> zxvf patch4.0.1.tar.gz</span></code></pre></div>
+<blockquote>
+<p>[!NOTE] Modify makefile according to selected tool-chain</p>
+</blockquote>
+<h3 id="modify-makefile">Modify makefile</h3>
+<div class="sourceCode" id="cb108"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb108-1"><a href="#cb108-1" aria-hidden="true" tabindex="-1"></a><span class="ex">vim</span> makefile</span></code></pre></div>
+<h4 id="a.-intel-easy-difficulty">A. Intel (easy difficulty)</h4>
+<p>Fix MKLROOT directory</p>
+<div class="sourceCode" id="cb109"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb109-1"><a href="#cb109-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
+<span id="cb109-2"><a href="#cb109-2" aria-hidden="true" tabindex="-1"></a><span class="ex">MKLROOT</span> = /opt/intel/oneapi/mkl/2025.3</span>
+<span id="cb109-3"><a href="#cb109-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb109-4"><a href="#cb109-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
+<span id="cb109-5"><a href="#cb109-5" aria-hidden="true" tabindex="-1"></a><span class="ex">MKLROOT</span> = /home/rocky/intel/oneapi/mkl/2026.0</span></code></pre></div>
+<p>Load OneAPI and build openmx</p>
+<pre><code>ml oneapi/2026.0.1
+
+make install
+</code></pre>
+<p>** Test Run! **</p>
+<div class="sourceCode" id="cb111"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../work</span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mpiexec</span> <span class="at">-n</span> 2 ./openmx 1-Methane.dat</span></code></pre></div>
+<h4 id="b.-mix-intelmkl-openmpi-gcc-medium-difficulty">B. Mix IntelMKL + openMPI + GCC (medium difficulty)</h4>
+<p>Fix MKLROOT directory and select correct c and fortran compilers</p>
+<div class="sourceCode" id="cb112"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Before</span></span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a><span class="ex">MKLROOT</span> = /opt/intel/oneapi/mkl/2025.3</span>
+<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a><span class="co"># After</span></span>
+<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a><span class="ex">MKLROOT</span> = /home/rocky/intel/oneapi/mkl/2026.0</span>
+<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Replace CC , FC and LIB with</span></span>
+<span id="cb112-8"><a href="#cb112-8" aria-hidden="true" tabindex="-1"></a><span class="ex">CC</span> = mpicc <span class="at">-O3</span> <span class="at">-fopenmp</span> <span class="at">-fcommon</span> <span class="at">-Wno-error</span><span class="op">=</span>implicit-function-declaration <span class="at">-I</span><span class="va">${MKLROOT}</span>/include/fftw <span class="at">-I</span><span class="va">${MKLROOT}</span>/include</span>
+<span id="cb112-9"><a href="#cb112-9" aria-hidden="true" tabindex="-1"></a><span class="ex">FC</span> = mpifort <span class="at">-O3</span> <span class="at">-fopenmp</span> <span class="at">-fallow-argument-mismatch</span> <span class="at">-I</span><span class="va">${MKLROOT}</span>/include</span>
+<span id="cb112-10"><a href="#cb112-10" aria-hidden="true" tabindex="-1"></a><span class="va">LIB</span><span class="op">=</span> <span class="ex">-L</span><span class="va">${MKLROOT}</span><span class="ex">/lib/intel64</span> <span class="at">-lmkl_scalapack_lp64</span> <span class="at">-lmkl_gf_lp64</span> <span class="at">-lmkl_gnu_thread</span> <span class="at">-lmkl_core</span> <span class="at">-lmkl_blacs_openmpi_lp64</span> <span class="at">-lmpi</span> <span class="at">-lmpi_mpifh</span> <span class="at">-lgfortran</span></span></code></pre></div>
+<p>Load mkl , openmpi and gcc and build openmx</p>
+<pre><code>ml compiler-rt tbb mkl
+ml gcc openmpi
+
+make install
+</code></pre>
+<p>** Test Run! **</p>
+<div class="sourceCode" id="cb114"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../work</span>
+<span id="cb114-2"><a href="#cb114-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb114-3"><a href="#cb114-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-n</span> 2 ./openmx 1-Methane.dat</span></code></pre></div>
+<h4 id="c.-own-high-performance-libraries-complex-difficulty">C. Own high performance libraries (complex difficulty)</h4>
+<p>These next few steps are very involved and can be skipped, it was only added for completeness.</p>
+<h5 id="build-fftw">Build FFTW</h5>
+<p>More information can be found at :</p>
+<blockquote>
+<p><a href="https://www.fftw.org/download.html">https://www.fftw.org/download.html</a></p>
+</blockquote>
+<div class="sourceCode" id="cb115"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb115-1"><a href="#cb115-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Get FFTW</span></span>
+<span id="cb115-2"><a href="#cb115-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://www.fftw.org/fftw-3.3.10.tar.gz</span>
+<span id="cb115-3"><a href="#cb115-3" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-xzf</span> fftw-3.3.10.tar.gz</span>
+<span id="cb115-4"><a href="#cb115-4" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> fftw-3.3.10</span>
+<span id="cb115-5"><a href="#cb115-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb115-6"><a href="#cb115-6" aria-hidden="true" tabindex="-1"></a><span class="co"># Configure and install (more flags bellow)</span></span>
+<span id="cb115-7"><a href="#cb115-7" aria-hidden="true" tabindex="-1"></a><span class="ex">./configure</span> <span class="at">--prefix</span><span class="op">=</span>/home/software/fftw3/3.3.10/gcc-14.2.1</span>
+<span id="cb115-8"><a href="#cb115-8" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span></span>
+<span id="cb115-9"><a href="#cb115-9" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make <span class="at">-j</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span> install</span></code></pre></div>
+<h5 id="build-openblas">Build OpenBLAS</h5>
+<p>Read the GitHub links below for optimization tips.</p>
+<blockquote>
+<p><a href="https://github.com/OpenMathLib/OpenBLAS">https://github.com/OpenMathLib/OpenBLAS</a></p>
+</blockquote>
+<div class="sourceCode" id="cb116"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fetch the source files from the GitHub repository</span></span>
+<span id="cb116-2"><a href="#cb116-2" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/xianyi/OpenBLAS.git</span>
+<span id="cb116-3"><a href="#cb116-3" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> OpenBLAS</span>
+<span id="cb116-4"><a href="#cb116-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb116-5"><a href="#cb116-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Tested against version 0.3.26, you can try an build `develop` branch</span></span>
+<span id="cb116-6"><a href="#cb116-6" aria-hidden="true" tabindex="-1"></a><span class="co"># check branches here</span></span>
+<span id="cb116-7"><a href="#cb116-7" aria-hidden="true" tabindex="-1"></a><span class="co"># https://github.com/OpenMathLib/OpenBLAS/tags</span></span>
+<span id="cb116-8"><a href="#cb116-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Favourites</span></span>
+<span id="cb116-9"><a href="#cb116-9" aria-hidden="true" tabindex="-1"></a><span class="co"># git checkout v0.3.26</span></span>
+<span id="cb116-10"><a href="#cb116-10" aria-hidden="true" tabindex="-1"></a><span class="co"># git checkout v0.3.28</span></span>
+<span id="cb116-11"><a href="#cb116-11" aria-hidden="true" tabindex="-1"></a><span class="co"># git checkout develop</span></span>
+<span id="cb116-12"><a href="#cb116-12" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> checkout v0.3.28</span>
+<span id="cb116-13"><a href="#cb116-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb116-14"><a href="#cb116-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Make sure correct gcc,g++ and gfortran is loaded</span></span>
+<span id="cb116-15"><a href="#cb116-15" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">CC</span><span class="op">=</span>/home/software/gcc/8.2.0/bin/gcc</span>
+<span id="cb116-16"><a href="#cb116-16" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">CXX</span><span class="op">=</span>/home/software/gcc/8.2.0/bin/g++</span>
+<span id="cb116-17"><a href="#cb116-17" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">FC</span><span class="op">=</span>/home/software/gcc/8.2.0/bin/gfortran</span>
+<span id="cb116-18"><a href="#cb116-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb116-19"><a href="#cb116-19" aria-hidden="true" tabindex="-1"></a><span class="co"># You can adjust the PREFIX to install to your preferred directory</span></span>
+<span id="cb116-20"><a href="#cb116-20" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span></span>
+<span id="cb116-21"><a href="#cb116-21" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> make <span class="at">-j</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span> PREFIX=/home/software/openblas/0.3.28/gcc-8.2.0 install</span></code></pre></div>
+<h5 id="scalapack-scalable-linear-algebra-package">ScaLAPACK (Scalable Linear Algebra PACKage)</h5>
+<p>More infomation on scalapack :</p>
+<blockquote>
+<p><a href="https://netlib.org/scalapack/">https://netlib.org/scalapack/</a></p>
+</blockquote>
+<p>Scalapack REPO:</p>
+<blockquote>
+<p><a href="https://github.com/Reference-ScaLAPACK/scalapack/">https://github.com/Reference-ScaLAPACK/scalapack/</a></p>
+</blockquote>
+<p>Download location :</p>
+<blockquote>
+<p><a href="https://github.com/Reference-ScaLAPACK/scalapack/archive/refs/tags/v2.2.2.tar.gz">https://github.com/Reference-ScaLAPACK/scalapack/archive/refs/tags/v2.2.2.tar.gz</a></p>
+</blockquote>
+<div class="sourceCode" id="cb117"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb117-1"><a href="#cb117-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Download ScaLAPACK</span></span>
+<span id="cb117-2"><a href="#cb117-2" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/Reference-ScaLAPACK/scalapack/archive/refs/tags/v2.2.2.tar.gz</span>
+<span id="cb117-3"><a href="#cb117-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb117-4"><a href="#cb117-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Extract the archive</span></span>
+<span id="cb117-5"><a href="#cb117-5" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-xzvf</span> v2.2.2.tar.gz</span>
+<span id="cb117-6"><a href="#cb117-6" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> scalapack-2.2.2</span>
+<span id="cb117-7"><a href="#cb117-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb117-8"><a href="#cb117-8" aria-hidden="true" tabindex="-1"></a><span class="co"># Create a build directory</span></span>
+<span id="cb117-9"><a href="#cb117-9" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> build</span>
+<span id="cb117-10"><a href="#cb117-10" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> build</span>
+<span id="cb117-11"><a href="#cb117-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb117-12"><a href="#cb117-12" aria-hidden="true" tabindex="-1"></a><span class="co">####  ---- load modules !!!!!</span></span>
+<span id="cb117-13"><a href="#cb117-13" aria-hidden="true" tabindex="-1"></a><span class="co"># NEEDS openBLAS or ( Lapack and BLACs )</span></span>
+<span id="cb117-14"><a href="#cb117-14" aria-hidden="true" tabindex="-1"></a><span class="co"># NEEDS GCC and fortran</span></span>
+<span id="cb117-15"><a href="#cb117-15" aria-hidden="true" tabindex="-1"></a><span class="co"># NEEDS a mpi like openMPI</span></span>
+<span id="cb117-16"><a href="#cb117-16" aria-hidden="true" tabindex="-1"></a><span class="ex">ml</span> fftw3 gcc openBlas openmpi</span>
+<span id="cb117-17"><a href="#cb117-17" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb117-18"><a href="#cb117-18" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> <span class="at">-DCMAKE_INSTALL_PREFIX</span><span class="op">=</span>/home/software/scalapack/2.2.2/gcc-14.2.1/ ..</span>
+<span id="cb117-19"><a href="#cb117-19" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb117-20"><a href="#cb117-20" aria-hidden="true" tabindex="-1"></a><span class="co"># Install scalapack</span></span>
+<span id="cb117-21"><a href="#cb117-21" aria-hidden="true" tabindex="-1"></a><span class="co"># before installing, make sure correct gcc and openblas is loaded !!</span></span>
+<span id="cb117-22"><a href="#cb117-22" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> cmake <span class="at">--build</span> . <span class="at">-j</span> <span class="at">--target</span> install</span></code></pre></div>
+<h5 id="setup-makefile">Setup makefile</h5>
+<div class="sourceCode" id="cb118"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="ex">vim</span> makefile</span></code></pre></div>
+<ul>
+<li><p>Recommended config</p></li>
+</ul>
+<div class="sourceCode" id="cb119"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb119-1"><a href="#cb119-1" aria-hidden="true" tabindex="-1"></a><span class="va">FFTROOT</span><span class="op">=</span>home/rocky/software/fftw3/3.3.10/openmpi-5.0.10-gcc-15.2.0-vectorized</span>
+<span id="cb119-2"><a href="#cb119-2" aria-hidden="true" tabindex="-1"></a><span class="va">LBSROOT</span><span class="op">=</span>home/rocky/software/openblas/0.3.28/openmpi-5.0.10-gcc-15.2.0-COOPERLAKE-vectorized</span>
+<span id="cb119-3"><a href="#cb119-3" aria-hidden="true" tabindex="-1"></a><span class="va">MPIROOT</span><span class="op">=</span>home/rocky/software/openMPI/5.0.10/gcc-15.2.0-source-omp-no-pmix</span>
+<span id="cb119-4"><a href="#cb119-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb119-5"><a href="#cb119-5" aria-hidden="true" tabindex="-1"></a><span class="ex">CC</span> = mpicc <span class="at">-O3</span> <span class="at">-ffast-math</span> <span class="at">-fopenmp</span> <span class="at">-fcommon</span> <span class="at">-Wno-error</span><span class="op">=</span>implicit-function-declaration <span class="at">-I</span>/<span class="va">$(</span><span class="ex">FFTROOT</span><span class="va">)</span>/include <span class="at">-I</span>/<span class="va">$(</span><span class="ex">LBSROOT</span><span class="va">)</span>/include <span class="at">-I</span>/<span class="va">$(</span><span class="ex">MPIROOT</span><span class="va">)</span>/include</span>
+<span id="cb119-6"><a href="#cb119-6" aria-hidden="true" tabindex="-1"></a><span class="ex">FC</span> = mpifort <span class="at">-O3</span> <span class="at">-fopenmp</span> <span class="at">-fallow-argument-mismatch</span></span>
+<span id="cb119-7"><a href="#cb119-7" aria-hidden="true" tabindex="-1"></a><span class="va">LIB</span><span class="op">=</span> <span class="ex">-lfftw3</span> <span class="at">-lmpi</span> <span class="at">-lmpi_mpifh</span> <span class="at">-lopenblas</span> <span class="at">-lscalapack</span> <span class="at">-lgfortran</span></span></code></pre></div>
+<p>Load gcc , openmpi , fftw , openblas , scalapack</p>
+<pre><code># For the creator of the tutorial this loads everything, however you might have to load more modules.
+ml gcc openmpi scalapack
+
+make install
+</code></pre>
+<p>** Test Run! **</p>
+<div class="sourceCode" id="cb121"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb121-1"><a href="#cb121-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../work</span>
+<span id="cb121-2"><a href="#cb121-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb121-3"><a href="#cb121-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-n</span> 2 ./openmx 1-Methane.dat</span></code></pre></div>
+<h2 id="tasks">Tasks</h2>
+<ol start="3" type="1">
+<li><p>Run <code>1-Methane.dat</code> to make sure OpenMX build is working</p></li>
+<li><p>Run <code>2-Si.dat</code> as the optimization benchmark to optimize OpenMX, and submit screenshots on <a href="https://github.com/chpc-tech-eval/scc/discussions/319">discussions page</a>.</p></li>
+<li><p>Run <code>3-NVC.dat</code> as the final task, and upload a screenshot of your final output to the <a href="https://github.com/chpc-tech-eval/scc/discussions/319">discussions page</a>.</p></li>
+<li><p>Visualize results using <a href="https://www.openmx-square.org/viewer/">viewer</a> and <code>nvc.sden.cube</code> output file. Upload as very small video to twitter and tag <code>@chpc_scc</code> or show a mentor.</p></li>
+</ol>
+<h3 id="optimization">Optimization</h3>
+<p>Make sure openMPI can use hyperthreading if it gives a performance bonus, otherwise disable hyperthreading.</p>
+<p><strong>MPI Ranks</strong>: These are individual processes that communicate with each other using MPI. Each rank typically runs on a separate core or processor. EACH <code>process</code> is assigned a unigue <code>rank number</code>.</p>
+<p><strong>OpenMP Threads</strong>: Within each MPI rank, you can use OpenMP to <code>create multiple threads</code>. These threads share the memory space of the MPI rank and can run concurrently on different cores.</p>
+<p>By varying the number of <code>OpenMP threads</code> <strong>per</strong> <code>MPI rank</code>, you can optimize the performance of your application. This approach can be beneficial in several scenarios:</p>
+<p><em>Memory Bandwidth</em> and <em>Cache Efficiency</em>: On nodes with many cores, using multiple OpenMP threads per MPI rank can help alleviate memory bandwidth and cache size limitations.</p>
+<p><strong>GPU</strong> Utilization: When running applications on <code>GPUs</code>, using <code>fewer MPI ranks</code> and <strong>more</strong> <code>OpenMP threads</code> can better utilize the computational power of the CPU for tasks that still run on the CPU side.</p>
+<p>To implement this, you can set the number of OpenMP threads using the <code>OMP_NUM_THREADS</code> environment variable and then run your application with mpirun.</p>
+<p>For example (bad, just for learning):</p>
+<div class="sourceCode" id="cb122"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="co"># This command sets 4 OpenMP threads per MPI rank and runs the application with 2 MPI ranks</span></span>
+<span id="cb122-2"><a href="#cb122-2" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_NUM_THREADS</span><span class="op">=</span>4</span>
+<span id="cb122-3"><a href="#cb122-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> 2 ./openmx Methane.dat</span>
+<span id="cb122-4"><a href="#cb122-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb122-5"><a href="#cb122-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Real example for 32 processes x 4 openMP threads per MPI = 128 processes for the 128 logical cores [hyper threading enabled]</span></span>
+<span id="cb122-6"><a href="#cb122-6" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_NUM_THREADS</span><span class="op">=</span>4</span>
+<span id="cb122-7"><a href="#cb122-7" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> 32 <span class="at">--map-by</span> socket:PE=4 <span class="at">--bind-to</span> hwthread <span class="at">--use-hwthread-cpus</span> <span class="at">--oversubscribe</span> <span class="at">--report-bindings</span> ./openmx 2-Si.dat <span class="at">-nt</span> 4</span>
+<span id="cb122-8"><a href="#cb122-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb122-9"><a href="#cb122-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Recommended add</span></span>
+<span id="cb122-10"><a href="#cb122-10" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_PROC_BIND</span><span class="op">=</span>close</span>
+<span id="cb122-11"><a href="#cb122-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb122-12"><a href="#cb122-12" aria-hidden="true" tabindex="-1"></a><span class="co"># It is clear from this what numbers is for what, just ignore the -nt 4 as this is specific to openmx to enable openMP for 4 parallel threads</span></span>
+<span id="cb122-13"><a href="#cb122-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb122-14"><a href="#cb122-14" aria-hidden="true" tabindex="-1"></a><span class="co"># Use this for 128 core on 1 node</span></span>
+<span id="cb122-15"><a href="#cb122-15" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_PROC_BIND</span><span class="op">=</span>close</span>
+<span id="cb122-16"><a href="#cb122-16" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_NUM_THREADS</span><span class="op">=</span>4</span>
+<span id="cb122-17"><a href="#cb122-17" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> 32 <span class="at">--map-by</span> socket:PE=4 <span class="at">--bind-to</span> hwthread <span class="at">--use-hwthread-cpus</span> <span class="at">--oversubscribe</span> <span class="at">--report-bindings</span> ./openmx <span class="op">&lt;</span>another_input<span class="op">&gt;</span>.dat <span class="at">-nt</span> 4</span></code></pre></div>
+<h4 id="openmp-vs-mpi-ranks">OpenMP vs MPI ranks</h4>
+<p>It all depends on the mpi you are using.</p>
+<p>Use <a href="https://docs.open-mpi.org/en/v5.0.x/man-openmpi/man1/mpirun.1.html">openMPI manual</a> for guidance on how to properly use <code>mpirun</code></p>
+<p>below is breakdown of keypoints</p>
+<div class="sourceCode" id="cb123"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb123-1"><a href="#cb123-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Command use</span></span>
+<span id="cb123-2"><a href="#cb123-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="pp">[</span><span class="ss">options</span><span class="pp">]</span> ./app [app input]</span>
+<span id="cb123-3"><a href="#cb123-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-4"><a href="#cb123-4" aria-hidden="true" tabindex="-1"></a><span class="co"># [options]</span></span>
+<span id="cb123-5"><a href="#cb123-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-6"><a href="#cb123-6" aria-hidden="true" tabindex="-1"></a><span class="ex">-np</span> X   <span class="co"># create X processes</span></span>
+<span id="cb123-7"><a href="#cb123-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-8"><a href="#cb123-8" aria-hidden="true" tabindex="-1"></a><span class="ex">--map-by</span> <span class="pp">[</span><span class="ss">options</span><span class="pp">]</span>   <span class="co"># This is how processes are distributed through cluster/system</span></span>
+<span id="cb123-9"><a href="#cb123-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-10"><a href="#cb123-10" aria-hidden="true" tabindex="-1"></a>    <span class="co"># map options</span></span>
+<span id="cb123-11"><a href="#cb123-11" aria-hidden="true" tabindex="-1"></a>    <span class="ex">slot</span> / core / numa / node / ppr:N</span>
+<span id="cb123-12"><a href="#cb123-12" aria-hidden="true" tabindex="-1"></a>    <span class="co"># ppr:N   -&gt; map N Processes Per Resource (core/slot/numa/node)</span></span>
+<span id="cb123-13"><a href="#cb123-13" aria-hidden="true" tabindex="-1"></a>    <span class="va">pe</span><span class="op">=</span>n</span>
+<span id="cb123-14"><a href="#cb123-14" aria-hidden="true" tabindex="-1"></a>    <span class="co"># pe=n    -&gt; n cpu&#39;s to each process, processing elements (cores)</span></span>
+<span id="cb123-15"><a href="#cb123-15" aria-hidden="true" tabindex="-1"></a>    <span class="co"># slots   -&gt; cpu&#39;s / cores</span></span>
+<span id="cb123-16"><a href="#cb123-16" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-17"><a href="#cb123-17" aria-hidden="true" tabindex="-1"></a><span class="ex">--bind-to</span> <span class="pp">[</span><span class="ss">options</span><span class="pp">]</span>     <span class="co"># Bind processes to </span></span>
+<span id="cb123-18"><a href="#cb123-18" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-19"><a href="#cb123-19" aria-hidden="true" tabindex="-1"></a>    <span class="co"># bind options</span></span>
+<span id="cb123-20"><a href="#cb123-20" aria-hidden="true" tabindex="-1"></a>    <span class="ex">none</span> / package / numa / core</span>
+<span id="cb123-21"><a href="#cb123-21" aria-hidden="true" tabindex="-1"></a>    <span class="ex">:overload-allowed</span></span>
+<span id="cb123-22"><a href="#cb123-22" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-23"><a href="#cb123-23" aria-hidden="true" tabindex="-1"></a><span class="ex">--rank-by</span> <span class="pp">[</span><span class="ss">options</span><span class="pp">]</span>     <span class="co"># How processes are place/ordered</span></span>
+<span id="cb123-24"><a href="#cb123-24" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-25"><a href="#cb123-25" aria-hidden="true" tabindex="-1"></a>    <span class="ex">slot</span> / node / fill / span</span>
+<span id="cb123-26"><a href="#cb123-26" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-27"><a href="#cb123-27" aria-hidden="true" tabindex="-1"></a><span class="ex">--report-bindings</span></span>
+<span id="cb123-28"><a href="#cb123-28" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-29"><a href="#cb123-29" aria-hidden="true" tabindex="-1"></a><span class="ex">-x</span> OMP_NUM_THREADS=2 </span>
+<span id="cb123-30"><a href="#cb123-30" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-31"><a href="#cb123-31" aria-hidden="true" tabindex="-1"></a><span class="co"># To pass lib to all hosts</span></span>
+<span id="cb123-32"><a href="#cb123-32" aria-hidden="true" tabindex="-1"></a><span class="ex">-x</span> LD_LIBRARY_PATH</span>
+<span id="cb123-33"><a href="#cb123-33" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-34"><a href="#cb123-34" aria-hidden="true" tabindex="-1"></a><span class="ex">-H</span> host1,host2</span>
+<span id="cb123-35"><a href="#cb123-35" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-36"><a href="#cb123-36" aria-hidden="true" tabindex="-1"></a><span class="ex">--hostfile</span> hosts.txt</span>
+<span id="cb123-37"><a href="#cb123-37" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb123-38"><a href="#cb123-38" aria-hidden="true" tabindex="-1"></a>    <span class="ex">hosts.txt</span></span>
+<span id="cb123-39"><a href="#cb123-39" aria-hidden="true" tabindex="-1"></a>    <span class="ex">com1</span> slot=64</span>
+<span id="cb123-40"><a href="#cb123-40" aria-hidden="true" tabindex="-1"></a>    <span class="ex">com2</span> slot=64</span></code></pre></div>
+<h5 id="openmpi-example">openMPI example</h5>
+<div class="sourceCode" id="cb124"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If 4 nodes with 256 total cores</span></span>
+<span id="cb124-2"><a href="#cb124-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 4 openmp threads , 64 mpi ranks</span></span>
+<span id="cb124-3"><a href="#cb124-3" aria-hidden="true" tabindex="-1"></a><span class="co"># 16 processes per node , 4 cpu&#39;s pre process (processing elements)</span></span>
+<span id="cb124-4"><a href="#cb124-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_NUM_THREADS</span><span class="op">=</span>4</span>
+<span id="cb124-5"><a href="#cb124-5" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> 64 <span class="at">--map-by</span> ppr:16:node:pe=4 ./openmx 2-Si.dat <span class="at">-nt</span> 4</span></code></pre></div>
+<ul>
+<li><p>Full Example</p></li>
+</ul>
+<div class="sourceCode" id="cb125"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb125-1"><a href="#cb125-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Full example </span></span>
+<span id="cb125-2"><a href="#cb125-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb125-3"><a href="#cb125-3" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> 128 <span class="at">-x</span> OMP_NUM_THREADS=2 <span class="at">--hostfile</span> hosts.txt <span class="at">-x</span> LD_LIBRARY_PATH <span class="at">--map-by</span> ppr:32:node:pe=2 ./openmx 2-Si.dat <span class="at">-nt</span> 2</span></code></pre></div>
+<h5 id="intelmpi-example">intelMPI example</h5>
+<div class="sourceCode" id="cb126"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="co"># n    -&gt; number of processes</span></span>
+<span id="cb126-2"><a href="#cb126-2" aria-hidden="true" tabindex="-1"></a><span class="co"># ppn  -&gt; processes per node</span></span>
+<span id="cb126-3"><a href="#cb126-3" aria-hidden="true" tabindex="-1"></a><span class="co"># On 4 nodes with 256 total cores</span></span>
+<span id="cb126-4"><a href="#cb126-4" aria-hidden="true" tabindex="-1"></a><span class="co"># 4 openmp threads, 64 mpi ranks, 16 processes per node</span></span>
+<span id="cb126-5"><a href="#cb126-5" aria-hidden="true" tabindex="-1"></a><span class="ex">mpiexec</span> <span class="at">-n</span> 64 <span class="at">-ppn</span> 16 <span class="at">-genv</span> OMP_NUM_THREADS=4 <span class="at">-genv</span> I_MPI_PIN_DOMAIN=socket <span class="at">-genv</span> I_MPI_PIN_ORDER=compact ./openmx 2-Si.dat <span class="at">-nt</span> 4</span></code></pre></div>
+<h3 id="openmp-flags">OpenMP flags</h3>
+<pre><code>Intel = -openmp
+Intel = -qopenmp
+Intel = -fiopenmp          
+GNU   = -fopenmp
+CLANG = -fopenmp         
+PGI = -mp -Dnosse
+</code></pre>
+<h3 id="compiler-flags">Compiler Flags</h3>
+<h4 id="intel">Intel</h4>
+<div class="sourceCode" id="cb128"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Min</span></span>
+<span id="cb128-2"><a href="#cb128-2" aria-hidden="true" tabindex="-1"></a><span class="ex">-xHost</span></span>
+<span id="cb128-3"><a href="#cb128-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Min++</span></span>
+<span id="cb128-4"><a href="#cb128-4" aria-hidden="true" tabindex="-1"></a><span class="ex">-axAVX</span> <span class="at">-axSSE4.2</span> <span class="at">-xSSE2</span></span>
+<span id="cb128-5"><a href="#cb128-5" aria-hidden="true" tabindex="-1"></a><span class="co"># Favourite</span></span>
+<span id="cb128-6"><a href="#cb128-6" aria-hidden="true" tabindex="-1"></a><span class="ex">-mavx2</span> <span class="at">-mavx512bw</span> <span class="at">-mavx512dq</span> <span class="at">-mavx512vl</span> <span class="at">-mavx512cd</span></span>
+<span id="cb128-7"><a href="#cb128-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Others</span></span>
+<span id="cb128-8"><a href="#cb128-8" aria-hidden="true" tabindex="-1"></a><span class="ex">-O3</span> <span class="at">-fopenmp</span> <span class="at">-march</span><span class="op">=</span>native <span class="at">-mtune</span><span class="op">=</span>native</span>
+<span id="cb128-9"><a href="#cb128-9" aria-hidden="true" tabindex="-1"></a><span class="co"># Safe</span></span>
+<span id="cb128-10"><a href="#cb128-10" aria-hidden="true" tabindex="-1"></a><span class="ex">-xHOST</span> <span class="at">-fp-model</span> precise</span>
+<span id="cb128-11"><a href="#cb128-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb128-12"><a href="#cb128-12" aria-hidden="true" tabindex="-1"></a><span class="ex">For</span> AVX-512, here are some specific vectorization flags you can use when compiling programs:</span>
+<span id="cb128-13"><a href="#cb128-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb128-14"><a href="#cb128-14" aria-hidden="true" tabindex="-1"></a><span class="ex">-mavx512f:</span> Enables the foundational AVX-512 instructions 1.</span>
+<span id="cb128-15"><a href="#cb128-15" aria-hidden="true" tabindex="-1"></a><span class="ex">-mavx512bw:</span> Enables AVX-512 byte and word instructions 1.</span>
+<span id="cb128-16"><a href="#cb128-16" aria-hidden="true" tabindex="-1"></a><span class="ex">-mavx512dq:</span> Enables AVX-512 doubleword and quadword instructions 1.</span>
+<span id="cb128-17"><a href="#cb128-17" aria-hidden="true" tabindex="-1"></a><span class="ex">-mavx512vl:</span> Enables AVX-512 vector length extensions for 128-bit and 256-bit vectors 1.</span>
+<span id="cb128-18"><a href="#cb128-18" aria-hidden="true" tabindex="-1"></a><span class="ex">-mavx512cd:</span> Enables AVX-512 conflict detection instructions 1.</span>
+<span id="cb128-19"><a href="#cb128-19" aria-hidden="true" tabindex="-1"></a><span class="ex">-qopt-zmm-usage:</span> Controls the usage of ZMM registers for AVX-512 2.</span>
+<span id="cb128-20"><a href="#cb128-20" aria-hidden="true" tabindex="-1"></a><span class="ex">-mprefer-vector-width-512:</span> Prefers 512-bit vector width for AVX-512 2.</span></code></pre></div>
+<h1 id="openfoam-application-benchmark">OpenFOAM Application Benchmark</h1>
+<p>Open-source Field Operation And Manipulation is a free, open source computational fluid dynamics (CFD) software package.</p>
+<p>It solves the fundamental equations of fluid mechanics - the Navier-Stokes equations - numerically across a 3D mesh. Instead of doing a physical experiment, you can simulate how air, water or any fluid behaves around or through objects on a computer.</p>
+<p>For this section, you will be using OpenFoam v2506 with the Intel oneAPI C++ Compiler and combine it with IntelMPI.</p>
+<p>Detailed installation instructions and general guidance can be found at: <a href="https://gitlab.com/openfoam/core/openfoam">https://gitlab.com/openfoam/core/openfoam</a>, but here’s a general installation overview for a RHEL based system and except for the different package managers eg. apt and yum, the instructions are the same.</p>
+<blockquote>
+<p>[!WARNING] Also note, you are NOT allowed to use precompiled binaries.</p>
+</blockquote>
+<h2 id="prerequisites-1">Prerequisites</h2>
+<blockquote>
+<p>[!NOTE] This step assumes you already have <code>lmod</code> installed.</p>
+</blockquote>
+<p>Before compiling, load the following modules from lmod:</p>
+<p>You can either use GCC + OpenMPI or InteloneAPI toolkit(intel compiler and intelMPI).</p>
+<p>The instructions following are for the Intel toolchain:</p>
+<div class="sourceCode" id="cb129"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb129-1"><a href="#cb129-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ml</span> oneapi/2026.1.0                    <span class="co"># Names are subject to your configuration, load the intel compiler</span></span>
+<span id="cb129-2"><a href="#cb129-2" aria-hidden="true" tabindex="-1"></a>                                      <span class="co"># This will automatically load IntelMPI as well depending on your lmod setup</span></span></code></pre></div>
+<h2 id="install-system-dependencies">Install System Dependencies</h2>
+<div class="sourceCode" id="cb130"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf install <span class="at">-y</span> <span class="dt">\</span></span>
+<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a>    flex bison <span class="dt">\</span></span>
+<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a>    fftw-devel <span class="dt">\</span></span>
+<span id="cb130-4"><a href="#cb130-4" aria-hidden="true" tabindex="-1"></a>    make cmake <span class="dt">\</span></span>
+<span id="cb130-5"><a href="#cb130-5" aria-hidden="true" tabindex="-1"></a>    wget git               <span class="co">#dnf, apt, yum packages according to your flavour of Linux</span></span></code></pre></div>
+<p>Packages might have different names depending on your linux distribution</p>
+<h2 id="download-openfoam-and-thirdparty-libraries">Download OpenFOAM and ThirdParty libraries</h2>
+<div class="sourceCode" id="cb131"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mkdir</span> <span class="at">-p</span> ~/OpenFOAM <span class="kw">&amp;&amp;</span> <span class="bu">cd</span> ~/OpenFOAM</span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://dl.openfoam.com/source/v2506/OpenFOAM-v2506.tgz</span>
+<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://dl.openfoam.com/source/v2506/ThirdParty-v2506.tgz</span>
+<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb131-6"><a href="#cb131-6" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-xzf</span> OpenFOAM-v2506.tgz</span>
+<span id="cb131-7"><a href="#cb131-7" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-xzf</span> ThirdParty-v2506.tgz</span></code></pre></div>
+<h2 id="source-openfoam-environment-and-set-flags">Source OpenFOAM Environment and set Flags</h2>
+<blockquote>
+<p>[!IMPORTANT] Always source the bashrc FIRST, then set WM_NCOMPROCS. Setting WM_NCOMPROCS before sourcing will cause it to be overwritten.</p>
+</blockquote>
+<div class="sourceCode" id="cb132"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> ~/OpenFOAM/OpenFOAM-v2506/etc/bashrc</span>
+<span id="cb132-2"><a href="#cb132-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb132-3"><a href="#cb132-3" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">WM_NCOMPROCS</span><span class="op">=</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span></span>
+<span id="cb132-4"><a href="#cb132-4" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span>~/bin:<span class="va">$PATH</span></span></code></pre></div>
+<blockquote>
+<p>[!NOTE] You must re-source this file (<code>source ~/OpenFOAM/OpenFOAM-v2506/etc/bashrc</code>) every time you open a new terminal session — it does not persist automatically unless added to ~/.bashrc.</p>
+</blockquote>
+<p>Verify the environment loaded correctly:</p>
+<div class="sourceCode" id="cb133"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb133-1"><a href="#cb133-1" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$WM_PROJECT_DIR</span>    <span class="co"># Points to OpenFOAM-v2506</span></span></code></pre></div>
+<h2 id="build-openfoam">Build OpenFOAM</h2>
+<p>This step takes <strong>2 to 3 hours</strong> depending on available cores.</p>
+<div class="sourceCode" id="cb134"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ~/OpenFOAM/OpenFOAM-v2506</span>
+<span id="cb134-2"><a href="#cb134-2" aria-hidden="true" tabindex="-1"></a><span class="ex">./Allwmake</span> <span class="at">-j</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span> <span class="dv">2</span><span class="op">&gt;&amp;</span><span class="dv">1</span> <span class="kw">|</span> <span class="fu">tee</span> ~/openfoam_build.log</span></code></pre></div>
+<p>Check for errors when complete:</p>
+<div class="sourceCode" id="cb135"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb135-1"><a href="#cb135-1" aria-hidden="true" tabindex="-1"></a><span class="fu">grep</span> <span class="at">-c</span> <span class="st">&quot;Error&quot;</span> ~/openfoam_build.log   <span class="co"># ignore if ADIOS did not build </span></span>
+<span id="cb135-2"><a href="#cb135-2" aria-hidden="true" tabindex="-1"></a>                                       <span class="co"># but SCOTCH is needed and has to be built</span></span></code></pre></div>
+<p>It is heavily advised to make use of a multiplexer such as Tmux as the build will consume a heavy chunk of time and you do not want your build to fail because your laptop or PC went into sleep mode</p>
+<h3 id="if-the-build-fails">If the Build Fails</h3>
+<p><code>Allwmake</code> is safe to re-run — it skips targets that already compiled successfully. If you hit an error:</p>
+<ol start="3" type="1">
+<li><p>Check <code>~/openfoam_build.log</code> for the specific error near the bottom of the file.</p></li>
+<li><p>Fix the issue, then re-run <code>./Allwmake -j$(nproc)</code> from the same directory.</p></li>
+</ol>
+<h3 id="common-errors">Common Errors</h3>
+<ul>
+<li><p><strong>Missing <code>flex</code>/<code>bison</code></strong> — mesh generation tools will fail to build.</p></li>
+<li><p><strong><code>command not found: wmake</code></strong> — the environment wasn’t sourced correctly in this terminal session.</p></li>
+<li><p><strong>Build seems “stuck” after re-opening a terminal</strong> — you forgot to re-source <code>etc/bashrc</code>.</p></li>
+</ul>
+<h2 id="scotch-libraries">Scotch Libraries</h2>
+<p>After OpenFOAM is built, check if scotch has built successfully.</p>
+<p>Also note that OpenFoam can be installed successfully without Scotch, but Scotch is critical for running the solvers.</p>
+<p>Verify:</p>
+<div class="sourceCode" id="cb136"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb136-1"><a href="#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="fu">ls</span> <span class="va">$FOAM_LIBBIN</span>/libscotchDecomp.so          <span class="co"># Serial Scotch decomposition</span></span></code></pre></div>
+<h2 id="verify-installation">Verify Installation</h2>
+<div class="sourceCode" id="cb137"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb137-1"><a href="#cb137-1" aria-hidden="true" tabindex="-1"></a><span class="ex">foamInstallationTest</span></span></code></pre></div>
+<p>Expected output should show: - <code>Base configuration ok</code> - <code>Critical systems ok</code></p>
+<h2 id="benchmark-ing-start">Benchmark-ing Start</h2>
+<h3 id="how-openfoam-parallelisation-works">How OpenFOAM Parallelisation Works</h3>
+<p>OpenFOAM uses an unconventional approach to parallelisation via <strong>domain decomposition</strong>. Instead of running on a shared dataset, the mesh and fields are split into separate subdirectories — one per MPI rank:</p>
+<pre><code>processor0/
+processor1/
+processor2/
+...
+processorN/
+</code></pre>
+<p>This applies to both the mesh generation tool (<code>snappyHexMesh</code>) and the flow solver (<code>simpleFoam</code>). After processing, the partitioned results can be reconstructed into a single dataset using <code>reconstructPar</code>.</p>
+<p>The decomposition is controlled by <code>system/decomposeParDict</code>. The <code>numberOfSubdomains</code> in this file <strong>must match</strong> the number of MPI ranks passed to <code>mpirun</code>.</p>
+<h3 id="get-the-case">Get the Case</h3>
+<p>First, download the Wind Around Buildings case:</p>
+<div class="sourceCode" id="cb139"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb139-1"><a href="#cb139-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://github.com/chpc-tech-eval/chpc25-scc-nationals/raw/refs/heads/main/OpenFOAM/OpenFoam_cases.tgz</span>
+<span id="cb139-2"><a href="#cb139-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tar</span> <span class="at">-xzf</span> OpenFoam_cases.tgz</span></code></pre></div>
+<p>Use the <strong>3.2 million cell</strong> case from the extracted folder.</p>
+<h3 id="set-up-the-case">Set Up the Case</h3>
+<p>Before running, edit the following:</p>
+<ul>
+<li><p><strong><code>system/decomposeParDict</code></strong></p>
+<ul>
+<li><p>Set <code>numberOfSubdomains</code> to match the number of cores you are using.</p></li>
+<li><p>Set <code>method</code> to <code>scotch</code>.</p></li>
+</ul></li>
+<li><p><strong><code>system/controlDict</code></strong></p>
+<ul>
+<li><p>Set <code>endTime</code> to <code>50</code>.</p></li>
+</ul></li>
+</ul>
+<p>The case is conveniently pre-configured for you otherwise — you shouldn’t need to touch anything else.</p>
+<p>Run the setup script, which handles decomposition and prepares reconstruction automatically:</p>
+<div class="sourceCode" id="cb140"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./makeCase.sh</span></span></code></pre></div>
+<h3 id="run-the-case">Run the Case</h3>
+<blockquote>
+<p><strong>Note:</strong> This step assumes you already have <code>slurm</code> installed.</p>
+</blockquote>
+<p>A Slurm script is also provided to run the case. You’re not required to use it, but it’s a helpful baseline:</p>
+<div class="sourceCode" id="cb141"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb141-1"><a href="#cb141-1" aria-hidden="true" tabindex="-1"></a><span class="ex">sbatch</span> runFoam.sh</span></code></pre></div>
+<p>If you do make use of slurm, direct simpleFoam to write to a .out so that results can be confirmed by the instructors.</p>
+<h1 id="gromacs-application-benchmark-part-3">GROMACS Application Benchmark (Part 3)</h1>
+<blockquote>
+<p>[!DANGER] Come back to this benchmark after you have completed OpenMX and OpenFOAM! The instructions for this part are highly subject to change.</p>
+</blockquote>
+<h2 id="benchmark-2-1.5m-water">Benchmark 2 (1.5M Water)</h2>
+<blockquote>
+<p>[!CAUTION] This is a large benchmark and can possibly take some time. Complete the next sections and come back to this if you feel as though your time is limited.</p>
+</blockquote>
+<p>Pre-process the input data using the <code>grompp</code> command</p>
+<div class="sourceCode" id="cb142"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gmx_mpi</span> grompp <span class="at">-f</span> pme_verlet.mdp <span class="at">-c</span> out.gro <span class="at">-p</span> topol.top <span class="at">-o</span> md_0_1.tpr</span></code></pre></div>
+<p>Using a batch script similar to the one above, run the benchmark. You may modify the mpirun command to optimise performance (significantly) but in order to produce a valid result, the simulation must run for 5,000 steps. Quoted in the output as:</p>
+<pre class="text"><code>&quot;5000 steps,     10.0 ps.&quot;
+</code></pre>
+<blockquote>
+<p>[!NOTE] Please be ready to present the <code>gromacs_log</code> files for the <strong>1.5M_water</strong> benchmark to the instructors.</p>
+</blockquote>

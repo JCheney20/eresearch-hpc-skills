@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "text",
+  "title": "Introducing the Shell",
+  "author": "Justin Cheney",
+  "updated": "2026-09-03",
+  "minimumReadSeconds": 120,
+  "source": {
+    "label": "shell-novice",
+    "url": "https://github.com/swcarpentry/shell-novice/blob/22c5a874725bd3048eb7cfceeafd0db3a5e49a2f/episodes/01-intro.md",
+    "repository": "https://github.com/swcarpentry/shell-novice",
+    "commit": "22c5a874725bd3048eb7cfceeafd0db3a5e49a2f",
+    "license": "CC-BY-4.0",
+    "adaptation": "Formatting converted from upstream Markdown to Typst and HTML; wording retained for initial review."
+  },
+  "blocks": [
+    {
+      "id": "body",
+      "type": "typst",
+      "source": "/content/imports/shell-introduction.typ",
+      "rendered": "/content/generated/shell-introduction.html"
+    }
+  ],
+  "workInProgress": true
+}

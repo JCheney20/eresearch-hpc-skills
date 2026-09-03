@@ -1,0 +1,925 @@
+<p>Student Cluster Competition - Tutorial 3</p>
+<h2 id="table-of-contents">Table of Contents</h2>
+<ol>
+<li><p><a href="#checklist">Checklist</a></p></li>
+<li><p><a href="#managing-your-environment">Managing Your Environment</a></p>
+<ol>
+<li><p><a href="#nfs-mounted-shared-home-folder-and-the-path-variable">NFS Mounted Shared <code>home</code> folder and the <code>PATH</code> Variable</a></p></li>
+</ol></li>
+<li><p><a href="#install-lmod">Install Lmod</a></p>
+<ol>
+<li><p><a href="#lmod-usage">Lmod Usage</a></p></li>
+</ol></li>
+<li><p><a href="#running-the-high-performance-linpack-hpl-benchmark-on-your-compute-node">Running the High Performance LINPACK (HPL) Benchmark on Your Compute Node</a></p>
+<ol>
+<li><p><a href="#system-libraries">System Libraries</a></p></li>
+<li><p><a href="#configure-and-run-hpl-on-compute-node">Configure and Run HPL on Compute Node</a></p></li>
+</ol></li>
+<li><p><a href="#building-and-compiling-openblas-and-openmpi-libraries-from-source">Building and Compiling OpenBLAS and OpenMPI Libraries from Source</a></p></li>
+<li><p><a href="#intel-oneapi-toolkits-and-compiler-suite">Intel oneAPI Toolkits and Compiler Suite</a></p>
+<ol>
+<li><p><a href="#configure-and-install-intel-oneapi-toolkits">Configure and Install Intel oneAPI Toolkits</a></p></li>
+<li><p><a href="#configuring-and-running-hpl-with-intel-oneapi-toolkit-and-mkl">Configuring and Running HPL with Intel oneAPI Toolkit and MKL</a></p></li>
+</ol></li>
+<li><p><a href="#linpack-theoretical-peak-performance">LinPACK Theoretical Peak Performance</a></p>
+<ol>
+<li><p><a href="#top500-list">Top500 List</a></p></li>
+</ol></li>
+<li><p><a href="#spinning-up-a-second-compute-node-using-a-snapshot">Spinning Up a Second Compute Node Using a Snapshot</a></p>
+<ol>
+<li><p><a href="#running-hpl-across-multiple-nodes">Running HPL Across Multiple Nodes</a></p></li>
+</ol></li>
+<li><p><a href="#application-benchmark-profiling">Application Benchmark Profiling</a></p>
+<ol>
+<li><p><a href="#hardware-topology">Hardware Topology</a></p></li>
+<li><p><a href="#vtune">VTune</a></p></li>
+</ol></li>
+<li><p><a href="#hpc-challenge">HPC Challenge</a></p></li>
+<li><p><a href="#high_performance_conjugate_gradients">High Performance Conjugate Gradients</a></p></li>
+<li><p><a href="#application-benchmarks-and-system-evaluation">Application Benchmarks and System Evaluation</a></p>
+<ol>
+<li><p><a href="#gromacs-adh-cubic">GROMACS (ADH Cubic)</a></p></li>
+<li><p><a href="#lammps-lennard-jones">LAMMPS (Lennard-Jones)</a></p></li>
+<li><p><a href="#qiskit-quantum-volume">Qiskit (Quantum Volume)</a></p></li>
+</ol></li>
+</ol>
+<h1 id="checklist">Checklist</h1>
+<p>Tutorial 3 demonstrates environment variable manipulation through the use of modules and the compilation and optimization of HPC benchmark software. This introduces the reader to the concepts of environment management and workspace sanity, as well as compilation of various software applications on Linux.</p>
+<p>In this tutorial, you will also be <em>spinning up and connecting a second compute node</em> in order to further extend the capabilities of your small VM cluster. More importantly, you will given detailed specifics on exactly how to go about running application benchmarks across multiple nodes.</p>
+<p>In this tutorial you will:</p>
+<ul class="task-list">
+<li><p><label><input type="checkbox" />Understand the importance of having a consistent environment across your cluster.</label></p></li>
+<li><p><label><input type="checkbox" />Understand the difference between system software and user <em>(local to the user’s <code>home</code> directory)</em> installed software.</label></p></li>
+<li><p><label><input type="checkbox" />Install, configure and use Lmod.</label></p></li>
+<li><p><label><input type="checkbox" />Understand some of the fundamental considerations around optimizing HPL.</label></p></li>
+<li><p><label><input type="checkbox" />Understand the pros and cons of compiling libraries from source.</label></p></li>
+<li><p><label><input type="checkbox" />Install and make use of Intel’s oneAPI framework to run HPL.</label></p></li>
+<li><p><label><input type="checkbox" />Understand theoretical system peak performance.</label></p></li>
+<li><p><label><input type="checkbox" />Appreciate the significance of the Top500 list and benchmarking.</label></p></li>
+<li><p><label><input type="checkbox" />Standup and Configure a Second Compute Node, and running applications across a cluster.</label></p></li>
+<li><p><label><input type="checkbox" />Download and compile the High Performance Computing Challenge (HPCC) benchmark.</label></p></li>
+<li><p><label><input type="checkbox" />Understand that scientific computer applications are primarily used to conduct scientific research, and can also evaluate system performance.</label></p></li>
+</ul>
+<h1 id="managing-your-environment">Managing Your Environment</h1>
+<p>One of the most central and fundamental problems that you and your team will need to tackle, will be that of managing you environment. When you run an application, there are a number of locations that are searched to determine the binary to execute.</p>
+<p>For example, if you wanted to know <em>“which”</em> GNU C Compiler your VM’s are using by default:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># If you completed the HPL excercise in tutorial1, you would have installed</span></span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="co"># a system-wide GCC on your head node, and can expect and out of /usr/bin/gcc</span></span>
+<span id="cb1-3"><a href="#cb1-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb1-4"><a href="#cb1-4" aria-hidden="true" tabindex="-1"></a><span class="fu">which</span> gcc</span></code></pre></div>
+<p>We see that for this particular system, the <code>gcc</code> that will be invoked by default is located in the directory <code>/usr/bin/</code>.</p>
+<blockquote>
+<p>[!TIP] Try the above command on your compute node, and you should notice that <code>no gcc in $PATH</code> is found…</p>
+</blockquote>
+<h2 id="nfs-mounted-shared-home-folder-and-the-path-variable">NFS Mounted Shared <code>home</code> folder and the <code>PATH</code> Variable</h2>
+<p>You will recall that you were required to configure an <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial2/README.md#network-file-system">NFS Mounted home dir</a>. This means that any software that you install into your <code>/home/&lt;USER_DIRECTORY&gt;</code> on your head node, will also automatically be available on your compute nodes.</p>
+<p>In order for this to work as expected, there are two important conditions that must be satisfied: 1. Firstly, you must ensure that you’re <code>PATH</code> variable is correctly configured on your head node and must similarly have a corresponding configuration on your compute node(s). For example, to see a colon (<code>:</code>) separated list of directories that are searched whenever you execute a binary: <code>bash    echo $PATH</code> 1. Secondly, you must ensure that any system dependencies are correctly installed on <strong>each</strong> of your nodes. For example, this would be a good time to install <code>gcc</code> on your <strong>compute node</strong>: <code>bash    sudo dnf groupinstall -y "Development Tools"</code></p>
+<p>Instructions for APT (Ubuntu) and Pacman (Arch)</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="co"># APT</span></span>
+<span id="cb2-2"><a href="#cb2-2" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> apt install gcc</span>
+<span id="cb2-3"><a href="#cb2-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb2-4"><a href="#cb2-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Pacman</span></span>
+<span id="cb2-5"><a href="#cb2-5" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> pacman <span class="at">-S</span> gcc</span></code></pre></div>
+<blockquote>
+<p>[!IMPORTANT] Software on one node will not automatically be installed across all nodes. For example, if you want to monitor the system performance of your head node, you must install and/or run <code>top # or htop or btop</code> on your head node. Similarly if you want to do this for your compute node(s), you must install and run the application on all of your compute node(s).</p>
+</blockquote>
+<p>In the next few sections you will be installing and deploying Lmod across your cluster. You will be configuring, building and compiling Lmod from a directory in your <code>/home/&lt;USER&gt;</code> directory. This will mean that the Lmod binary will be available across your cluster, however in order to run Lmod on your compute nodes for example, you must ensure that all Lua system dependencies are installed across all you nodes.</p>
+<h1 id="install-lmod">Install Lmod</h1>
+<p>Environment Modules provide a convenient way to dynamically change a user’s environment through <em>modulefiles</em> to simplify software and library use when there are multiple versions of a particular software package (e.g. Python2.7 and Python 3.x) installed on the system. Environment Module parameters typically involve, among other things, modifying the <code>PATH</code> environment variable for locating a particular package (such as dynamically changing the path to Python from <code>/usr/local/bin/python2.7</code> to <code>/usr/local/bin/python3</code>).</p>
+<p>In this section, you are going to be building and compiling Lmod from source. Lmod is a Lua-based environment module tool for users to easily manipulate their HPC software environment and is used on thousands of HPC systems around the world. Carefully follow these instructions, as there are prerequisites and dependencies that are required to build Lmod, which are slightly different to those required to execute the Lmod binary.</p>
+<blockquote>
+<p>[!IMPORTANT] You can build Lmod on either your head node or one of your compute nodes. Since your compute node(s), <em>will generally speaking</em> have <strong>more CPUs for compute</strong>, they will typically be able to build and compile applications much much faster than your administrative (or login) <em>head node</em>.</p>
+</blockquote>
+<ol>
+<li><p>Install prerequisites required to build Lmod: From one of your <strong>compute nodes</strong>, install the following dependencies</p>
+<ul>
+<li><p>DNF / YUM</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rocky (or similar RPM based systems: RHEL, Alma, CentOS Stream)</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install <span class="at">-y</span> epel-release</span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install <span class="at">-y</span> git gcc make</span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>APT</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu (or similar APT based systems)</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt update</span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install <span class="at">-y</span> git gcc make</span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Pacman</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> git gcc make</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ul></li>
+<li><p>Install dependencies for running and using Lmod: You will need to install these on all the nodes you intend to use with Lmod</p>
+<ul>
+<li><p>DNF / YUM</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Rocky (or similar RPM based systems: RHEL, Alma, CentOS Stream)</span></span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install <span class="at">-y</span> epel-release</span>
+<span id="cb6-3"><a href="#cb6-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install <span class="at">-y</span> tcl-devel tcl tcllib  bc</span>
+<span id="cb6-4"><a href="#cb6-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install <span class="at">-y</span> lua lua-posix lua-term</span>
+<span id="cb6-5"><a href="#cb6-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf <span class="at">--enablerepo</span><span class="op">=</span>devel install lua-devel</span>
+<span id="cb6-6"><a href="#cb6-6" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>APT</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu (or similar APT based systems)</span></span>
+<span id="cb7-2"><a href="#cb7-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt update</span>
+<span id="cb7-3"><a href="#cb7-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install <span class="at">-y</span> tcl tcl-dev lua5.3 lua-posix bc</span>
+<span id="cb7-4"><a href="#cb7-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Pacman</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch</span></span>
+<span id="cb8-2"><a href="#cb8-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> lua lua-filesystem lua-posix bc</span>
+<span id="cb8-3"><a href="#cb8-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ul></li>
+<li><p>Compile, Build and Install Lmod The following instructions will be the same regardless of the system you are using. You will be using the Lmod repo from the Texas Advanced Computing Center at the University of Texas, to build and compile Lmod from source into your own <code>home</code> directory:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Clone the repository</span></span>
+<span id="cb9-2"><a href="#cb9-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> clone https://github.com/TACC/Lmod.git</span>
+<span id="cb9-3"><a href="#cb9-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-4"><a href="#cb9-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Navigate into the Lmod directory</span></span>
+<span id="cb9-5"><a href="#cb9-5" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> Lmod</span>
+<span id="cb9-6"><a href="#cb9-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-7"><a href="#cb9-7" aria-hidden="true" tabindex="-1"></a> <span class="co"># Run the configuration script and install into you home directory</span></span>
+<span id="cb9-8"><a href="#cb9-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">./configure</span> <span class="at">--prefix</span><span class="op">=</span><span class="va">$HOME</span>/lmod</span>
+<span id="cb9-9"><a href="#cb9-9" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-10"><a href="#cb9-10" aria-hidden="true" tabindex="-1"></a> <span class="co"># Build and install Lmod</span></span>
+<span id="cb9-11"><a href="#cb9-11" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span> <span class="at">-j</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span></span>
+<span id="cb9-12"><a href="#cb9-12" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span> install</span>
+<span id="cb9-13"><a href="#cb9-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb9-14"><a href="#cb9-14" aria-hidden="true" tabindex="-1"></a> <span class="co"># If you are on Rocky 9.3 and receive an error about &quot;lua.h&quot;,</span></span>
+<span id="cb9-15"><a href="#cb9-15" aria-hidden="true" tabindex="-1"></a> <span class="co"># You can install Lmod from the DNF / YUM package repos.</span></span>
+<span id="cb9-16"><a href="#cb9-16" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p><code>--prefix</code>: This directive instructs the <code>./configure</code> command, to install Lmod into a specific directory, where the <code>$HOME</code> variable is used as a shortcut for <code>/home/&lt;user&gt;</code>.</p></li>
+<li><p><code>-j$(nproc)</code>: This directive instructs the <code>make</code> command to build and compile use the maximum number of processors on the system.</p></li>
+</ul></li>
+</ol>
+<blockquote>
+<p>[!TIP] You and your team are <strong>STRONGLY</strong> encouraged to review and make sure you understand the Compile, Build and Installation instructions for Lmod as these steps will apply to virtually all application benchmarks you will encounter in this competition.</p>
+</blockquote>
+<h2 id="lmod-usage">Lmod Usage</h2>
+<p>Complete your Lmod installation by sourcing the appropriate profile configuration:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="co"># For a generic configuration</span></span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="bu">source</span> ~/lmod/lmod/lmod/init/profile</span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb10-4"><a href="#cb10-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Alternatively you can source a specific profile configuration</span></span>
+<span id="cb10-5"><a href="#cb10-5" aria-hidden="true" tabindex="-1"></a><span class="co"># for you shell environment.</span></span>
+<span id="cb10-6"><a href="#cb10-6" aria-hidden="true" tabindex="-1"></a><span class="co">#</span></span>
+<span id="cb10-7"><a href="#cb10-7" aria-hidden="true" tabindex="-1"></a><span class="co"># Remember to append your local profile or rc file with the</span></span>
+<span id="cb10-8"><a href="#cb10-8" aria-hidden="true" tabindex="-1"></a><span class="co"># appropriate configuration.</span></span></code></pre></div>
+<p>With Lmod installed, you’ll now have some new commands on the terminal. Namely, these are: <code>module &lt;subcommand&gt;</code>. The important ones for you to know and use are: <code>module avail</code>, <code>module list</code>, <code>module load</code> and <code>module unload</code>. These commands do the following:</p>
+<figure>
+<div data-align="center">
+<table>
+<thead>
+<tr>
+<th><p>Command</p></th>
+<th><p>Operation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>module avail</code></p></td>
+<td><p>Lists all modules that are available to the user.</p></td>
+</tr>
+<tr>
+<td><p><code>module list</code></p></td>
+<td><p>Lists all modules that are loaded by the user.</p></td>
+</tr>
+<tr>
+<td><p><code>module load &lt;module_name&gt;</code></p></td>
+<td><p>Loads a module to the user’s environment.</p></td>
+</tr>
+<tr>
+<td><p><code>module unload &lt;module_name&gt;</code></p></td>
+<td><p>Removes a loaded module from the user’s environment.</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+<p>Lmod also features a shortcut command <code>ml</code> which can perform all of the above commands:</p>
+<figure>
+<div data-align="center">
+<table>
+<thead>
+<tr>
+<th><p>Command</p></th>
+<th><p>Operation</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p><code>ml</code></p></td>
+<td><p>Same as <code>module list</code></p></td>
+</tr>
+<tr>
+<td><p><code>ml avail</code></p></td>
+<td><p>Same as <code>module avail</code></p></td>
+</tr>
+<tr>
+<td><p><code>ml &lt;module_name&gt;</code></p></td>
+<td><p>Same as <code>module load &lt;module_name&gt;</code></p></td>
+</tr>
+<tr>
+<td><p><code>ml -&lt;module_name&gt;</code></p></td>
+<td><p>Same as <code>module unload &lt;module_name&gt;</code></p></td>
+</tr>
+<tr>
+<td><p><code>ml foo</code></p></td>
+<td><p>Same as <code>module load foo</code></p></td>
+</tr>
+<tr>
+<td><p><code>ml foo -bar</code></p></td>
+<td><p>Same as <code>module load foo</code> and <code>module unload bar</code></p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+<blockquote>
+<p>[!NOTE] Some installed packages will automatically add environment modules to the Lmod system, while others will not and will require you to manually add definitions for them. For example, the <code>Intel oneAPI Toolkits</code> package that we will install from source later in this tutorial will have automatic configuration scripts to add module files to the system for loading via Lmod.</p>
+</blockquote>
+<h1 id="running-the-high-performance-linpack-hpl-benchmark-on-your-compute-node">Running the High Performance LINPACK (HPL) Benchmark on Your Compute Node</h1>
+<p>The High Performance LINPACK (HPL) benchmark is used to measure a system’s floating point number processing power. The resulting score (in Floating Point Operations Per Second, or FLOPS for short) is often used to roughly quantify the computational power of an HPC system. HPL requires math libraries to perform its floating point operations as it does not include these by itself and it also requires an MPI installation for communication in order to execute in parallel across multiple CPU cores (and hosts).</p>
+<h2 id="system-libraries">System Libraries</h2>
+<p>A library is a collection of pre-compiled code that provides functionality to other software. This allows the re-use of common code (such as math operations) and simplifies software development. You get two types of libraries on Linux: <code>static</code> and <code>dynamic</code> libraries.</p>
+<ul>
+<li><p>Static Libraries</p>
+<p>Static libraries are embedded into the binary that you create when you compile your software. In essence, it copies the library that exists on your computer into the executable that gets created at <strong>compilation time</strong>. This means that the resulting program binary is self-contained and can operate on multiple systems without them needing the libraries installed first. Static libraries are normally files that end with the <code>.a</code> extension, for “archive”.</p>
+<p>Advantages here are that the program can potentially be faster, as it has direct access to the required libraries without having to query the operating system first, but disadvantages include the file size being larger and updating the library requires recompiling (and linking the updated library) the software.</p></li>
+<li><p>Dynamic Libraries</p>
+<p>Dynamic libraries are loaded into a compiled program at <strong>runtime</strong>, meaning that the library that the program needs is <strong>not</strong> embedded into the executable program binary at compilation time. Dynamic libraries are files that normally end with the <code>.so</code> extension, for “shared object”.</p>
+<p>Advantages here are that the file size can be much smaller and the application doesn’t need to be recompiled (linked) when using a different version of the library (as long as there weren’t fundamental changes in the library). However, it requires the library to be installed and made available to the program on the operating system.</p></li>
+</ul>
+<blockquote>
+<p>[!NOTE] Applications (such as HPL) can be configured to use static or dynamic libraries for its math and MPI communication, as mentioned above.</p>
+</blockquote>
+<ul>
+<li><p>Message Passing Interface (MPI)</p>
+<p>MPI is a message-passing standard used for parallel software communication. It allows for software to send messages between multiple processes. These processes could be on the local computer (think multiple cores of a CPU or multiple CPUs) as well as on networked computers. MPI is a cornerstone of HPC. There are many implementations of MPI in software such as OpenMPI, MPICH, MVAPICH2 and so forth. To find out more about MPI, please read the following: <a href="https://www.linuxtoday.com/blog/mpi-in-thirty-minutes.html">https://www.linuxtoday.com/blog/mpi-in-thirty-minutes.html</a></p></li>
+<li><p>Basic Linear Algebra Subprograms Libraries</p>
+<p>Basic Linear Algebra Subprograms (BLAS) libraries provide low-level routines for performing common linear algebra operations such as vector and matrix multiplication. These libraries are highly optimized for performance on various hardware architectures and are a fundamental building block in many numerical computing applications.</p></li>
+</ul>
+<h2 id="configure-and-run-hpl-on-compute-node">Configure and Run HPL on Compute Node</h2>
+<p>We need to install the statically <code>($(LIBdir)/libhpl.a)</code> and dynamically<code>($(LAdir)/libtatlas.so $(LAdir)/libsatlas.so)</code> linked libraries that HPL expects to have, as well as the software for MPI. The MPI implementation we’re going to use here is OpenMPI and we will use the Automatically Tuned Linear Algebra Software (ATLAS) math library.</p>
+<blockquote>
+<p>[!IMPORTANT] Remember that since the MPI and BLAS libraries are dynamically linked, you need to ensure that ALL of our nodes that you expect to run HPL on have the expected MPI and BLAS libraries.</p>
+<p>If you’ve managed to successfully <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial3/(../tutorial1/README.md#install-compile-and-run-high-performance-linpack-hpl-benchmark)">build, compile and run HPL in tutorial 1</a>, and you’ve managed to successfully configure your <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial2/README.md##network-file-system">NFS <code>home</code> directory export in tutorial 2</a>, then you may proceed. Otherwise you <strong>must</strong> discuss with, and seek advice from an instructor.</p>
+</blockquote>
+<ol>
+<li><p>Install the necessary dependencies on your <strong>compute node</strong>:</p>
+<ul>
+<li><p>DNF / YUM</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="co"># RHEL, Rocky, Alma, Centos</span></span>
+<span id="cb11-2"><a href="#cb11-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf update <span class="at">-y</span></span>
+<span id="cb11-3"><a href="#cb11-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf config-manager <span class="at">--set-enabled</span> crb</span>
+<span id="cb11-4"><a href="#cb11-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb11-5"><a href="#cb11-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install <span class="at">-y</span> <span class="dt">\</span></span>
+<span id="cb11-6"><a href="#cb11-6" aria-hidden="true" tabindex="-1"></a>   openmpi <span class="dt">\</span></span>
+<span id="cb11-7"><a href="#cb11-7" aria-hidden="true" tabindex="-1"></a>   openmpi-devel <span class="dt">\</span></span>
+<span id="cb11-8"><a href="#cb11-8" aria-hidden="true" tabindex="-1"></a>   openblas <span class="dt">\</span></span>
+<span id="cb11-9"><a href="#cb11-9" aria-hidden="true" tabindex="-1"></a>   openblas-devel <span class="dt">\</span></span>
+<span id="cb11-10"><a href="#cb11-10" aria-hidden="true" tabindex="-1"></a>   gcc <span class="dt">\</span></span>
+<span id="cb11-11"><a href="#cb11-11" aria-hidden="true" tabindex="-1"></a>   gcc-c++ <span class="dt">\</span></span>
+<span id="cb11-12"><a href="#cb11-12" aria-hidden="true" tabindex="-1"></a>   make <span class="dt">\</span></span>
+<span id="cb11-13"><a href="#cb11-13" aria-hidden="true" tabindex="-1"></a>   wget <span class="dt">\</span></span>
+<span id="cb11-14"><a href="#cb11-14" aria-hidden="true" tabindex="-1"></a>   nano</span>
+<span id="cb11-15"><a href="#cb11-15" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>APT</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu</span></span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt update</span>
+<span id="cb12-3"><a href="#cb12-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install openmpi libatlas-base-dev</span>
+<span id="cb12-4"><a href="#cb12-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install wget nano</span>
+<span id="cb12-5"><a href="#cb12-5" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Pacman</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch</span></span>
+<span id="cb13-2"><a href="#cb13-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-Syu</span></span>
+<span id="cb13-3"><a href="#cb13-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> base-devel openmpi openblas nano wget</span>
+<span id="cb13-4"><a href="#cb13-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ul></li>
+<li><p>Configuring and Tuning HPL</p>
+<p>The <code>HPL.dat</code> file (in the same directory as <code>xhpl</code>) defines how the HPL benchmark solves a large dense linear array of double precision floating point numbers. Therefore, selecting the appropriate parameters in this file can have a considerable effect on the GFLOPS score that you obtain. The most important parameters are:</p>
+<ul>
+<li><p><code>N</code> which defines the length of one of the sides of the 2D array to be solved. It follows therefore:</p>
+<ul>
+<li><p><strong><em>“Problem Size”</em></strong> is proportional to <code>N x N</code>,</p></li>
+<li><p><strong><em>“Runtime”</em></strong> is proportional to <code>N x N</code>,</p></li>
+<li><p><strong><em>“Memory Usage”</em></strong> is proportional to <code>N x N</code>.</p></li>
+</ul></li>
+</ul>
+<p><span class="box"><img src="/content/assets/chpc-scc-tutorial-3/001-An-example-of-P-by-Q-partitioning-of-a-HPL-matrix-in-6-processes-2x3-decomposition.png" /></span> The image depicts an example of P by Q partitioning of an HPL matrix in 6 processes. In this case they’ve been decomposed into 2 x 3. The image is from a journal article publication, <a href="https://www.researchgate.net/publication/228524393_Gaining_asynchrony_by_using_hybrid_UPCSMPSs">Gaining asynchrony by using hybrid UPC SMPSs</a></p>
+<p>We can observe that if you we to <em>double</em> <code>N</code>, your run would take <strong>four</strong> times as long. If you <strong>tippled</strong> <code>N</code>, your run would use <strong>nine times as much</strong> memory. If you made <code>N</code> <strong>ten times larger</strong>, your run would use <strong>hundred times</strong> more memory, and would take <strong>hundred times</strong> as long to run.</p>
+<ul>
+<li><p><code>NB</code> defines the block (or chunk) size into which the array is divided. The optimal value is determined by the CPU architecture such that the block fits in cache. For best performance <code>N</code> should be a multiple of <code>NB</code>.</p></li>
+<li><p><code>P x Q</code> define the domains (in two dimensions) for how the array is partitioned on a distributed memory system. Therefore <code>P x Q</code> typically should equate more or less to the number of MPI ranks, or number of nodes, or number of NUMA domains. For example, if you have 4 single CPU nodes, the permutations for <code>P</code> and <code>Q</code> include [1, 4] and [2, 2]. Similarly, if you have 4 dual socket nodes, the permutations for <code>P</code> and <code>Q</code> include [1,8], [2, 4], etc…</p></li>
+</ul></li>
+<li><p>Prepare your environment to rerun your <code>xhpl</code> binary on your <strong>compute node</strong></p>
+<p>Make sure to open an additional ssh session to your compute node, so that you can monitor your CPU utilization using <code>top # preferably btop / htop</code>.</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Export the path to the OpenMPI Library</span></span>
+<span id="cb14-2"><a href="#cb14-2" aria-hidden="true" tabindex="-1"></a> <span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span>/usr/lib64/openmpi/bin:<span class="va">$PATH</span></span>
+<span id="cb14-3"><a href="#cb14-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb14-4"><a href="#cb14-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Edit your HPL.dat file with the following changes</span></span>
+<span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> ~/hpl/bin/<span class="op">&lt;</span>TEAM_NAME<span class="op">&gt;</span></span>
+<span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">nano</span> HPL.dat</span>
+<span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Make the following changes to your <code>HPL.dat</code> file:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="dt">22000</span>                    <span class="dt">Ns</span></span>
+<span id="cb15-2"><a href="#cb15-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">164</span>                      <span class="dt">NBs</span></span>
+<span id="cb15-3"><a href="#cb15-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Finally, rerun <code>xhpl</code> and record your GFLOPS score:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">./xhpl</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<blockquote>
+<p>[!TIP] You can find <a href="https://www.advancedclustering.com/act_kb/tune-hpl-dat-file/">online calculators</a> that will generate an <code>HPL.dat</code> file for you <em>as a starting point</em>, but you will still need to do some tuning if you want to squeeze out maximum performance.</p>
+</blockquote></li>
+</ol>
+<h1 id="building-and-compiling-openblas-and-openmpi-libraries-from-source">Building and Compiling OpenBLAS and OpenMPI Libraries from Source</h1>
+<blockquote>
+<p>[!CAUTION] Compiling your entire application stack and tool-chains from source, can provide you with a tremendous performance improvement. Compiling applications from source <em>‘can’</em> take a very long time and can also be a very tricky process. For this reason the compilation of <code>gcc</code> is omitted for the competition.</p>
+<p>You are advised to skip this section if you have fallen behind the pace recommended by the course coordinators. Skipping this section will <em>NOT</em> stop you from completing the remainder of the tutorials.</p>
+</blockquote>
+<p>You now have a functioning HPL benchmark. However, using math libraries (BLAS, LAPACK, ATLAS) from a repository (<code>dnf</code>) will not yield optimal performance, because these repositories contain generic code compiled to work on all x86 hardware. If you were monitoring your compute during the execution of <code>xhpl</code>, you would have noticed that the OpenMPI and Atlas configurations restricted HPL to running with no more than two OpenMP threads.</p>
+<p>Code compiled specifically for HPC hardware can use instruction sets like <code>AVX</code>, <code>AVX2</code> and <code>AVX512</code> (if available) to make better use of the CPU. A (much) higher HPL result is possible if you compile your math library (such as ATLAS, GOTOBLAS, OpenBLAS or Intel MKL) from source code on the hardware you intend to run the code on.</p>
+<ol>
+<li><p>Install dependencies</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="co"># DNF / YUM (RHEL, Rocky, Alma, Centos Stream)</span></span>
+<span id="cb17-2"><a href="#cb17-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf group install <span class="st">&quot;Development Tools&quot;</span></span>
+<span id="cb17-3"><a href="#cb17-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install gfortran git gcc wget</span>
+<span id="cb17-4"><a href="#cb17-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-5"><a href="#cb17-5" aria-hidden="true" tabindex="-1"></a> <span class="co"># APT (Ubuntu)</span></span>
+<span id="cb17-6"><a href="#cb17-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install build-essential hwloc libhwloc-dev libevent-dev gfortran wget</span>
+<span id="cb17-7"><a href="#cb17-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb17-8"><a href="#cb17-8" aria-hidden="true" tabindex="-1"></a> <span class="co"># Pacman</span></span>
+<span id="cb17-9"><a href="#cb17-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> base-devel gcc gcc-fortran git wget</span>
+<span id="cb17-10"><a href="#cb17-10" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Fetch and Compile OpenBLAS Source Files</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fetch the source files from the GitHub repository</span></span>
+<span id="cb18-2"><a href="#cb18-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> clone https://github.com/xianyi/OpenBLAS.git</span>
+<span id="cb18-3"><a href="#cb18-3" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> OpenBLAS</span>
+<span id="cb18-4"><a href="#cb18-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-5"><a href="#cb18-5" aria-hidden="true" tabindex="-1"></a> <span class="co"># Tested against version 0.3.26, you can try an build `develop` branch</span></span>
+<span id="cb18-6"><a href="#cb18-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> checkout v0.3.26</span>
+<span id="cb18-7"><a href="#cb18-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb18-8"><a href="#cb18-8" aria-hidden="true" tabindex="-1"></a> <span class="co"># You can adjust the PREFIX to install to your preferred directory</span></span>
+<span id="cb18-9"><a href="#cb18-9" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span></span>
+<span id="cb18-10"><a href="#cb18-10" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span> PREFIX=<span class="va">$HOME</span>/opt/openblas install</span>
+<span id="cb18-11"><a href="#cb18-11" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Fetch, Unpack and Compile OpenMPI Source Files</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Fetch and unpack the source files</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">wget</span> https://download.open-mpi.org/release/open-mpi/v4.1/openmpi-4.1.4.tar.gz</span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">tar</span> xf openmpi-4.1.4.tar.gz</span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> openmpi-4.1.4</span>
+<span id="cb19-5"><a href="#cb19-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-6"><a href="#cb19-6" aria-hidden="true" tabindex="-1"></a> <span class="co"># Pay careful attention to tuning options here, and ensure they correspond</span></span>
+<span id="cb19-7"><a href="#cb19-7" aria-hidden="true" tabindex="-1"></a> <span class="co"># to your compute node&#39;s processor.</span></span>
+<span id="cb19-8"><a href="#cb19-8" aria-hidden="true" tabindex="-1"></a> <span class="co">#</span></span>
+<span id="cb19-9"><a href="#cb19-9" aria-hidden="true" tabindex="-1"></a> <span class="co"># If you are unsure, you can replace the `cascadelake` architecture option</span></span>
+<span id="cb19-10"><a href="#cb19-10" aria-hidden="true" tabindex="-1"></a> <span class="co"># with `native`, however you are expected to determine your compute node&#39;s</span></span>
+<span id="cb19-11"><a href="#cb19-11" aria-hidden="true" tabindex="-1"></a> <span class="co"># architecture using `lscpu` or similar tools.</span></span>
+<span id="cb19-12"><a href="#cb19-12" aria-hidden="true" tabindex="-1"></a> <span class="co">#</span></span>
+<span id="cb19-13"><a href="#cb19-13" aria-hidden="true" tabindex="-1"></a> <span class="co"># Once again you can adjust the --prefix to install to your preferred path.</span></span>
+<span id="cb19-14"><a href="#cb19-14" aria-hidden="true" tabindex="-1"></a> <span class="va">CFLAGS</span><span class="op">=</span><span class="st">&quot;-Ofast -march=cascadelake -mtune=cascadelake&quot;</span> <span class="ex">./configure</span> <span class="at">--prefix</span><span class="op">=</span><span class="va">$HOME</span>/opt/openmpi <span class="at">--enable-mpi1-compatibility</span></span>
+<span id="cb19-15"><a href="#cb19-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb19-16"><a href="#cb19-16" aria-hidden="true" tabindex="-1"></a> <span class="co"># Use the maximum number of threads to compile the application</span></span>
+<span id="cb19-17"><a href="#cb19-17" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span> <span class="at">-j</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span></span>
+<span id="cb19-18"><a href="#cb19-18" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span> install</span>
+<span id="cb19-19"><a href="#cb19-19" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Compile and Configure HPL</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Copy the Makefile `Make.&lt;TEAM_NAME&gt;` that you&#39;d previously prepared</span></span>
+<span id="cb20-2"><a href="#cb20-2" aria-hidden="true" tabindex="-1"></a> <span class="co"># and customize it to utilize the OpenBLAS and OpenMPI libraries that</span></span>
+<span id="cb20-3"><a href="#cb20-3" aria-hidden="true" tabindex="-1"></a> <span class="co"># you have just compiled.</span></span>
+<span id="cb20-4"><a href="#cb20-4" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> ~/hpl</span>
+<span id="cb20-5"><a href="#cb20-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">cp</span> Make.<span class="op">&lt;</span>TEAM_NAME<span class="op">&gt;</span> Make.compile_BLAS_MPI</span>
+<span id="cb20-6"><a href="#cb20-6" aria-hidden="true" tabindex="-1"></a> <span class="fu">nano</span> Make.compile_BLAS_MPI</span>
+<span id="cb20-7"><a href="#cb20-7" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Edit the platform identifier <em>(architecture)</em>, MPI and BLAS paths, and add compiler optimization flags:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="dt">ARCH</span>         <span class="op">=</span> <span class="dt">compile_BLAS_MPI</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">MPdir</span>        <span class="op">=</span> <span class="er">$(</span><span class="dt">HOME</span><span class="er">)/</span><span class="dt">opt</span><span class="er">/</span><span class="dt">openmpi</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">MPinc</span>        <span class="op">=</span> <span class="dt">-I</span><span class="er">$(</span><span class="dt">MPdir</span><span class="er">)/</span><span class="dt">include</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a> <span class="dt">MPlib</span>        <span class="op">=</span> <span class="er">$(</span><span class="dt">MPdir</span><span class="er">)/</span><span class="dt">lib</span><span class="er">/</span><span class="dt">libmpi.so</span></span>
+<span id="cb21-6"><a href="#cb21-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-7"><a href="#cb21-7" aria-hidden="true" tabindex="-1"></a> <span class="dt">LAdir</span>        <span class="op">=</span> <span class="er">$(</span><span class="dt">HOME</span><span class="er">)/</span><span class="dt">opt</span><span class="er">/</span><span class="dt">openblas</span></span>
+<span id="cb21-8"><a href="#cb21-8" aria-hidden="true" tabindex="-1"></a> <span class="dt">LAinc</span>        <span class="op">=</span></span>
+<span id="cb21-9"><a href="#cb21-9" aria-hidden="true" tabindex="-1"></a> <span class="dt">LAlib</span>        <span class="op">=</span> <span class="er">$(</span><span class="dt">LAdir</span><span class="er">)/</span><span class="dt">lib</span><span class="er">/</span><span class="dt">libopenblas.a</span></span>
+<span id="cb21-10"><a href="#cb21-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-11"><a href="#cb21-11" aria-hidden="true" tabindex="-1"></a> <span class="dt">CC</span>           <span class="op">=</span> <span class="dt">mpicc</span></span>
+<span id="cb21-12"><a href="#cb21-12" aria-hidden="true" tabindex="-1"></a> <span class="dt">CCFLAGS</span>      <span class="op">=</span> <span class="er">$(</span><span class="dt">HPL_DEFS</span><span class="er">)</span> <span class="dt">-O3</span> <span class="dt">-march</span><span class="op">=</span><span class="dt">cascadelake</span> <span class="dt">-mtune</span><span class="op">=</span><span class="dt">cascadelake</span> <span class="dt">-fopenmp</span> <span class="dt">-fomit-frame-pointer</span> <span class="dt">-funroll-loops</span> <span class="dt">-W</span> <span class="dt">-Wall</span></span>
+<span id="cb21-13"><a href="#cb21-13" aria-hidden="true" tabindex="-1"></a> <span class="dt">LDFLAGS</span>      <span class="op">=</span> <span class="dt">-O3</span> <span class="dt">-fopenmp</span></span>
+<span id="cb21-14"><a href="#cb21-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb21-15"><a href="#cb21-15" aria-hidden="true" tabindex="-1"></a> <span class="dt">LINKER</span>       <span class="op">=</span> <span class="er">$(</span><span class="dt">CC</span><span class="er">)</span></span>
+<span id="cb21-16"><a href="#cb21-16" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>You can now compile your new HPL:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="co"># You will also need to temporarily export the following environment</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a> <span class="co"># variables to make OpenMPI available on the system.</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a> <span class="bu">export</span> <span class="va">MPI_HOME</span><span class="op">=</span><span class="va">$HOME</span>/opt/openmpi</span>
+<span id="cb22-5"><a href="#cb22-5" aria-hidden="true" tabindex="-1"></a> <span class="bu">export</span> <span class="va">PATH</span><span class="op">=</span><span class="va">$MPI_HOME</span>/bin:<span class="va">$PATH</span></span>
+<span id="cb22-6"><a href="#cb22-6" aria-hidden="true" tabindex="-1"></a> <span class="bu">export</span> <span class="va">LD_LIBRARY_PATH</span><span class="op">=</span><span class="va">$MPI_HOME</span>/lib:<span class="va">$LD_LIBRARY_PATH</span></span>
+<span id="cb22-7"><a href="#cb22-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-8"><a href="#cb22-8" aria-hidden="true" tabindex="-1"></a> <span class="co"># Remember that if you make a mistake and need to recompile, first run</span></span>
+<span id="cb22-9"><a href="#cb22-9" aria-hidden="true" tabindex="-1"></a> <span class="co"># make clean arch=compile_BLAS_MPI</span></span>
+<span id="cb22-10"><a href="#cb22-10" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb22-11"><a href="#cb22-11" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span> arch=compile_BLAS_MPI</span>
+<span id="cb22-12"><a href="#cb22-12" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Edit HPL to take advantage of your custom compiled MPI and Math Libraries Verify that a <code>xhpl</code> executable binary was in fact produced and configure your <code>HPL.dat</code> file with reference to the <a href="https://netlib.org/benchmark/hpl/tuning.html">Official HPL Tuning Guide</a>:</p>
+<div class="sourceCode" id="cb23"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> bin/compile_BLAS_MPI</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a> <span class="co"># As a starting point when running HPL on a single node, with a single CPU</span></span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Try setting Ps = 1 and Qs = 1, and Ns = 21976 and NBs = 164</span></span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">nano</span> HPL.dat</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Finally, you can run your <code>xhpl</code> binary with custom compiled libraries.</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="co"># There is no need to explicitly use `mpirun`, nor do you have to specify</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a> <span class="co"># the number of cores by exporting the `OMP_NUM_THREADS`.</span></span>
+<span id="cb24-3"><a href="#cb24-3" aria-hidden="true" tabindex="-1"></a> <span class="co"># This is because OpenBLAS is multi-threaded by default.</span></span>
+<span id="cb24-4"><a href="#cb24-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb24-5"><a href="#cb24-5" aria-hidden="true" tabindex="-1"></a> <span class="ex">./xhpl</span></span>
+<span id="cb24-6"><a href="#cb24-6" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<blockquote>
+<p>[!TIP] Remember to open a new ssh session to your compute node and run either <code>top # preferably htop / btop</code>. Better yet, if you are running <code>tmux</code> in your current session, open a new tmux window using <code>C-b c</code> then ssh to your compute node from there, and you can cycle between the two tmux windows using <code>C-b n</code>.</p>
+</blockquote>
+<p>Join the <a href="https://github.com/chpc-tech-eval/chpc24-scc-nmu/discussions/61">Discussion</a> by replying to the thread with a screenshot of your compute node’s CPU threads hard at work.</p>
+<h1 id="intel-oneapi-toolkits-and-compiler-suite">Intel oneAPI Toolkits and Compiler Suite</h1>
+<p>Intel oneAPI Toolkits provide a comprehensive suite of development tools that span various programming models and architectures. These toolkits help developers optimize their applications for performance across CPUs, GPUs, FPGAs, and other accelerators, visit <a href="https://www.intel.com/content/www/us/en/developer/tools/oneapi/toolkits.html">Intel oneAPI Toolkits</a> for more information.</p>
+<h2 id="configure-and-install-intel-oneapi-toolkits">Configure and Install Intel oneAPI Toolkits</h2>
+<blockquote>
+<p>[!CAUTION] The Intel oneAPI Toolkits can provide considerable improvements of your benchmarking results. However, they can be tricky to install and configure. You are advised to skip this section if you have fallen behind the pace recommended by the course coordinators. Skipping this section will <em>NOT</em> stop you from completing the remainder of the tutorials.</p>
+</blockquote>
+<p>You will need to install and configure Intel’s oneAPI Base Toolkit which includes Intel’s optimized Math Kernel Libraries, Intel’s C/C++ Compilers and FORTRAN and MPI Compilers.</p>
+<ol>
+<li><p><em>Optionally</em> the following prerequisites and install dependencies, to make use of Intel’s VTune Profiler for a graphical user interface.</p>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># DNF / YUM (RHEL, Rocky, Alma, CentOS Stream)</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install libdrm gtk3 libnotify xdg-utils libxcb mesa-libgbm at-spi2-core</span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># APT (Ubuntu)</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install libdrm2 libgtk-3-0 libnotify4 xdg-utils libxcb-dri3-0 libgbm1 libatspi2.0-0</span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a> <span class="co"># Pacman (Arch)</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> libdrm gtk3 libnotify xdg-utils libxcb mesa at-spi2-core</span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Download the offline installers into your <code>HOME</code> directory</p>
+<ul>
+<li><p>Intel oneAPI Toolkit</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://registrationcenter-download.intel.com/akdlm/IRC_NAS/33cb2a22-ddf1-4aa9-8d68-1f5a118acaf2/intel-oneapi-toolkit-2026.1.0.192_offline.sh</span>
+<span id="cb26-2"><a href="#cb26-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ul></li>
+<li><p>Use <code>chmod</code> to make the scripts executable</p>
+<div class="sourceCode" id="cb27"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># First make the toolkit executable</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">chmod</span> +x intel-oneapi-toolkit-2026.1.0.192_offline.sh</span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Run the installation script using the following command line parameters:</p>
+<ul>
+<li><p><code>-a</code>: List of arguments to follow…</p></li>
+<li><p><code>--cli</code>: Executing the installer on a Command Line Interface.</p></li>
+<li><p><code>--eula accept</code>: Agree to accept the end user license agreement. More details about the <a href="https://www.intel.com/content/www/us/en/docs/oneapi/installation-guide-linux/2024-2/install-with-command-line.html">Command Line Arguments</a> can be found within Intel’s installation guide.</p></li>
+</ul>
+<p>These must be run separately and you will need to navigate through a number of CLI text prompts and accept the end-user license agreement.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Run Intel oneAPI kit installation script</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">./intel-oneapi-toolkit-2026.1.0.192_offline.sh</span> <span class="at">-a</span> <span class="at">--cli</span> <span class="at">--eula</span> accept</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Configure your Environment to use Intel oneAPI Toolkits You can either use the <code>setvars.sh</code> configuration script or modulefiles:</p>
+<ul>
+<li><p>To have your environment automaticaly prepared for use with Intel’s oneAPI Toolkit append the following line either to your <code>/etc/profile</code> or your <code>~/.bashrc</code> or your <code>~/.profile</code> or run the command every time you login to your node <code>bash  source ~/intel/oneapi/setvars.sh</code></p></li>
+<li><p>If you managed to successfully configure Lmod, then you can make use of Intel oneAPI modulefile configuration script: ```bash # Navigate to the location of your Intel oneAPI installation cd ~/intel/oneapi/</p>
+<p># Execute the modulefiles setup script ./modulefiles-setup.sh</p>
+<p># Return to the top level of your $HOME directory and # configure Lmod to make use of the newly created modules # Alternatively, this line can be appended to /etc/profile or your .bashrc ml use $HOME/modulefiles</p>
+<p># Make sure the newly created modules are available to use and have been correclty configured ml avail ```</p></li>
+</ul></li>
+</ol>
+<blockquote>
+<p>[!IMPORTANT] You will need to configure your environment each time you login to a new shell, as is the case when you use <code>mpirun</code> over multiple nodes. You will be shown how to do this automatically when you run HPL over multiple nodes.</p>
+</blockquote>
+<p>You have successfully installed the Intel oneAPI Base and HPC Toolkits, including Intel Compiler Suite and Math Kernel Libraries.</p>
+<h2 id="configuring-and-running-hpl-with-intel-oneapi-toolkit-and-mkl">Configuring and Running HPL with Intel oneAPI Toolkit and MKL</h2>
+<p>After you’ve successfully completed the previous section, you will be ready to recompile HPL with Intel’s <code>icx</code> compiler and <code>mkl</code> math kernel libraries.</p>
+<ol>
+<li><p>Copy and Edit the <code>Make.Linux_Intel64</code></p>
+<p>From your <code>~/hpl</code> folder, with a properly configured environment, copy and edit the configuration</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Copy a setup configuration script to use as a template</span></span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">cp</span> setup/Make.Linux_Intel64 ./</span>
+<span id="cb29-3"><a href="#cb29-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb29-4"><a href="#cb29-4" aria-hidden="true" tabindex="-1"></a> <span class="co"># Edit the configuration file to make use of your Intel oneAPI Toolkit</span></span>
+<span id="cb29-5"><a href="#cb29-5" aria-hidden="true" tabindex="-1"></a> <span class="fu">nano</span> Make.Linux_Intel64</span>
+<span id="cb29-6"><a href="#cb29-6" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Configure your <code>Make.Linux_Intel64</code></p>
+<p>Ensure that you make the following changes and amendments:</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="dt">CC</span>       <span class="op">=</span> <span class="dt">mpiicx</span></span>
+<span id="cb30-2"><a href="#cb30-2" aria-hidden="true" tabindex="-1"></a> <span class="dt">OMP_DEFS</span> <span class="op">=</span> <span class="dt">-qopenmp</span></span>
+<span id="cb30-3"><a href="#cb30-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">CCFLAGS</span>  <span class="op">=</span> <span class="er">$(</span><span class="dt">HPL_DEFS</span><span class="er">)</span> <span class="dt">-O3</span> <span class="dt">-w</span> <span class="dt">-ansi-alias</span> <span class="dt">-z</span> <span class="dt">noexecstack</span> <span class="dt">-z</span> <span class="dt">relro</span> <span class="dt">-z</span> <span class="dt">now</span> <span class="dt">-Wall</span></span>
+<span id="cb30-4"><a href="#cb30-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Compile your HPL Binary using the Intel oneAPI Toolkit</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> arch=Linux_Intel64</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Reuse your <code>HPL.dat</code> from when you compiled OpenMPI and OpenBLAS from source.</p></li>
+</ol>
+<blockquote>
+<p>[!TIP] Remember to use tmux to open a new tmux window, <code>C-b c</code>. You can cycle between the tmux windows using <code>C-b n</code>.</p>
+</blockquote>
+<h1 id="linpack-theoretical-peak-performance">LinPACK Theoretical Peak Performance</h1>
+<p>It is useful to know what the theoretical FLOPS performance (RPeak) of your hardware is when trying to obtain the highest benchmark result (RMax). RPeak can be derived from the formula:</p>
+<p><strong>RPeak = CPU Frequency [GHz] x Num CPU Cores x OPS/cycle</strong></p>
+<p>Newer CPU architectures allow for ‘wider” instruction sets which execute multiple instructions per CPU cycle. The table below shows the floating point operations per cycle of various instruction sets:</p>
+<figure>
+<div data-align="center">
+<table>
+<thead>
+<tr>
+<th><p>CPU Extension</p></th>
+<th><p>Floating Point Operations per CPU Cycle</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>SSE4.2</p></td>
+<td><p>4</p></td>
+</tr>
+<tr>
+<td><p>AVX</p></td>
+<td><p>8</p></td>
+</tr>
+<tr>
+<td><p>AVX2</p></td>
+<td><p>16</p></td>
+</tr>
+<tr>
+<td><p>AVX512</p></td>
+<td><p>32</p></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+<p>You can determine your CPU model as well as the instruction extensions supported on your <strong>compute node(s)</strong> with the command:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lscpu</span></span></code></pre></div>
+<p>For model name, you should see something along the lines “Intel Xeon Processor (Cascadelake)”,</p>
+<p>You can determine the maximum and base frequency of your CPU model on the Intel Ark website. Because HPL is a demanding workload, assume the CPU is operating at its base frequency and <strong>NOT</strong> the boost/turbo frequency. You should have everything you need to calculate the RPeak of your cluster. Typically an efficiency of at least 75% is considered adequate for Intel CPUs (RMax / RPeak &gt; 0.75).</p>
+<h2 id="top500-list">Top500 List</h2>
+<p>The <a href="https://top500.org/lists/top500/">TOP500 list</a> is a project that ranks and details the 500 most powerful supercomputers in the world. The ranking is based on the High-Performance Linpack (HPL) benchmark, which measures a system’s floating point computing power.</p>
+<ol>
+<li><p>Go the the Top500 List and compare your results</p>
+<p>Populate the following table by recording your Rmax from HPL results, and calculating your expected Rpeak value.</p></li>
+</ol>
+<figure>
+<div data-align="center">
+<table>
+<thead>
+<tr>
+<th><p>Rank</p></th>
+<th><p>System</p></th>
+<th><p>Threads</p></th>
+<th><p>Rmax (GFlops/s)</p></th>
+<th><p>Rpeak (GFlops/s)</p></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><p>1</p></td>
+<td><p>LineShine - LinkKun LX2 - Shenzen China</p></td>
+<td><p>13 789 440</p></td>
+<td><p>2 198 x 106</p></td>
+<td><p>2 735.82 x 106</p></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td><p>3</p></td>
+<td><p>Frontier - HPE - United States</p></td>
+<td><p>8 699 904</p></td>
+<td><p>1 206 x 106</p></td>
+<td><p>1 714.81 x 106</p></td>
+</tr>
+<tr>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><p>Head node</p></td>
+<td><p>2</p></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><p>Compute node using head node <code>xhpl</code> binary</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><p>Compute node using custom compiled MPI and BLAS</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><p>Compute node using Intel oneAPI Toolkits</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+<tr>
+<td></td>
+<td><p>Across two compute nodes</p></td>
+<td></td>
+<td></td>
+<td></td>
+</tr>
+</tbody>
+</table>
+</div>
+</figure>
+<blockquote>
+<p>[!IMPORTANT] You do <strong>NOT</strong> need to try and Rank you VM’s HPL performance. Cores and threads are used interchangeably in this context. Following the recommended configuration and guides, your head node has one CPU package with two compute cores (or threads). Continuing this same analogy, your compute node has one CPU with six cores (or threads).</p>
+</blockquote>
+<h1 id="spinning-up-a-second-compute-node-using-a-snapshot">Spinning Up a Second Compute Node Using a Snapshot</h1>
+<p>At this point you are ready to run HPL on your cluster with two compute nodes. From your OpenStack workspace, navigate to <code>Compute</code> → <code>Instances</code> and create a snapshot from your compute node.</p>
+<p>Launch a new instance, as you did in <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial1/README.md#launch-a-new-instance">Tutorial 1</a> and <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial2/README.md#spinning-up-a-compute-node-on-sebowaopenstack">Tutorial 2</a> only this time you’ll be using the snapshot that you have just created as boot source.</p>
+<figure>
+<p><img src="/content/assets/chpc-scc-tutorial-3/002-openstack_instance_snapshot.png" /></p>
+<figcaption><p>OpenStack create instance from Snapshot.</p></figcaption>
+</figure>
+<p>Pay careful attention to the hostname, network and other configuration settings that may be specific to and may conflict with your initial node. Once your two compute nodes have been successfully deployed, are accessible from the head node and added to your MPI <code>hosts</code> file, you can continue with running HPL across multiple nodes.</p>
+<h2 id="running-hpl-across-multiple-nodes">Running HPL Across Multiple Nodes</h2>
+<p>Everything is now in place for you to run HPL across your two compute nodes. You must ensure that all libraries and dependencies are satisfied across your cluster. You must also ensure that your passwordless SSH is properly configured. Your NFS mounted <code>/home</code> directory must be properly configured.</p>
+<ul>
+<li><p>Configuring OpenMPI Hosts File</p>
+<p>You must configure a <code>hosts</code> (or <code>machinefile</code>) file which contains the IP addresses or hostnames of your compute nodes.</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode conf"><code class="sourceCode toml"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="co"># The slots value indicates the number of processes to run on each node.</span></span>
+<span id="cb33-2"><a href="#cb33-2" aria-hidden="true" tabindex="-1"></a> <span class="co"># Adjust this number based on the number of CPU cores available on each node.</span></span>
+<span id="cb33-3"><a href="#cb33-3" aria-hidden="true" tabindex="-1"></a> <span class="dt">compute01</span> <span class="dt">slots</span><span class="op">=</span><span class="dv">1</span></span>
+<span id="cb33-4"><a href="#cb33-4" aria-hidden="true" tabindex="-1"></a> <span class="dt">compute02</span> <span class="dt">slots</span><span class="op">=</span><span class="dv">1</span></span>
+<span id="cb33-5"><a href="#cb33-5" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Runtime and Environment Configuration Options for <code>mpirun</code></p>
+<p>You compute nodes each have a single CPU with multiple OpenMP threads. It is critical that your <code>environment</code> is correctly configured to you to run HPL across your two compute nodes.</p>
+<ul>
+<li><p>Navigate to the directory where your HPL executable and <code>HPL.dat</code> file are located. Use <code>mpirun</code> to run HPL across the nodes specified in the hosts file</p></li>
+<li><p>Edit your <code>~/.profile</code> to set environment variables when <code>mpirun</code> creates a new shell</p></li>
+<li><p>Execute <code>mpirun</code></p></li>
+</ul>
+<div class="sourceCode" id="cb34"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> 2 <span class="at">--hostfile</span> hosts ./xhpl</span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ul>
+<h1 id="application-benchmark-profiling">Application Benchmark Profiling</h1>
+<p>In order to visualize and understand the a portable abstraction of the layout of the hierarchical topology of modern hardware architectures, you can make use of the Portable Hardware Locality <code>hwlock</code> software package. This will give you insight into NUMA memory nodes, processor packages, shared caches, cores and simultaneous multi-threading.</p>
+<h2 id="hardware-topology">Hardware Topology</h2>
+<p>You will be using <code>hwloc</code> to help you understand how you are going to be mapping <code>&lt;OpenMP / pThreads&gt;</code> to <code>&lt;MPI Ranks&gt;</code>.</p>
+<ol>
+<li><p>Install <code>lstopo</code> and <code>numactl</code>:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">sudo</span> dnf <span class="at">-y</span> install numactl hwloc hwloc-libs hwloc-gui</span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Print the layout and topology of the memory, CPU cores and peripherals</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">lstopo</span> <span class="op">&lt;</span>FILENAME<span class="op">&gt;</span>.png</span>
+<span id="cb36-2"><a href="#cb36-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<h2 id="vtune">VTune</h2>
+<p>You’re now going to recompile HPL across <em>“multiple”</em> nodes, using Intel oneAPI’s <code>vtune</code> application for profiling.</p>
+<blockquote>
+<p>[!IMPORTANT] You do not have direct access to your VM’s CPU’s and hence you <em>may</em> not be able to utilize profiling tools in this round of the competition. It would nonetheless still be a very good idea to run <code>vTune</code> on your laptops, or on your universities” cluster, to determine the MPI communications” profile.</p>
+</blockquote>
+<ol>
+<li><p>Recompile HPL You must ensure the following Intel oneAPI modules are configure and loaded</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">ml</span> tbb compiler-rt mkl mpi vtune advisor intel_ipp_intel64</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Should you have a firewall or security groups configured, ensure that you open the appropriate network ports:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Take note of the relavant nodes where this is required</span></span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a> <span class="bu">export</span> <span class="va">I_MPI_HYDRA_SERVICE_PORT</span><span class="op">=&lt;</span>SERVICE_PORT<span class="op">&gt;</span> <span class="co"># ex: 50000</span></span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a> <span class="bu">export</span> <span class="va">I_MPI_PORT_RANGE</span><span class="op">=&lt;</span>PORT_RANGE<span class="op">&gt;</span> <span class="co"># ex: 50000:50500</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Configure the number of OpenMPI Threads that should spawn with the application:</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_NUM_THREADS</span><span class="op">=&lt;</span>Threads_per_MPI_Rank<span class="op">&gt;</span></span>
+<span id="cb39-2"><a href="#cb39-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Run profiling tool</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> <span class="op">&lt;</span>NUM_PROCESSORS<span class="op">&gt;</span> -ppn <span class="op">&lt;</span>PROCS_PER_NODE<span class="op">&gt;</span> -f <span class="op">&lt;</span>HOSTSFILE<span class="op">&gt;</span> -gtool <span class="st">&quot;vtune -collect hpc-performance -data-limit=0 -r result_init:&lt;MPI_RANK_TO_MONITOR&gt;&quot;</span> ./xhpl</span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Monitor the performance behavior for different configurations:</p>
+<ul>
+<li><p>Vary the <code>&lt;NUM_PROCS&gt;</code> vs <code>&lt;PROCS_PER_NODE&gt;</code> vs <code>&lt;NUM+_THREADS&gt;</code> and repeat the experiments.</p></li>
+</ul></li>
+</ol>
+<blockquote>
+<p>[!Tip] You may need to create a symbolic link to in the binaries directory of the compiler sub-directory between <code>icc</code> and <code>icx</code>.</p>
+</blockquote>
+<p>Recompile with <code>-parallel-source-info=2</code> flag.</p>
+<h1 id="hpc-challenge">HPC Challenge</h1>
+<p>HPC Challenge (or HPCC) is benchmark suite which contains 7 micro-benchmarks used to test various performance aspects of your cluster. HPCC includes HPL which it uses to access FLOPs performance. Having successfully compiled and executed HPL, the process is fairly straight forward to setup HPCC (it uses the same Makefile structure).</p>
+<blockquote>
+<p>[!NOTE] If you are having difficulties downloading the HPCC source and navigating to the site, you may skip the HPC Challenge and instead do HPCG below. Bonus points will be given for completing both.</p>
+</blockquote>
+<ol>
+<li><p>Download HPCC from <a href="https://icl.utk.edu/hpcc/software/index.html">https://icl.utk.edu/hpcc/software/index.html</a> or clone the repository from <a href="https://github.com/icl-utk-edu/hpcc">https://github.com/icl-utk-edu/hpcc</a>.</p></li>
+<li><p>Extract the file, then enter the <code>hpcc/</code> sub-directory.</p></li>
+<li><p>Copy and modify the <code>Makefile.&lt;arch&gt;</code> as your did for the HPL benchmark</p></li>
+<li><p>Compile HPCC from the base directory using</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> arch=<span class="op">&lt;</span>arch<span class="op">&gt;</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Edit the <code>hpccinf.txt</code> file</p>
+<p>HPCC replies on the input parameter file <code>hpccinf.txt</code> (same as <code>HPL.dat</code>). Run HPCC as you did HPL.</p></li>
+<li><p>Prepare and format your output</p>
+<p>Run the <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial3/resources/format.pl">format.pl script</a> with to format your benchmark results into a readable format. Compare your HPL score with your standalone HPL.</p>
+<div class="sourceCode" id="cb42"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># You may need to install perl</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">./format.pl</span> <span class="at">-w</span> <span class="at">-f</span> hpccoutf.txt</span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<p>Have the output <code>hpccoutf.txt</code> and your <code>Make.&lt;architecture&gt;</code> ready for the instructors to view on request.</p></li>
+</ol>
+<h1 id="high-performance-conjugate-gradients">High Performance Conjugate Gradients</h1>
+<p><strong>HPCG</strong> is intended as a complement to the <strong>High Performance LINPACK (HPL)</strong>* benchmark. It is designed to exercise computational and data access patterns that more closely match a different and broad set of important applications. See <a href="https://hpcg-benchmark.org/">HPCG Benchmark</a> for more information. Or clone the repository from their Github repository <a href="https://github.com/hpcg-benchmark/hpcg">HPCG Repo</a>.</p>
+<h2 id="getting-the-source-code">Getting the source code</h2>
+<p>There is little setup and configuration required for this benchmark, so limited guidance is provided. A reference version of <strong>HPCG</strong> is available for download, which you can compile and run:</p>
+<div class="sourceCode" id="cb43"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="fu">wget</span> https://hpcg-benchmark.org/downloads/hpcg-3.1.tar.gz</span></code></pre></div>
+<p>Alternatively the source can be obtained from GitHub:</p>
+<div class="sourceCode" id="cb44"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="fu">git</span> clone https://github.com/hpcg-benchmark/hpcg/</span></code></pre></div>
+<p>Lastly, it is possible to find prebuilt versions of HPCG which should provide optimal performance. You are required to use <strong>HPCG</strong> version <strong>3.1</strong> or newer.</p>
+<h2 id="submission">Submission</h2>
+<p>You must once again build <strong>HPCG</strong> using both (1.) <strong>GCC</strong>, an open-source <strong>MPI</strong> implementation, and open-source maths libraries; and (2.) the equivalent Intel implementation.</p>
+<p>Similarly, as was the case for <strong>HPCC</strong>, you must submit a <code>README.md</code> file describing the libraries and versions used to build <strong>HPCG</strong>, all relevant input and output files, and the executable binaries used in your best run.</p>
+<h1 id="application-benchmarks-and-system-evaluation">Application Benchmarks and System Evaluation</h1>
+<p>HPC applications are widely used in scientific research and systems evaluation or benchmarking to address complex computational problems. These applications span various fields, including computational chemistry, computational fluid dynamics, cosmology / astrophysics, quantum mechanics, weather forecasting, genomics, to name a few…</p>
+<p>These applications are integral to advancing scientific research, enabling researchers to solve complex problems that are otherwise computationally prohibitive. They are also essential for evaluating and benchmarking the performance of high-performance computing systems, ensuring that they meet the demands of cutting-edge research and industrial applications.</p>
+<p>You will now build, compile, install and run a few such examples.</p>
+<h2 id="gromacs-adh-cubic">GROMACS (ADH Cubic)</h2>
+<p>GROMACS is a versatile package to perform molecular dynamics, i.e. simulate the Newtonian equations of motion for systems with hundreds to millions of particles. It is primarily designed for biochemical molecules like proteins, lipids and nucleic acids that have a lot of complicated bonded interactions, but since GROMACS is extremely fast at calculating the nonbonded interactions (that usually dominate simulations) many groups are also using it for research on non-biological systems, such as polymers.</p>
+<p>Detailed installation instructions can be found at: <a href="http://manual.gromacs.org/current/install-guide/index.html">http://manual.gromacs.org/current/install-guide/index.html</a>, but here’s a general installation overview:</p>
+<ol>
+<li><p>Ensure you have an up-to-date <code>cmake</code> available on your system.</p></li>
+<li><p>You will also require a compiler such as the GNU <code>gcc</code>, Intel <code>icc</code> or other, and <strong>MPI (OpenMPI, MPICH, Intel MPI or other)</strong> be installed on system. Your <strong>PATH</strong> &amp; <strong>LD_LIBRARY_PATH</strong> environment variables should be set up to reflect this.</p></li>
+<li><p>Compile GROMACS <strong>with MPI support</strong> from source using <code>cmake</code>.</p></li>
+</ol>
+<p>The benchmark <strong>(adh_cubic)</strong> should complete within a few minutes and has a small memory footprint, it is intended to demonstrate that your installation is working properly. The metric which will be used to assess your performance is the <strong>ns/day</strong> (number of nanoseconds the model is simulated for per day of computation), quoted at the end of the simulation output. <strong>Higher is better</strong>.</p>
+<p>Ensure that your GROMACS /<strong>bin</strong> directory is exported to your <strong>PATH</strong>. You should be able to type <code>gmx_mpi --version</code> in your terminal and have the application information displayed correctly. The first task is to pre-process the input data into a usable format, using the <code>grompp</code> tool:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="ex">gmx_mpi</span> grompp <span class="at">-f</span> pme_verlet.mdp <span class="at">-c</span> conf.gro <span class="at">-p</span> topol.top <span class="at">-o</span> md_0_1.tpr</span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="co">#export PATH and LD_LIBRARY_PATH</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> gmx_mpi mdrun <span class="at">-nsteps</span> 5000 <span class="at">-s</span> md_0_1.tpr <span class="at">-g</span> gromacs.log</span></code></pre></div>
+<p>Then execute the script from you head node, which will in turn launch the simulation using MPI and write output to the log file <code>gromacs_log</code>.</p>
+<p>You may modify the <code>mpirun</code> command to optimise performance (significantly) but in order to produce a valid result, the simulation must run for <strong>5,000 steps</strong>. Quoted in the output as:</p>
+<pre class="text"><code>&quot;5000 steps,     10.0 ps.&quot;
+</code></pre>
+<blockquote>
+<p>[!NOTE] Please be able to present the instructors with the output of <code>gmx_mpi --version</code>. Also be able to present the instructors with your Slurm batch script and <code>gromacs_log</code> files for the <strong>adh_cubic</strong> benchmark.</p>
+</blockquote>
+<h2 id="lammps-lennard-jones">LAMMPS (Lennard-Jones)</h2>
+<p><a href="https://docs.lammps.org">LAMMPS</a> (Large-scale Atomic/Molecular Massively Parallel Simulator) is a classical molecular dynamics simulation code designed for simulating particles in a variety of fields including materials science, chemistry, physics, and biology. It was originally developed at Sandia National Laboratories and is now maintained by a community of developers. LAMMPS runs on single processors or in parallel using message-passing techniques and a spatial-decomposition of the simulation domain.</p>
+<p>The purpose of this benchmark is to demonstrate to you that there are often multiple way to build and compile many applications.</p>
+<ol>
+<li><p>Configure prerequisites and install dependencies</p>
+<ul>
+<li><p>DNF / YUM</p></li>
+</ul>
+<div class="sourceCode" id="cb47"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="co"># RHEL, Rocky, Alma, CentOS Stream</span></span>
+<span id="cb47-2"><a href="#cb47-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf groupinstall <span class="st">&#39;Development Tools&#39;</span> <span class="at">-y</span></span>
+<span id="cb47-3"><a href="#cb47-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install cmake git <span class="at">-y</span></span>
+<span id="cb47-4"><a href="#cb47-4" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install fftw-devel libjpeg-devel libpng-devel libtiff-devel libX11-devel libXext-devel libXrender-devel <span class="at">-y</span></span>
+<span id="cb47-5"><a href="#cb47-5" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p>APT</p></li>
+</ul>
+<div class="sourceCode" id="cb48"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb48-1"><a href="#cb48-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu</span></span>
+<span id="cb48-2"><a href="#cb48-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install build-essential cmake git <span class="at">-y</span></span>
+<span id="cb48-3"><a href="#cb48-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install libfftw3-dev libjpeg-dev libpng-dev libtiff-dev libx11-dev libxext-dev libxrender-dev <span class="at">-y</span></span>
+<span id="cb48-4"><a href="#cb48-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div>
+<ul>
+<li><p>Pacman</p></li>
+</ul>
+<div class="sourceCode" id="cb49"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> base-devel cmake git <span class="at">-y</span></span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> fftw libjpeg-turbo libpng libtiff libx11 libxext libxrender <span class="at">-y</span></span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Clone, build and compile LAMMPS with <code>make</code></p>
+<p>Building LAMMPS with traditional Makefiles requires that you have a <code>Makefile.&lt;machine&gt;</code> file appropriate for your system in either the <code>src</code> folder.</p>
+<div class="sourceCode" id="cb50"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb50-1"><a href="#cb50-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ensure that the correct paths are exported</span></span>
+<span id="cb50-2"><a href="#cb50-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-3"><a href="#cb50-3" aria-hidden="true" tabindex="-1"></a> <span class="fu">git</span> clone <span class="at">-b</span> stable https://github.com/lammps/lammps.git</span>
+<span id="cb50-4"><a href="#cb50-4" aria-hidden="true" tabindex="-1"></a> <span class="bu">cd</span> lammps/src</span>
+<span id="cb50-5"><a href="#cb50-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-6"><a href="#cb50-6" aria-hidden="true" tabindex="-1"></a> <span class="co"># List the different make options</span></span>
+<span id="cb50-7"><a href="#cb50-7" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span></span>
+<span id="cb50-8"><a href="#cb50-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-9"><a href="#cb50-9" aria-hidden="true" tabindex="-1"></a> <span class="co"># Build a serial LAMMPS executable using GNU g++</span></span>
+<span id="cb50-10"><a href="#cb50-10" aria-hidden="true" tabindex="-1"></a> <span class="co"># Remember to monitor top / htop / btop in another tmux pane</span></span>
+<span id="cb50-11"><a href="#cb50-11" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span> serial</span>
+<span id="cb50-12"><a href="#cb50-12" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb50-13"><a href="#cb50-13" aria-hidden="true" tabindex="-1"></a> <span class="co"># Build a parallel LAMMPS executable with MPI</span></span>
+<span id="cb50-14"><a href="#cb50-14" aria-hidden="true" tabindex="-1"></a> <span class="co"># If you were frustrated at how long the previous make build took,</span></span>
+<span id="cb50-15"><a href="#cb50-15" aria-hidden="true" tabindex="-1"></a> <span class="co"># try to build and compile using the -j&lt;num_threads&gt; switch</span></span>
+<span id="cb50-16"><a href="#cb50-16" aria-hidden="true" tabindex="-1"></a> <span class="fu">make</span> mpi</span>
+<span id="cb50-17"><a href="#cb50-17" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Copy the executable binaries to the benchmarks folder</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cp</span> lmp_serial ../bench</span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">cp</span> lmp_mpi ../bench</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Execute the Lennard Jones benchmarks</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> ../bench</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a> <span class="co"># Verify that only one thread is utilized</span></span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a> <span class="ex">./lmp_serial</span> <span class="at">-in</span> in.lj</span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a> <span class="co"># Verify the number of OpenMP threads utilized</span></span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a> <span class="bu">export</span> <span class="va">OMP_NUM_THREADS</span><span class="op">=&lt;</span>num_threads<span class="op">&gt;</span></span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a> <span class="ex">mpirun</span> <span class="at">-np</span> <span class="op">&lt;</span>num_procs<span class="op">&gt;</span> lmp_mpi <span class="at">-in</span> in.lj</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Rerun your binaries against the Rhodopsin Structure benchmark</p>
+<p>The Lennard Jones benchmark might be too short for proper evaluation. These small bencharks are often used for an installation validation test.</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Save the output for submission</span></span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">./lmp_serial</span> <span class="op">&lt;</span> in.rhodo <span class="op">&gt;</span> lmp_serial_rhodo.out</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a> <span class="ex">mpirun</span> <span class="at">-np</span> <span class="op">&lt;</span>num_procs<span class="op">&gt;</span> lmp_mpi <span class="at">-in</span> in.rhodo <span class="op">&gt;</span> lmp_mpi_rhodo.out</span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>
+<blockquote>
+<p>[!IMPORTANT] The following section is included here for illustrative purposes. If you feel that you are falling behind in the competition, you may read through this section without completing it. Limited instructions will be provided, and you will be required to take decisions in terms of choice of compiler, MPI implementation, FFTW library. This will be good practice for what benchmarks <em>might</em> look like in the Nationals Round of the Student Cluster Competition.</p>
+<ol>
+<li><p>Build LAMMPS with GCC, OpenMP and OpenMPI using CMake</p></li>
+</ol>
+<ul>
+<li><p>In addition to a choice of <code>gcc</code>, <code>MPI</code> implementation and an <code>FFTW</code> library, you’ll need to also install <code>cmake</code>.</p></li>
+<li><p>If you’re using the same checkout as before, you need to purge your <code>src</code> directory</p></li>
+</ul>
+<div class="sourceCode" id="cb54"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="bu">cd</span> lammps/src</span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a><span class="co"># Remove conflicting files from the previous build, uninstall all packages</span></span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a><span class="co"># make no-all purge</span></span></code></pre></div>
+<ul>
+<li><p>Configure the build with CMake, then compile and install</p></li>
+</ul>
+<div class="sourceCode" id="cb55"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cmake</span> ../cmake <span class="at">-D</span> BUILD_MPI=on <span class="at">-D</span> BUILD_OMP=on <span class="at">-D</span> CMAKE_C_COMPILER=gcc <span class="at">-D</span> CMAKE_CXX_COMPILER=g++ <span class="at">-D</span> MPI_C_COMPILER=mpicc <span class="at">-D</span> MPI_CXX_COMPILER=mpicxx</span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> <span class="at">-j</span><span class="va">$(</span><span class="fu">nproc</span><span class="va">)</span></span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a><span class="fu">make</span> DESTDIR=/<span class="op">&lt;</span>path-to-install-dir<span class="op">&gt;</span> install</span></code></pre></div>
+<ul>
+<li><p>Rerun the benchmarks</p></li>
+</ul>
+<div class="sourceCode" id="cb56"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="bu">export</span> <span class="va">OMP_NUM_THREADS</span><span class="op">=&lt;</span>num_threads<span class="op">&gt;</span></span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a><span class="ex">mpirun</span> <span class="at">-np</span> <span class="op">&lt;</span>num_procs<span class="op">&gt;</span> ./lmp <span class="at">-in</span> <span class="op">&lt;</span>input_file<span class="op">&gt;</span></span></code></pre></div>
+</blockquote>
+<h2 id="qiskit-quantum-volume">Qiskit (Quantum Volume)</h2>
+<p>IBM’s Qiskit is an open-source <a href="https://www.ibm.com/quantum/qiskit">Software Development Kit (SDK)</a> for working with quantum computers at the level of circuits, pulses, and algorithms. It provides tools for creating and manipulating quantum programs and running them on prototype quantum devices on IBM Quantum Platform or on simulators on a local computer.</p>
+<p><a href="https://github.com/Qiskit/">Qiskit-Aer</a> is an extension to the Qiskit SDK for using high performance computing resources to simulate quantum computers and programs. It provides interfaces to run quantum circuits with or without noise using a number of various simulation methods. <em>Qiskit-Aer</em> supports leveraging <em>MPI</em> to improve the performance of simulation.</p>
+<p><strong>Quantum Volume (QV)</strong> is a single-number metric that can be measured using a concrete protocol on near-term quantum computers of modest size. The QV method quantifies the largest random circuit of equal width and depth that the computer successfully implements. Quantum computing systems with high-fidelity operations, high connectivity, large calibrated gate sets, and circuit rewriting tool chains are expected to have higher quantum volumes. Simply put, Quantum Volume is a single number meant to encapsulate the performance of today’s quantum computers, like a classical computer’s transistor count.</p>
+<p>For this benchmark, we will be providing you with the details of the script that you will need to write yourself, or <a href="https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial3/resources/qv_experiment.py">download</a> from the competition GitHub repository in order to successfully conduct the (Quantum Volume Experiment)(<a href="https://qiskit.org/ecosystem/experiments/dev/manuals/verification/quantum_volume.html">https://qiskit.org/ecosystem/experiments/dev/manuals/verification/quantum_volume.html</a>).</p>
+<ol>
+<li><p>Configure and install dependencies You will be using <a href="https://pypi.org/project/pip/">Python Pip - PyPI</a> to configure and install Qiskit. <code>pip</code> is the official tool for installing and using Python packages from various indexes.</p>
+<ul>
+<li><p>DNF / YUM</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="co"># RHEL, Rocky, Alma, CentOS Stream</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> dnf install python python-pip</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>APT</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Ubuntu</span></span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> apt install python python-pip</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Pacman</p>
+<div class="sourceCode" id="cb59"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Arch</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a> <span class="fu">sudo</span> pacman <span class="at">-S</span> python python-pip</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ul></li>
+<li><p>Create and Activate a New Virtual Environment</p>
+<p>Separate your python projects and ensure that they exist in their own, clean environments:</p>
+<div class="sourceCode" id="cb60"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="ex">python</span> <span class="at">-m</span> venv QiskitAer</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a> <span class="bu">source</span> QiskitAer/bin/activate</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Install <code>qiskit-aer</code></p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pip</span> install qiskit-aer</span>
+<span id="cb61-2"><a href="#cb61-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Save the following in a Python script <code>qv_experiment.py</code>:</p>
+<div class="sourceCode" id="cb62"><pre class="sourceCode python"><code class="sourceCode python"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="im">from</span> qiskit <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb62-2"><a href="#cb62-2" aria-hidden="true" tabindex="-1"></a> <span class="im">from</span> qiskit.circuit.library <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb62-3"><a href="#cb62-3" aria-hidden="true" tabindex="-1"></a> <span class="im">from</span> qiskit_aer <span class="im">import</span> <span class="op">*</span></span>
+<span id="cb62-4"><a href="#cb62-4" aria-hidden="true" tabindex="-1"></a> <span class="im">import</span> time</span>
+<span id="cb62-5"><a href="#cb62-5" aria-hidden="true" tabindex="-1"></a> <span class="im">import</span> numpy <span class="im">as</span> np</span>
+<span id="cb62-6"><a href="#cb62-6" aria-hidden="true" tabindex="-1"></a> <span class="kw">def</span> quant_vol(qubits<span class="op">=</span><span class="dv">15</span>, depth<span class="op">=</span><span class="dv">10</span>):</span>
+<span id="cb62-7"><a href="#cb62-7" aria-hidden="true" tabindex="-1"></a>   sim <span class="op">=</span> AerSimulator(method<span class="op">=</span><span class="st">&#39;statevector&#39;</span>, device<span class="op">=</span><span class="st">&#39;CPU&#39;</span>)</span>
+<span id="cb62-8"><a href="#cb62-8" aria-hidden="true" tabindex="-1"></a>   circuit <span class="op">=</span> QuantumVolume(qubits, depth, seed<span class="op">=</span><span class="dv">0</span>)</span>
+<span id="cb62-9"><a href="#cb62-9" aria-hidden="true" tabindex="-1"></a>   circuit.measure_all()</span>
+<span id="cb62-10"><a href="#cb62-10" aria-hidden="true" tabindex="-1"></a>   circuit <span class="op">=</span> transpile(circuit, sim)</span>
+<span id="cb62-11"><a href="#cb62-11" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-12"><a href="#cb62-12" aria-hidden="true" tabindex="-1"></a>   start <span class="op">=</span> time.time()</span>
+<span id="cb62-13"><a href="#cb62-13" aria-hidden="true" tabindex="-1"></a>   result <span class="op">=</span> sim.run(circuit, shots<span class="op">=</span><span class="dv">1</span>, seed_simulator<span class="op">=</span><span class="dv">12345</span>).result()</span>
+<span id="cb62-14"><a href="#cb62-14" aria-hidden="true" tabindex="-1"></a>   time_val <span class="op">=</span> time.time() <span class="op">-</span> start</span>
+<span id="cb62-15"><a href="#cb62-15" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb62-16"><a href="#cb62-16" aria-hidden="true" tabindex="-1"></a>   <span class="co"># Optionally return and print result for debugging</span></span>
+<span id="cb62-17"><a href="#cb62-17" aria-hidden="true" tabindex="-1"></a>   <span class="co"># Bonus marks available for reading the simulation time directly from `result`</span></span>
+<span id="cb62-18"><a href="#cb62-18" aria-hidden="true" tabindex="-1"></a> <span class="cf">return</span> time_val</span>
+<span id="cb62-19"><a href="#cb62-19" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Parameterize the following variables for the QV experiment</p>
+<p>These are used to generate the QV circuits and run them on a backend and on an ideal simulator:</p>
+<ul>
+<li><p><code>qubits</code>: number or list of physical qubits to be simulated for the experiment,</p></li>
+<li><p><code>depth</code>: meaning the number of discrete time steps during which the circuit can run gates before the qubits decohere.</p></li>
+<li><p><code>shots</code>: used for sampling statistics, number of repetitions of each circuit.</p></li>
+</ul></li>
+<li><p>Run the benchmark by executing the script you’ve just written:</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> python qv_experiment.py</span>
+<span id="cb63-2"><a href="#cb63-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+<li><p>Deactivate the Python virtualenv</p>
+<div class="sourceCode" id="cb64"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="ex">deactivate</span></span>
+<span id="cb64-2"><a href="#cb64-2" aria-hidden="true" tabindex="-1"></a> </span></code></pre></div></li>
+</ol>

@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "kind": "text",
+  "title": "CHPC SCC Tutorial 4",
+  "author": "Justin Cheney",
+  "updated": "2026-09-03",
+  "minimumReadSeconds": 120,
+  "source": {
+    "label": "scc",
+    "url": "https://github.com/chpc-tech-eval/scc/blob/0d585e40a3a3e6d768c598b31443920c70a4ff9e/tutorial4/README.md",
+    "repository": "https://github.com/chpc-tech-eval/scc",
+    "commit": "0d585e40a3a3e6d768c598b31443920c70a4ff9e",
+    "license": "Apache-2.0",
+    "adaptation": "Formatting converted from upstream Markdown to Typst and HTML; wording retained for initial review."
+  },
+  "blocks": [
+    {
+      "id": "body",
+      "type": "typst",
+      "source": "/content/imports/chpc-scc-tutorial-4.typ",
+      "rendered": "/content/generated/chpc-scc-tutorial-4.html"
+    }
+  ],
+  "workInProgress": true
+}

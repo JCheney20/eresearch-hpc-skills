@@ -1,7 +1,7 @@
 // Browser-local learner progress. Stable challenge numbers survive slug/title
 // changes; revision and variant pin an attempt to the content it started with.
 
-import { ALL_NODES, nodeBySlug, requirementsMet, TOPICS } from "./topics.js";
+import { ALL_NODES, nodeBySlug, TOPICS } from "./topics.js";
 
 const KEY = "uwc_hpc_track";
 const VERSION = 2;
@@ -108,19 +108,10 @@ export function resetProgress() {
   try { localStorage.removeItem(KEY); } catch { /* see write() */ }
 }
 
-function completedNumbers() {
-  const progress = read();
-  return new Set(Object.entries(progress.challenges)
-    .filter(([, attempt]) => attempt && attempt.completedAt)
-    .map(([number]) => number));
-}
-
-/* "done" | "open" | "locked" — the one rule, applied everywhere. */
+/* Every known challenge is open. Completion changes progress, not access. */
 export function stateOf(slug) {
-  const node = nodeBySlug(slug);
-  if (!node) return "locked";
-  if (isSolved(slug)) return "done";
-  return requirementsMet(node, completedNumbers()) ? "open" : "locked";
+  if (!nodeBySlug(slug)) return "locked";
+  return isSolved(slug) ? "done" : "open";
 }
 
 export function topicProgress(topic) {
@@ -131,20 +122,7 @@ export function topicProgress(topic) {
 
 export function topicState(topic) {
   const progress = topicProgress(topic);
-  if (progress.done === progress.total) return "done";
-  return topic.nodes.some(node => stateOf(node.slug) === "open") ? "open" : "locked";
-}
-
-export function unlockedBy(slug) {
-  const source = nodeBySlug(slug);
-  if (!source) return [];
-  const completed = completedNumbers();
-  completed.add(source.number);
-  return ALL_NODES.filter(node =>
-    !isSolved(node.slug) &&
-    node.prerequisiteGroups.some(group => group.sources.includes(source.number)) &&
-    requirementsMet(node, completed)
-  );
+  return progress.done === progress.total ? "done" : "open";
 }
 
 export function nextOpen() {
@@ -154,8 +132,12 @@ export function nextOpen() {
 export function nextAfter(slug, isBuiltFn = () => true) {
   const here = nodeBySlug(slug);
   if (!here) return null;
+  const recommended = ALL_NODES
+    .filter(node => node.recommendedAfter.includes(here.number) && !isSolved(node.slug) && isBuiltFn(node.slug))
+    .sort((a, b) => a.displayNum - b.displayNum)[0];
+  if (recommended) return recommended;
   return ALL_NODES
-    .filter(node => node.displayNum > here.displayNum && stateOf(node.slug) !== "locked" && isBuiltFn(node.slug))
+    .filter(node => node.displayNum > here.displayNum && !isSolved(node.slug) && isBuiltFn(node.slug))
     .sort((a, b) => a.displayNum - b.displayNum)[0] || null;
 }
 

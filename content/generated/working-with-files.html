@@ -1,0 +1,402 @@
+<ul>
+<li><p>Delete, copy and move specified files and/or directories.</p></li>
+<li><p>Create files in that hierarchy using an editor or by copying and renaming existing files.</p></li>
+<li><p>Create a directory hierarchy that matches a given diagram.</p></li>
+</ul>
+<ul>
+<li><p>How can I create, copy, and delete files and directories?</p></li>
+<li><p>How can I edit files?</p></li>
+</ul>
+<h2 id="creating-directories">Creating directories</h2>
+<p>We now know how to explore files and directories, but how do we create them in the first place?</p>
+<p>In this episode we will learn about creating and moving files and directories, using the <code>exercise-data/writing</code> directory as an example.</p>
+<h3 id="step-one-see-where-we-are-and-what-we-already-have">Step one: see where we are and what we already have</h3>
+<p>We should still be in the <code>shell-lesson-data</code> directory on the Desktop, which we can check using:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pwd</span></code></pre></div>
+<pre class="output"><code>/Users/nelle/Desktop/shell-lesson-data
+</code></pre>
+<p>Next we’ll move to the <code>exercise-data/writing</code> directory and see what it contains:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd exercise-data/writing/</span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-F</span></span></code></pre></div>
+<pre class="output"><code>haiku.txt  LittleWomen.txt
+</code></pre>
+<h3 id="create-a-directory">Create a directory</h3>
+<p>Let’s create a new directory called <code>thesis</code> using the command <code>mkdir thesis</code> (which has no output):</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir thesis</span></code></pre></div>
+<p>As you might guess from its name, <code>mkdir</code> means ‘make directory’. Since <code>thesis</code> is a relative path (i.e., does not have a leading slash, like <code>/what/ever/thesis</code>), the new directory is created in the current working directory:</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-F</span></span></code></pre></div>
+<pre class="output"><code>haiku.txt  LittleWomen.txt  thesis/
+</code></pre>
+<p>Since we’ve just created the <code>thesis</code> directory, there’s nothing in it yet:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-F</span> thesis</span></code></pre></div>
+<p>Note that <code>mkdir</code> is not limited to creating single directories one at a time. The <code>-p</code> option allows <code>mkdir</code> to create a directory with nested subdirectories in a single operation:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir <span class="at">-p</span> ../project/data ../project/results</span></code></pre></div>
+<p>Let’s use <code>ls -F</code> to list the new directories we just created in the <code>project</code> directory:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-F</span> ../project</span></code></pre></div>
+<pre class="output"><code>data/  results/
+</code></pre>
+<p>One could use <code>ls -R</code> to list a directory hierarchy, but rather than introducing it in <code>cp</code> context, <code>find</code> can be used instead and is explained more deeply in the <code>find</code> episode.</p>
+<h2 id="two-ways-of-doing-the-same-thing">Two ways of doing the same thing</h2>
+<p>Using the shell to create a directory is no different than using a file explorer. If you open the current directory using your operating system’s graphical file explorer, the <code>thesis</code> directory will appear there too. While the shell and the file explorer are two different ways of interacting with the files, the files and directories themselves are the same.</p>
+<h2 id="good-names-for-files-and-directories">Good names for files and directories</h2>
+<p>Complicated names of files and directories can make your life painful when working on the command line. Here we provide a few useful tips for the names of your files and directories.</p>
+<ol>
+<li><p>Don’t use spaces.</p></li>
+</ol>
+<p>Spaces can make a name more meaningful, but since spaces are used to separate arguments on the command line it is better to avoid them in names of files and directories. You can use <code>-</code> or <code>_</code> instead (e.g. <code>north-pacific-gyre/</code> rather than <code>north pacific gyre/</code>). To test this out, try typing <code>mkdir north pacific gyre</code> and see what directory (or directories!) are made when you check with <code>ls -F</code>.</p>
+<ol start="2" type="1">
+<li><p>Don’t begin the name with <code>-</code> (dash).</p></li>
+</ol>
+<p>Commands treat names starting with <code>-</code> as options.</p>
+<ol start="3" type="1">
+<li><p>Stick with lowercase letters, numbers, <code>.</code> (period or ‘full stop’), <code>-</code> (dash) and <code>_</code> (underscore).</p></li>
+</ol>
+<p>Many other characters have special meanings on the command line. We will learn about some of these during this lesson. There are special characters that can cause your command to not work as expected and can even result in data loss.</p>
+<p>If you need to refer to names of files or directories that have spaces or other special characters, you should surround the name in single <a href="https://www.gnu.org/software/bash/manual/html_node/Quoting.html">quotes</a> (<code>''</code>).</p>
+<p>It is often good practice to use all lowercase letters in names of files and directories; Windows and macOS file systems are typically case insensitive and therefore unable to distinguish between <code>thesis</code> and <code>Thesis</code> in the same directory.</p>
+<p>Learners can sometimes get trapped within command-line text editors such as Vim, Emacs, or Nano. Closing the terminal emulator and opening a new one can be frustrating as learners will have to navigate to the correct folder again. Our recommendation to mitigate this problem is that instructors should use the same text editor as the learners during workshops (in most cases Nano).</p>
+<h3 id="create-a-text-file">Create a text file</h3>
+<p>Let’s change our working directory to <code>thesis</code> using <code>cd</code>, then run a text editor called Nano to create a file called <code>draft.txt</code>:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd thesis</span>
+<span id="cb12-2"><a href="#cb12-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano draft.txt</span></code></pre></div>
+<h2 id="which-editor">Which Editor?</h2>
+<p>When we say, ‘<code>nano</code> is a text editor” we really do mean ‘text’. It can only work with plain character data, not tables, images, or any other human-friendly media. We use it in examples because it is one of the least complex text editors. However, because of this trait, it may not be powerful enough or flexible enough for the work you need to do after this workshop. On Unix systems (such as Linux and macOS), many programmers use <a href="https://www.gnu.org/software/emacs/">Emacs</a> or <a href="https://www.vim.org/">Vim</a> (both of which require more time to learn), or a graphical editor such as <a href="https://gedit-text-editor.org/">Gedit</a> or <a href="https://code.visualstudio.com/">VScode</a>. On Windows, you may wish to use <a href="https://notepad-plus-plus.org/">Notepad++</a>. Windows also has a built-in editor called <code>notepad</code> that can be run from the command line in the same way as <code>nano</code> for the purposes of this lesson.</p>
+<p>No matter what editor you use, you will need to know where it searches for and saves files. If you start it from the shell, it will (probably) use your current working directory as its default location. If you use your computer’s start menu, it may want to save files in your Desktop or Documents directory instead. You can change this by navigating to another directory the first time you ‘Save As…’</p>
+<p>Let’s type in a few lines of text.</p>
+<p><span class="box"><img src="/content/assets/working-with-files/001-nano-screenshot.png" /></span></p>
+<p>Once we’re happy with our text, we can press Ctrl+O (press the Ctrl or Control key and, while holding it down, press the O key) to write our data to disk. We will be asked to provide a name for the file that will contain our text. Press Return to accept the suggested default of <code>draft.txt</code>.</p>
+<p>Once our file is saved, we can use Ctrl+X to quit the editor and return to the shell.</p>
+<h2 id="control-ctrl-or-key">Control, Ctrl, or ^ Key</h2>
+<p>The Control key is also called the ‘Ctrl” key. There are various ways in which using the Control key may be described. For example, you may see an instruction to press the Control key and, while holding it down, press the X key, described as any of:</p>
+<ul>
+<li><p><code>Control-X</code></p></li>
+<li><p><code>Control+X</code></p></li>
+<li><p><code>Ctrl-X</code></p></li>
+<li><p><code>Ctrl+X</code></p></li>
+<li><p><code>^X</code></p></li>
+<li><p><code>C-x</code></p></li>
+</ul>
+<p>In nano, along the bottom of the screen you’ll see <code>^G Get Help ^O WriteOut</code>. This means that you can use <code>Control-G</code> to get help and <code>Control-O</code> to save your file.</p>
+<p><code>nano</code> doesn’t leave any output on the screen after it exits, but <code>ls</code> now shows that we have created a file called <code>draft.txt</code>:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls</span></code></pre></div>
+<pre class="output"><code>draft.txt
+</code></pre>
+<h2 id="creating-files-a-different-way">Creating Files a Different Way</h2>
+<p>We have seen how to create text files using the <code>nano</code> editor. Now, try the following command:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> touch my_file.txt</span></code></pre></div>
+<ol start="3" type="1">
+<li><p>What did the <code>touch</code> command do? When you look at your current directory using the GUI file explorer, does the file show up?</p></li>
+<li><p>Use <code>ls -l</code> to inspect the files. How large is <code>my_file.txt</code>?</p></li>
+<li><p>When might you want to create a file this way?</p></li>
+</ol>
+<h2 id="solution">Solution</h2>
+<ol start="3" type="1">
+<li><p>The <code>touch</code> command generates a new file called <code>my_file.txt</code> in your current directory. You can observe this newly generated file by typing <code>ls</code> at the command line prompt. <code>my_file.txt</code> can also be viewed in your GUI file explorer.</p></li>
+<li><p>When you inspect the file with <code>ls -l</code>, note that the size of <code>my_file.txt</code> is 0 bytes. In other words, it contains no data. If you open <code>my_file.txt</code> using your text editor it is blank.</p></li>
+<li><p>Some programs do not generate output files themselves, but instead require that empty files have already been generated. When the program is run, it searches for an existing file to populate with its output. The touch command allows you to efficiently generate a blank text file to be used by such programs.</p></li>
+</ol>
+<p>To avoid confusion later on, we suggest removing the file you’ve just created before proceeding with the rest of the episode, otherwise future outputs may vary from those given in the lesson. To do this, use the following command:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> rm my_file.txt</span></code></pre></div>
+<h2 id="whats-in-a-name">What’s In A Name?</h2>
+<p>You may have noticed that all of Nelle’s files are named ‘something dot something’, and in this part of the lesson, we always used the extension <code>.txt</code>. This is just a convention; we can call a file <code>mythesis</code> or almost anything else we want. However, most people use two-part names most of the time to help them (and their programs) tell different kinds of files apart. The second part of such a name is called the <strong>filename extension</strong> and indicates what type of data the file holds: <code>.txt</code> signals a plain text file, <code>.pdf</code> indicates a PDF document, <code>.cfg</code> is a configuration file full of parameters for some program or other, <code>.png</code> is a PNG image, and so on.</p>
+<p>This is just a convention, albeit an important one. Files merely contain bytes; it’s up to us and our programs to interpret those bytes according to the rules for plain text files, PDF documents, configuration files, images, and so on.</p>
+<p>Naming a PNG image of a whale as <code>whale.mp3</code> doesn’t somehow magically turn it into a recording of whale song, though it <em>might</em> cause the operating system to associate the file with a music player program. In this case, if someone double-clicked <code>whale.mp3</code> in a file explorer program, the music player will automatically (and erroneously) attempt to open the <code>whale.mp3</code> file.</p>
+<h2 id="moving-files-and-directories">Moving files and directories</h2>
+<p>Returning to the <code>shell-lesson-data/exercise-data/writing</code> directory,</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ~/Desktop/shell-lesson-data/exercise-data/writing</span></code></pre></div>
+<p>In our <code>thesis</code> directory we have a file <code>draft.txt</code> which isn’t a particularly informative name, so let’s change the file’s name using <code>mv</code>, which is short for ‘move’:</p>
+<div class="sourceCode" id="cb18"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb18-1"><a href="#cb18-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mv thesis/draft.txt thesis/quotes.txt</span></code></pre></div>
+<p>The first argument tells <code>mv</code> what we’re ‘moving’, while the second is where it’s to go. In this case, we’re moving <code>thesis/draft.txt</code> to <code>thesis/quotes.txt</code>, which has the same effect as renaming the file. Sure enough, <code>ls</code> shows us that <code>thesis</code> now contains one file called <code>quotes.txt</code>:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls thesis</span></code></pre></div>
+<pre class="output"><code>quotes.txt
+</code></pre>
+<p>One must be careful when specifying the target file name, since <code>mv</code> will silently overwrite any existing file with the same name, which could lead to data loss. By default, <code>mv</code> will not ask for confirmation before overwriting files. However, an additional option, <code>mv -i</code> (or <code>mv --interactive</code>), will cause <code>mv</code> to request such confirmation.</p>
+<p>Note that <code>mv</code> also works on directories.</p>
+<p>Let’s move <code>quotes.txt</code> into the current working directory. We use <code>mv</code> once again, but this time we’ll use just the name of a directory as the second argument to tell <code>mv</code> that we want to keep the filename but put the file somewhere new. (This is why the command is called ‘move’.) In this case, the directory name we use is the special directory name <code>.</code> that we mentioned earlier.</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mv thesis/quotes.txt .</span></code></pre></div>
+<p>The effect is to move the file from the directory it was in to the current working directory. <code>ls</code> now shows us that <code>thesis</code> is empty:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls thesis</span></code></pre></div>
+<pre class="output"><code>$
+</code></pre>
+<p>Alternatively, we can confirm the file <code>quotes.txt</code> is no longer present in the <code>thesis</code> directory by explicitly trying to list it:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls thesis/quotes.txt</span></code></pre></div>
+<pre class="error"><code>ls: cannot access &#39;thesis/quotes.txt&#39;: No such file or directory
+</code></pre>
+<p><code>ls</code> with a filename or directory as an argument only lists the requested file or directory. If the file given as the argument doesn’t exist, the shell returns an error as we saw above. We can use this to see that <code>quotes.txt</code> is now present in our current directory:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls quotes.txt</span></code></pre></div>
+<pre class="output"><code>quotes.txt
+</code></pre>
+<h2 id="moving-files-to-a-new-folder">Moving Files to a new folder</h2>
+<p>After running the following commands, Jamie realizes that she put the files <code>sucrose.dat</code> and <code>maltose.dat</code> into the wrong folder. The files should have been placed in the <code>raw</code> folder.</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-F</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a> <span class="ex">analyzed/</span> raw/</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-F</span> analyzed</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a><span class="ex">fructose.dat</span> glucose.dat maltose.dat sucrose.dat</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd analyzed</span></code></pre></div>
+<p>Fill in the blanks to move these files to the <code>raw/</code> folder (i.e. the one she forgot to put them in)</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mv sucrose.dat maltose.dat ____/____</span></code></pre></div>
+<h2 id="solution-1">Solution</h2>
+<div class="sourceCode" id="cb30"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mv sucrose.dat maltose.dat ../raw</span></code></pre></div>
+<p>Recall that <code>..</code> refers to the parent directory (i.e. one above the current directory) and that <code>.</code> refers to the current directory.</p>
+<h2 id="copying-files-and-directories">Copying files and directories</h2>
+<p>The <code>cp</code> command works very much like <code>mv</code>, except it copies a file instead of moving it. We can check that it did the right thing using <code>ls</code> with two paths as arguments — like most Unix commands, <code>ls</code> can be given multiple paths at once:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp quotes.txt thesis/quotations.txt</span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls quotes.txt thesis/quotations.txt</span></code></pre></div>
+<pre class="output"><code>quotes.txt   thesis/quotations.txt
+</code></pre>
+<p>The <code>-r</code> or <code>--recursive</code> option for <code>cp</code> applies the command not just to the specified directory, but to all its contents.</p>
+<p>As an example, we can use this to back up a directory:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp <span class="at">-r</span> thesis thesis_backup</span></code></pre></div>
+<p>We can check the result by listing the contents of both the <code>thesis</code> and <code>thesis_backup</code> directory:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls thesis thesis_backup</span></code></pre></div>
+<pre class="output"><code>thesis:
+quotations.txt
+
+thesis_backup:
+quotations.txt
+</code></pre>
+<p>It is important to include the <code>-r</code> flag. If you want to copy a directory and you omit this option you will see a message that the directory has been omitted because <code>-r not specified</code>.</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp thesis thesis_backup</span></code></pre></div>
+<pre class="error"><code>cp: -r not specified; omitting directory &#39;thesis&#39;
+</code></pre>
+<h3 id="destination-can-be-new-name-or-directory">Destination Can Be New Name or Directory</h3>
+<p>When we use two arguments with <code>mv</code> or <code>cp</code>, the second argument can be the location and new name we want our file to have. Alternatively, if we provide the path to an existing directory as the second argument, <code>mv</code>/<code>cp</code> will interpret that to mean that we want the file copied/moved to that directory without changing its name.</p>
+<p>For example:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp quotes.txt thesis</span></code></pre></div>
+<p>accomplishes the same thing as</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp quotes.txt thesis/quotes.txt</span></code></pre></div>
+<h2 id="renaming-files">Renaming Files</h2>
+<p>Suppose that you created a plain-text file in your current directory to contain a list of the statistical tests you will need to do to analyze your data, and named it <code>statstics.txt</code></p>
+<p>After creating and saving this file you realize you misspelled the filename! You want to correct the mistake, which of the following commands could you use to do so?</p>
+<ol start="3" type="1">
+<li><p><code>cp statstics.txt statistics.txt</code></p></li>
+<li><p><code>mv statstics.txt statistics.txt</code></p></li>
+<li><p><code>mv statstics.txt .</code></p></li>
+<li><p><code>cp statstics.txt .</code></p></li>
+</ol>
+<h2 id="solution-2">Solution</h2>
+<ol start="3" type="1">
+<li><p>No. While this would create a file with the correct name, the incorrectly named file still exists in the directory and would need to be deleted.</p></li>
+<li><p>Yes, this would work to rename the file.</p></li>
+<li><p>No, the period(.) indicates where to move the file, but does not provide a new file name; identical file names cannot be created.</p></li>
+<li><p>No, the period(.) indicates where to copy the file, but does not provide a new file name; identical file names cannot be created.</p></li>
+</ol>
+<h2 id="moving-and-copying">Moving and Copying</h2>
+<p>What is the output of the closing <code>ls</code> command in the sequence shown below?</p>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> pwd</span></code></pre></div>
+<pre class="output"><code>/Users/jamie/data
+</code></pre>
+<div class="sourceCode" id="cb42"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls</span></code></pre></div>
+<pre class="output"><code>proteins.dat
+</code></pre>
+<div class="sourceCode" id="cb44"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb44-1"><a href="#cb44-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir recombined</span>
+<span id="cb44-2"><a href="#cb44-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mv proteins.dat recombined/</span>
+<span id="cb44-3"><a href="#cb44-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp recombined/proteins.dat ../proteins-saved.dat</span>
+<span id="cb44-4"><a href="#cb44-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls</span></code></pre></div>
+<ol start="3" type="1">
+<li><p><code>proteins-saved.dat recombined</code></p></li>
+<li><p><code>recombined</code></p></li>
+<li><p><code>proteins.dat recombined</code></p></li>
+<li><p><code>proteins-saved.dat</code></p></li>
+</ol>
+<h2 id="solution-3">Solution</h2>
+<p>We start in the <code>/Users/jamie/data</code> directory, and create a new folder called <code>recombined</code>. The second line moves (<code>mv</code>) the file <code>proteins.dat</code> to the new folder (<code>recombined</code>). The third line makes a copy of the file we just moved. The tricky part here is where the file was copied to. Recall that <code>..</code> means ‘go up a level’, so the copied file is now in <code>/Users/jamie</code>. Notice that <code>..</code> is interpreted with respect to the current working directory, <strong>not</strong> with respect to the location of the file being copied. So, the only thing that will show using ls (in <code>/Users/jamie/data</code>) is the recombined folder.</p>
+<ol start="3" type="1">
+<li><p>No, see explanation above. <code>proteins-saved.dat</code> is located at <code>/Users/jamie</code></p></li>
+<li><p>Yes</p></li>
+<li><p>No, see explanation above. <code>proteins.dat</code> is located at <code>/Users/jamie/data/recombined</code></p></li>
+<li><p>No, see explanation above. <code>proteins-saved.dat</code> is located at <code>/Users/jamie</code></p></li>
+</ol>
+<h2 id="removing-files-and-directories">Removing files and directories</h2>
+<p>Returning to the <code>shell-lesson-data/exercise-data/writing</code> directory, let’s tidy up this directory by removing the <code>quotes.txt</code> file we created. The Unix command we’ll use for this is <code>rm</code> (short for ‘remove’):</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> rm quotes.txt</span></code></pre></div>
+<p>We can confirm the file has gone using <code>ls</code>:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls quotes.txt</span></code></pre></div>
+<pre class="error"><code>ls: cannot access &#39;quotes.txt&#39;: No such file or directory
+</code></pre>
+<h2 id="deleting-is-forever">Deleting Is Forever</h2>
+<p>The Unix shell doesn’t have a trash bin that we can recover deleted files from (though most graphical interfaces to Unix do). Instead, when we delete files, they are unlinked from the file system so that their storage space on disk can be recycled. Tools for finding and recovering deleted files do exist, but there’s no guarantee they’ll work in any particular situation, since the computer may recycle the file’s disk space right away.</p>
+<h2 id="using-rm-safely">Using <code>rm</code> Safely</h2>
+<p>What happens when we execute <code>rm -i thesis_backup/quotations.txt</code>? Why would we want this protection when using <code>rm</code>?</p>
+<h2 id="solution-4">Solution</h2>
+<pre class="output"><code>rm: remove regular file &#39;thesis_backup/quotations.txt&#39;? y
+</code></pre>
+<p>The <code>-i</code> option will prompt before (every) removal (use Y to confirm deletion or N to keep the file). The Unix shell doesn’t have a trash bin, so all the files removed will disappear forever. By using the <code>-i</code> option, we have the chance to check that we are deleting only the files that we want to remove.</p>
+<p>If we try to remove the <code>thesis</code> directory using <code>rm thesis</code>, we get an error message:</p>
+<div class="sourceCode" id="cb49"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> rm thesis</span></code></pre></div>
+<pre class="error"><code>rm: cannot remove &#39;thesis&#39;: Is a directory
+</code></pre>
+<p>This happens because <code>rm</code> by default only works on files, not directories.</p>
+<p><code>rm</code> can remove a directory <em>and all its contents</em> if we use the recursive option <code>-r</code>, and it will do so <em>without any confirmation prompts</em>:</p>
+<div class="sourceCode" id="cb51"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> rm <span class="at">-r</span> thesis</span></code></pre></div>
+<p>Given that there is no way to retrieve files deleted using the shell, <code>rm -r</code> <em>should be used with great caution</em> (you might consider adding the interactive option <code>rm -r -i</code>).</p>
+<h2 id="operations-with-multiple-files-and-directories">Operations with multiple files and directories</h2>
+<p>Oftentimes one needs to copy or move several files at once. This can be done by providing a list of individual filenames, or specifying a naming pattern using wildcards. Wildcards are special characters that can be used to represent unknown characters or sets of characters when navigating the Unix file system.</p>
+<h2 id="copy-with-multiple-filenames">Copy with Multiple Filenames</h2>
+<p>For this exercise, you can test the commands in the <code>shell-lesson-data/exercise-data</code> directory.</p>
+<p>We have seen how <code>cp</code> behaves when given two arguments. The second argument can be a filename (what to name the copy) or an existing directory (where to put the copy).</p>
+<p><code>cp</code> behaves slightly differently when given three or more arguments. Let’s try giving <code>cp</code> three arguments. In the example below, what does <code>cp</code> do when given several filenames and a directory name?</p>
+<div class="sourceCode" id="cb52"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir backup</span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp creatures/minotaur.dat creatures/unicorn.dat backup/</span></code></pre></div>
+<p>In the example below, what does <code>cp</code> do when given three or more file names?</p>
+<div class="sourceCode" id="cb53"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd creatures</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-F</span></span></code></pre></div>
+<pre class="output"><code>basilisk.dat  minotaur.dat  unicorn.dat
+</code></pre>
+<div class="sourceCode" id="cb55"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp minotaur.dat unicorn.dat basilisk.dat</span></code></pre></div>
+<h2 id="solution-5">Solution</h2>
+<p>When <code>cp</code> is given three or more arguments, the last argument must be a directory. <code>cp</code> copies the other files specified into that directory. If the last argument is a file name, you get an error:</p>
+<pre class="error"><code>cp: target &#39;basilisk.dat&#39; is not a directory
+</code></pre>
+<h3 id="using-wildcards-for-accessing-multiple-files-at-once">Using wildcards for accessing multiple files at once</h3>
+<h2 id="wildcards">Wildcards</h2>
+<p><code>*</code> is a <strong>wildcard</strong>, which represents zero or more other characters. Let’s consider the <code>shell-lesson-data/exercise-data/alkanes</code> directory: <code>*.pdb</code> represents <code>ethane.pdb</code>, <code>propane.pdb</code>, and every file that ends with ‘.pdb’. On the other hand, <code>p*.pdb</code> only represents <code>pentane.pdb</code> and <code>propane.pdb</code>, because the ‘p” at the front can only represent filenames that begin with the letter ‘p’.</p>
+<p><code>?</code> is also a wildcard, but it represents exactly one character. So <code>?ethane.pdb</code> could represent <code>methane.pdb</code> whereas <code>*ethane.pdb</code> represents both <code>ethane.pdb</code> and <code>methane.pdb</code>.</p>
+<p>Wildcards can be used in combination with each other. For example, <code>???ane.pdb</code> indicates three characters followed by <code>ane.pdb</code>, giving <code>cubane.pdb  ethane.pdb  octane.pdb</code>.</p>
+<p>When the shell sees a wildcard, it expands the wildcard to create a list of matching filenames <em>before</em> running the preceding command. As an exception, if a wildcard expression does not match any file, Bash will pass the expression as an argument to the command as it is. For example, typing <code>ls *.pdf</code> in the <code>alkanes</code> directory (which contains only files with names ending with <code>.pdb</code>) results in an error message that there is no file called <code>*.pdf</code>. However, generally commands like <code>wc</code> and <code>ls</code> see the lists of file names matching these expressions, but not the wildcards themselves. It is the shell, not the other programs, that expands the wildcards.</p>
+<h2 id="list-filenames-matching-a-pattern">List filenames matching a pattern</h2>
+<p>When run in the <code>alkanes</code> directory, which <code>ls</code> command(s) will produce this output?</p>
+<p><code>ethane.pdb   methane.pdb</code></p>
+<ol start="3" type="1">
+<li><p><code>ls *t*ane.pdb</code></p></li>
+<li><p><code>ls *t?ne.*</code></p></li>
+<li><p><code>ls *t??ne.pdb</code></p></li>
+<li><p><code>ls ethane.*</code></p></li>
+</ol>
+<h2 id="solution-6">Solution</h2>
+<p>The solution is <code>3.</code></p>
+<p><code>1.</code> shows all files whose names contain zero or more characters (<code>*</code>) followed by the letter <code>t</code>, then zero or more characters (<code>*</code>) followed by <code>ane.pdb</code>. This gives <code>ethane.pdb  methane.pdb  octane.pdb  pentane.pdb</code>.</p>
+<p><code>2.</code> shows all files whose names start with zero or more characters (<code>*</code>) followed by the letter <code>t</code>, then a single character (<code>?</code>), then <code>ne.</code> followed by zero or more characters (<code>*</code>). This will give us <code>octane.pdb</code> and <code>pentane.pdb</code> but doesn’t match anything which ends in <code>thane.pdb</code>.</p>
+<p><code>3.</code> fixes the problems of option 2 by matching two characters (<code>??</code>) between <code>t</code> and <code>ne</code>. This is the solution.</p>
+<p><code>4.</code> only shows files starting with <code>ethane.</code>.</p>
+<h2 id="more-on-wildcards">More on Wildcards</h2>
+<p>Sam has a directory containing calibration data, datasets, and descriptions of the datasets:</p>
+<div class="sourceCode" id="cb57"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb57-1"><a href="#cb57-1" aria-hidden="true" tabindex="-1"></a><span class="bu">.</span></span>
+<span id="cb57-2"><a href="#cb57-2" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-23-calibration.txt</span>
+<span id="cb57-3"><a href="#cb57-3" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-23-dataset1.txt</span>
+<span id="cb57-4"><a href="#cb57-4" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-23-dataset2.txt</span>
+<span id="cb57-5"><a href="#cb57-5" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-23-dataset_overview.txt</span>
+<span id="cb57-6"><a href="#cb57-6" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-26-calibration.txt</span>
+<span id="cb57-7"><a href="#cb57-7" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-26-dataset1.txt</span>
+<span id="cb57-8"><a href="#cb57-8" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-26-dataset2.txt</span>
+<span id="cb57-9"><a href="#cb57-9" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-26-dataset_overview.txt</span>
+<span id="cb57-10"><a href="#cb57-10" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-11-23-calibration.txt</span>
+<span id="cb57-11"><a href="#cb57-11" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-11-23-dataset1.txt</span>
+<span id="cb57-12"><a href="#cb57-12" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-11-23-dataset2.txt</span>
+<span id="cb57-13"><a href="#cb57-13" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-11-23-dataset_overview.txt</span>
+<span id="cb57-14"><a href="#cb57-14" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> backup</span>
+<span id="cb57-15"><a href="#cb57-15" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span> ├── calibration</span>
+<span id="cb57-16"><a href="#cb57-16" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span> └── datasets</span>
+<span id="cb57-17"><a href="#cb57-17" aria-hidden="true" tabindex="-1"></a><span class="ex">└──</span> send_to_bob</span>
+<span id="cb57-18"><a href="#cb57-18" aria-hidden="true" tabindex="-1"></a>    <span class="ex">├──</span> all_datasets_created_on_a_23rd</span>
+<span id="cb57-19"><a href="#cb57-19" aria-hidden="true" tabindex="-1"></a>    <span class="ex">└──</span> all_november_files</span></code></pre></div>
+<p>Before heading off to another field trip, she wants to back up her data and send some datasets to her colleague Bob. Sam uses the following commands to get the job done:</p>
+<div class="sourceCode" id="cb58"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp <span class="pp">*</span>dataset<span class="pp">*</span> backup/datasets</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp ____calibration____ backup/calibration</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp 2015-____-____ send_to_bob/all_november_files/</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp ____ send_to_bob/all_datasets_created_on_a_23rd/</span></code></pre></div>
+<p>Help Sam by filling in the blanks.</p>
+<p>The resulting directory structure should look like this</p>
+<div class="sourceCode" id="cb59"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb59-1"><a href="#cb59-1" aria-hidden="true" tabindex="-1"></a><span class="bu">.</span></span>
+<span id="cb59-2"><a href="#cb59-2" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-23-calibration.txt</span>
+<span id="cb59-3"><a href="#cb59-3" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-23-dataset1.txt</span>
+<span id="cb59-4"><a href="#cb59-4" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-23-dataset2.txt</span>
+<span id="cb59-5"><a href="#cb59-5" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-23-dataset_overview.txt</span>
+<span id="cb59-6"><a href="#cb59-6" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-26-calibration.txt</span>
+<span id="cb59-7"><a href="#cb59-7" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-26-dataset1.txt</span>
+<span id="cb59-8"><a href="#cb59-8" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-26-dataset2.txt</span>
+<span id="cb59-9"><a href="#cb59-9" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-10-26-dataset_overview.txt</span>
+<span id="cb59-10"><a href="#cb59-10" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-11-23-calibration.txt</span>
+<span id="cb59-11"><a href="#cb59-11" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-11-23-dataset1.txt</span>
+<span id="cb59-12"><a href="#cb59-12" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-11-23-dataset2.txt</span>
+<span id="cb59-13"><a href="#cb59-13" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> 2015-11-23-dataset_overview.txt</span>
+<span id="cb59-14"><a href="#cb59-14" aria-hidden="true" tabindex="-1"></a><span class="ex">├──</span> backup</span>
+<span id="cb59-15"><a href="#cb59-15" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span> ├── calibration</span>
+<span id="cb59-16"><a href="#cb59-16" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span> │   ├── 2015-10-23-calibration.txt</span>
+<span id="cb59-17"><a href="#cb59-17" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span> │   ├── 2015-10-26-calibration.txt</span>
+<span id="cb59-18"><a href="#cb59-18" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span> │   └── 2015-11-23-calibration.txt</span>
+<span id="cb59-19"><a href="#cb59-19" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span> └── datasets</span>
+<span id="cb59-20"><a href="#cb59-20" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span>     ├── 2015-10-23-dataset1.txt</span>
+<span id="cb59-21"><a href="#cb59-21" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span>     ├── 2015-10-23-dataset2.txt</span>
+<span id="cb59-22"><a href="#cb59-22" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span>     ├── 2015-10-23-dataset_overview.txt</span>
+<span id="cb59-23"><a href="#cb59-23" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span>     ├── 2015-10-26-dataset1.txt</span>
+<span id="cb59-24"><a href="#cb59-24" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span>     ├── 2015-10-26-dataset2.txt</span>
+<span id="cb59-25"><a href="#cb59-25" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span>     ├── 2015-10-26-dataset_overview.txt</span>
+<span id="cb59-26"><a href="#cb59-26" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span>     ├── 2015-11-23-dataset1.txt</span>
+<span id="cb59-27"><a href="#cb59-27" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span>     ├── 2015-11-23-dataset2.txt</span>
+<span id="cb59-28"><a href="#cb59-28" aria-hidden="true" tabindex="-1"></a><span class="ex">│  </span>     └── 2015-11-23-dataset_overview.txt</span>
+<span id="cb59-29"><a href="#cb59-29" aria-hidden="true" tabindex="-1"></a><span class="ex">└──</span> send_to_bob</span>
+<span id="cb59-30"><a href="#cb59-30" aria-hidden="true" tabindex="-1"></a>    <span class="ex">├──</span> all_datasets_created_on_a_23rd</span>
+<span id="cb59-31"><a href="#cb59-31" aria-hidden="true" tabindex="-1"></a>    <span class="ex">│  </span> ├── 2015-10-23-dataset1.txt</span>
+<span id="cb59-32"><a href="#cb59-32" aria-hidden="true" tabindex="-1"></a>    <span class="ex">│  </span> ├── 2015-10-23-dataset2.txt</span>
+<span id="cb59-33"><a href="#cb59-33" aria-hidden="true" tabindex="-1"></a>    <span class="ex">│  </span> ├── 2015-10-23-dataset_overview.txt</span>
+<span id="cb59-34"><a href="#cb59-34" aria-hidden="true" tabindex="-1"></a>    <span class="ex">│  </span> ├── 2015-11-23-dataset1.txt</span>
+<span id="cb59-35"><a href="#cb59-35" aria-hidden="true" tabindex="-1"></a>    <span class="ex">│  </span> ├── 2015-11-23-dataset2.txt</span>
+<span id="cb59-36"><a href="#cb59-36" aria-hidden="true" tabindex="-1"></a>    <span class="ex">│  </span> └── 2015-11-23-dataset_overview.txt</span>
+<span id="cb59-37"><a href="#cb59-37" aria-hidden="true" tabindex="-1"></a>    <span class="ex">└──</span> all_november_files</span>
+<span id="cb59-38"><a href="#cb59-38" aria-hidden="true" tabindex="-1"></a>        <span class="ex">├──</span> 2015-11-23-calibration.txt</span>
+<span id="cb59-39"><a href="#cb59-39" aria-hidden="true" tabindex="-1"></a>        <span class="ex">├──</span> 2015-11-23-dataset1.txt</span>
+<span id="cb59-40"><a href="#cb59-40" aria-hidden="true" tabindex="-1"></a>        <span class="ex">├──</span> 2015-11-23-dataset2.txt</span>
+<span id="cb59-41"><a href="#cb59-41" aria-hidden="true" tabindex="-1"></a>        <span class="ex">└──</span> 2015-11-23-dataset_overview.txt</span></code></pre></div>
+<h2 id="solution-7">Solution</h2>
+<div class="sourceCode" id="cb60"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp <span class="pp">*</span>calibration.txt backup/calibration</span>
+<span id="cb60-2"><a href="#cb60-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp 2015-11-<span class="pp">*</span> send_to_bob/all_november_files/</span>
+<span id="cb60-3"><a href="#cb60-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cp <span class="pp">*</span>-23-dataset<span class="pp">*</span> send_to_bob/all_datasets_created_on_a_23rd/</span></code></pre></div>
+<h2 id="organizing-directories-and-files">Organizing Directories and Files</h2>
+<p>Jamie is working on a project, and she sees that her files aren’t very well organized:</p>
+<div class="sourceCode" id="cb61"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb61-1"><a href="#cb61-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-F</span></span></code></pre></div>
+<pre class="output"><code>analyzed/  fructose.dat    raw/   sucrose.dat
+</code></pre>
+<p>The <code>fructose.dat</code> and <code>sucrose.dat</code> files contain output from her data analysis. What command(s) covered in this lesson does she need to run so that the commands below will produce the output shown?</p>
+<div class="sourceCode" id="cb63"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb63-1"><a href="#cb63-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls <span class="at">-F</span></span></code></pre></div>
+<pre class="output"><code>analyzed/   raw/
+</code></pre>
+<div class="sourceCode" id="cb65"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb65-1"><a href="#cb65-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> ls analyzed</span></code></pre></div>
+<pre class="output"><code>fructose.dat    sucrose.dat
+</code></pre>
+<h2 id="solution-8">Solution</h2>
+<div class="sourceCode" id="cb67"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb67-1"><a href="#cb67-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mv</span> <span class="pp">*</span>.dat analyzed</span></code></pre></div>
+<p>Jamie needs to move her files <code>fructose.dat</code> and <code>sucrose.dat</code> to the <code>analyzed</code> directory. The shell will expand *.dat to match all .dat files in the current directory. The <code>mv</code> command then moves the list of .dat files to the ‘analyzed” directory.</p>
+<h2 id="reproduce-a-folder-structure">Reproduce a folder structure</h2>
+<p>You’re starting a new experiment and would like to duplicate the directory structure from your previous experiment so you can add new data.</p>
+<p>Assume that the previous experiment is in a folder called <code>2016-05-18</code>, which contains a <code>data</code> folder that in turn contains folders named <code>raw</code> and <code>processed</code> that contain data files. The goal is to copy the folder structure of the <code>2016-05-18</code> folder into a folder called <code>2016-05-20</code> so that your final directory structure looks like this:</p>
+<pre class="output"><code>2016-05-20/
+└── data
+   ├── processed
+   └── raw
+</code></pre>
+<p>Which of the following set of commands would achieve this objective? What would the other commands do?</p>
+<div class="sourceCode" id="cb69"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb69-1"><a href="#cb69-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir 2016-05-20</span>
+<span id="cb69-2"><a href="#cb69-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir 2016-05-20/data</span>
+<span id="cb69-3"><a href="#cb69-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir 2016-05-20/data/processed</span>
+<span id="cb69-4"><a href="#cb69-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir 2016-05-20/data/raw</span></code></pre></div>
+<div class="sourceCode" id="cb70"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir 2016-05-20</span>
+<span id="cb70-2"><a href="#cb70-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd 2016-05-20</span>
+<span id="cb70-3"><a href="#cb70-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir data</span>
+<span id="cb70-4"><a href="#cb70-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd data</span>
+<span id="cb70-5"><a href="#cb70-5" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir raw processed</span></code></pre></div>
+<div class="sourceCode" id="cb71"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb71-1"><a href="#cb71-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir 2016-05-20/data/raw</span>
+<span id="cb71-2"><a href="#cb71-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir 2016-05-20/data/processed</span></code></pre></div>
+<div class="sourceCode" id="cb72"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir <span class="at">-p</span> 2016-05-20/data/raw</span>
+<span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir <span class="at">-p</span> 2016-05-20/data/processed</span></code></pre></div>
+<div class="sourceCode" id="cb73"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb73-1"><a href="#cb73-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir 2016-05-20</span>
+<span id="cb73-2"><a href="#cb73-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd 2016-05-20</span>
+<span id="cb73-3"><a href="#cb73-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir data</span>
+<span id="cb73-4"><a href="#cb73-4" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir raw processed</span></code></pre></div>
+<h2 id="solution-9">Solution</h2>
+<p>The first two sets of commands achieve this objective. The first set uses relative paths to create the top-level directory before the subdirectories.</p>
+<p>The third set of commands will give an error because the default behavior of <code>mkdir</code> won’t create a subdirectory of a non-existent directory: the intermediate level folders must be created first.</p>
+<p>The fourth set of commands achieve this objective. Remember, the <code>-p</code> option, followed by a path of one or more directories, will cause <code>mkdir</code> to create any intermediate subdirectories as required.</p>
+<p>The final set of commands generates the ‘raw” and ‘processed” directories at the same level as the ‘data” directory.</p>
+<ul>
+<li><p><code>cp [old] [new]</code> copies a file.</p></li>
+<li><p><code>mkdir [path]</code> creates a new directory.</p></li>
+<li><p><code>mv [old] [new]</code> moves (renames) a file or directory.</p></li>
+<li><p><code>rm [path]</code> removes (deletes) a file.</p></li>
+<li><p><code>*</code> matches zero or more characters in a filename, so <code>*.txt</code> matches all files ending in <code>.txt</code>.</p></li>
+<li><p><code>?</code> matches any single character in a filename, so <code>?.txt</code> matches <code>a.txt</code> but not <code>any.txt</code>.</p></li>
+<li><p>Use of the Control key may be described in many ways, including <code>Ctrl-X</code>, <code>Control-X</code>, and <code>^X</code>.</p></li>
+<li><p>The shell does not have a trash bin: once something is deleted, it’s really gone.</p></li>
+<li><p>Most files” names are <code>something.extension</code>. The extension isn’t required, and doesn’t guarantee anything, but is normally used to indicate the type of data in the file.</p></li>
+<li><p>Depending on the type of work you do, you may need a more powerful text editor than Nano.</p></li>
+</ul>

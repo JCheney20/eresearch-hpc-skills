@@ -1,0 +1,246 @@
+<ul>
+<li><p>Write a shell script that runs a command or series of commands for a fixed set of files.</p></li>
+<li><p>Run a shell script from the command line.</p></li>
+<li><p>Write a shell script that operates on a set of files defined by the user on the command line.</p></li>
+<li><p>Create pipelines that include shell scripts you, and others, have written.</p></li>
+</ul>
+<ul>
+<li><p>How can I save and re-use commands?</p></li>
+</ul>
+<p>We are finally ready to see what makes the shell such a powerful programming environment. We are going to take the commands we repeat frequently and save them in files so that we can re-run all those operations again later by typing a single command. For historical reasons, a bunch of commands saved in a file is usually called a <strong>shell script</strong>, but make no mistake — these are actually small programs.</p>
+<p>Not only will writing shell scripts make your work faster, but also you won’t have to retype the same commands over and over again. It will also make it more accurate (fewer chances for typos) and more reproducible. If you come back to your work later (or if someone else finds your work and wants to build on it), you will be able to reproduce the same results simply by running your script, rather than having to remember or retype a long list of commands.</p>
+<p>Let’s start by going back to <code>alkanes/</code> and creating a new file, <code>middle.sh</code> which will become our shell script:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd alkanes</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano middle.sh</span></code></pre></div>
+<p>The command <code>nano middle.sh</code> opens the file <code>middle.sh</code> within the text editor ‘nano” (which runs within the shell). If the file does not exist, it will be created. We can use the text editor to directly edit the file by inserting the following line:</p>
+<pre class="source"><code>head -n 15 octane.pdb | tail -n 5
+</code></pre>
+<p>This is a variation on the pipe we constructed earlier, which selects lines 11-15 of the file <code>octane.pdb</code>. Remember, we are <em>not</em> running it as a command just yet; we are only incorporating the commands in a file.</p>
+<p>Then we save the file (<code>Ctrl-O</code> in nano) and exit the text editor (<code>Ctrl-X</code> in nano). Check that the directory <code>alkanes</code> now contains a file called <code>middle.sh</code>.</p>
+<p>Once we have saved the file, we can ask the shell to execute the commands it contains. Our shell is called <code>bash</code>, so we run the following command:</p>
+<div class="sourceCode" id="cb3"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash middle.sh</span></code></pre></div>
+<pre class="output"><code>ATOM      9  H           1      -4.502   0.681   0.785  1.00  0.00
+ATOM     10  H           1      -5.254  -0.243  -0.537  1.00  0.00
+ATOM     11  H           1      -4.357   1.252  -0.895  1.00  0.00
+ATOM     12  H           1      -3.009  -0.741  -1.467  1.00  0.00
+ATOM     13  H           1      -3.172  -1.337   0.206  1.00  0.00
+</code></pre>
+<p>Sure enough, our script’s output is exactly what we would get if we ran that pipeline directly.</p>
+<h2 id="text-vs.-whatever">Text vs. Whatever</h2>
+<p>We usually call programs like Microsoft Word or LibreOffice Writer “text editors”, but we need to be a bit more careful when it comes to programming. By default, Microsoft Word uses <code>.docx</code> files to store not only text, but also formatting information about fonts, headings, and so on. This extra information isn’t stored as characters and doesn’t mean anything to tools like <code>head</code>, which expects input files to contain nothing but the letters, digits, and punctuation on a standard computer keyboard. When editing programs, therefore, you must either use a plain text editor or be careful to save files as plain text.</p>
+<p>What if we want to select lines from an arbitrary file? We could edit <code>middle.sh</code> each time to change the filename, but that would probably take longer than typing the command out again in the shell and executing it with a new file name. Instead, let’s edit <code>middle.sh</code> and make it more versatile:</p>
+<div class="sourceCode" id="cb5"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano middle.sh</span></code></pre></div>
+<p>Now, within “nano”, replace the text <code>octane.pdb</code> with the special variable called <code>$1</code>:</p>
+<pre class="source"><code>head -n 15 &quot;$1&quot; | tail -n 5
+</code></pre>
+<p>Inside a shell script, <code>$1</code> means ‘the first filename (or other argument) on the command line’. We can now run our script like this:</p>
+<div class="sourceCode" id="cb7"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb7-1"><a href="#cb7-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash middle.sh octane.pdb</span></code></pre></div>
+<pre class="output"><code>ATOM      9  H           1      -4.502   0.681   0.785  1.00  0.00
+ATOM     10  H           1      -5.254  -0.243  -0.537  1.00  0.00
+ATOM     11  H           1      -4.357   1.252  -0.895  1.00  0.00
+ATOM     12  H           1      -3.009  -0.741  -1.467  1.00  0.00
+ATOM     13  H           1      -3.172  -1.337   0.206  1.00  0.00
+</code></pre>
+<p>or on a different file like this:</p>
+<div class="sourceCode" id="cb9"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb9-1"><a href="#cb9-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash middle.sh pentane.pdb</span></code></pre></div>
+<pre class="output"><code>ATOM      9  H           1       1.324   0.350  -1.332  1.00  0.00
+ATOM     10  H           1       1.271   1.378   0.122  1.00  0.00
+ATOM     11  H           1      -0.074  -0.384   1.288  1.00  0.00
+ATOM     12  H           1      -0.048  -1.362  -0.205  1.00  0.00
+ATOM     13  H           1      -1.183   0.500  -1.412  1.00  0.00
+</code></pre>
+<h2 id="double-quotes-around-arguments">Double-Quotes Around Arguments</h2>
+<p>For the same reason that we put the loop variable inside double-quotes, in case the filename happens to contain any spaces, we surround <code>$1</code> with double-quotes.</p>
+<p>Currently, we need to edit <code>middle.sh</code> each time we want to adjust the range of lines that is returned. Let’s fix that by configuring our script to instead use three command-line arguments. After the first command-line argument (<code>$1</code>), each additional argument that we provide will be accessible via the special variables <code>$1</code>, <code>$2</code>, <code>$3</code>, which refer to the first, second, third command-line arguments, respectively.</p>
+<p>Knowing this, we can use additional arguments to define the range of lines to be passed to <code>head</code> and <code>tail</code> respectively:</p>
+<div class="sourceCode" id="cb11"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb11-1"><a href="#cb11-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano middle.sh</span></code></pre></div>
+<pre class="source"><code>head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;
+</code></pre>
+<p>We can now run:</p>
+<div class="sourceCode" id="cb13"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb13-1"><a href="#cb13-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash middle.sh pentane.pdb 15 5</span></code></pre></div>
+<pre class="output"><code>ATOM      9  H           1       1.324   0.350  -1.332  1.00  0.00
+ATOM     10  H           1       1.271   1.378   0.122  1.00  0.00
+ATOM     11  H           1      -0.074  -0.384   1.288  1.00  0.00
+ATOM     12  H           1      -0.048  -1.362  -0.205  1.00  0.00
+ATOM     13  H           1      -1.183   0.500  -1.412  1.00  0.00
+</code></pre>
+<p>By changing the arguments to our command, we can change our script’s behaviour:</p>
+<div class="sourceCode" id="cb15"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb15-1"><a href="#cb15-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash middle.sh pentane.pdb 20 5</span></code></pre></div>
+<pre class="output"><code>ATOM     14  H           1      -1.259   1.420   0.112  1.00  0.00
+ATOM     15  H           1      -2.608  -0.407   1.130  1.00  0.00
+ATOM     16  H           1      -2.540  -1.303  -0.404  1.00  0.00
+ATOM     17  H           1      -3.393   0.254  -0.321  1.00  0.00
+TER      18              1
+</code></pre>
+<p>This works, but it may take the next person who reads <code>middle.sh</code> a moment to figure out what it does. We can improve our script by adding some <strong>comments</strong> at the top:</p>
+<div class="sourceCode" id="cb17"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb17-1"><a href="#cb17-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano middle.sh</span></code></pre></div>
+<pre class="source"><code># Select lines from the middle of a file.
+# Usage: bash middle.sh filename end_line num_lines
+head -n &quot;$2&quot; &quot;$1&quot; | tail -n &quot;$3&quot;
+</code></pre>
+<p>A comment starts with a <code>#</code> character and runs to the end of the line. The computer ignores comments, but they’re invaluable for helping people (including your future self) understand and use scripts. The only caveat is that each time you modify the script, you should check that the comment is still accurate. An explanation that sends the reader in the wrong direction is worse than none at all.</p>
+<p>What if we want to process many files in a single pipeline? For example, if we want to sort our <code>.pdb</code> files by length, we would type:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> wc <span class="at">-l</span> <span class="pp">*</span>.pdb <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-n</span></span></code></pre></div>
+<p>because <code>wc -l</code> lists the number of lines in the files (recall that <code>wc</code> stands for ‘word count’, adding the <code>-l</code> option means ‘count lines” instead) and <code>sort -n</code> sorts things numerically. We could put this in a file, but then it would only ever sort a list of <code>.pdb</code> files in the current directory. If we want to be able to get a sorted list of other kinds of files, we need a way to get all those names into the script. We can’t use <code>$1</code>, <code>$2</code>, and so on because we don’t know how many files there are. Instead, we use the special variable <code>$@</code>, which means, ‘All of the command-line arguments to the shell script’. We also should put <code>$@</code> inside double-quotes to handle the case of arguments containing spaces (<code>"$@"</code> is special syntax and is equivalent to <code>"$1"</code> <code>"$2"</code> …).</p>
+<p>Here’s an example:</p>
+<div class="sourceCode" id="cb20"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb20-1"><a href="#cb20-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano sorted.sh</span></code></pre></div>
+<pre class="source"><code># Sort files by their length.
+# Usage: bash sorted.sh one_or_more_filenames
+wc -l &quot;$@&quot; | sort -n
+</code></pre>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash sorted.sh <span class="pp">*</span>.pdb ../creatures/<span class="pp">*</span>.dat</span></code></pre></div>
+<pre class="output"><code>9 methane.pdb
+12 ethane.pdb
+15 propane.pdb
+20 cubane.pdb
+21 pentane.pdb
+30 octane.pdb
+163 ../creatures/basilisk.dat
+163 ../creatures/minotaur.dat
+163 ../creatures/unicorn.dat
+596 total
+</code></pre>
+<h2 id="list-unique-species">List Unique Species</h2>
+<p>Leah has several hundred data files, each of which is formatted like this:</p>
+<pre class="source"><code>2013-11-05,deer,5
+2013-11-05,rabbit,22
+2013-11-05,raccoon,7
+2013-11-06,rabbit,19
+2013-11-06,deer,2
+2013-11-06,fox,1
+2013-11-07,rabbit,18
+2013-11-07,bear,1
+</code></pre>
+<p>An example of this type of file is given in <code>shell-lesson-data/exercise-data/animal-counts/animals.csv</code>.</p>
+<p>We can use the command <code>cut -d , -f 2 animals.csv | sort | uniq</code> to produce the unique species in <code>animals.csv</code>. In order to avoid having to type out this series of commands every time, a scientist may choose to write a shell script instead.</p>
+<p>Write a shell script called <code>species.sh</code> that takes any number of filenames as command-line arguments and uses a variation of the above command to print a list of the unique species appearing in each of those files separately.</p>
+<h2 id="solution">Solution</h2>
+<div class="sourceCode" id="cb25"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Script to find unique species in csv files where species is the second data field</span></span>
+<span id="cb25-2"><a href="#cb25-2" aria-hidden="true" tabindex="-1"></a><span class="co"># This script accepts any number of file names as command line arguments</span></span>
+<span id="cb25-3"><a href="#cb25-3" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb25-4"><a href="#cb25-4" aria-hidden="true" tabindex="-1"></a><span class="co"># Loop over all files</span></span>
+<span id="cb25-5"><a href="#cb25-5" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> file <span class="kw">in</span> <span class="va">$@</span></span>
+<span id="cb25-6"><a href="#cb25-6" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb25-7"><a href="#cb25-7" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="st">&quot;Unique species in </span><span class="va">$file</span><span class="st">:&quot;</span></span>
+<span id="cb25-8"><a href="#cb25-8" aria-hidden="true" tabindex="-1"></a>    <span class="co"># Extract species names</span></span>
+<span id="cb25-9"><a href="#cb25-9" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cut</span> <span class="at">-d</span> , <span class="at">-f</span> 2 <span class="va">$file</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="kw">|</span> <span class="fu">uniq</span></span>
+<span id="cb25-10"><a href="#cb25-10" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>Suppose we have just run a series of commands that did something useful — for example, creating a graph we’d like to use in a paper. We’d like to be able to re-create the graph later if we need to, so we want to save the commands in a file. Instead of typing them in again (and potentially getting them wrong) we can do this:</p>
+<div class="sourceCode" id="cb26"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb26-1"><a href="#cb26-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> history <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> 5 <span class="op">&gt;</span> redo-figure-3.sh</span></code></pre></div>
+<p>The file <code>redo-figure-3.sh</code> now contains:</p>
+<pre class="source"><code>297 bash goostats.sh NENE01729B.txt stats-NENE01729B.txt
+298 bash goodiff.sh stats-NENE01729B.txt /data/validated/01729.txt &gt; 01729-differences.txt
+299 cut -d &#39;,&#39; -f 2-3 01729-differences.txt &gt; 01729-time-series.txt
+300 ygraph --format scatter --color bw --borders none 01729-time-series.txt figure-3.png
+301 history | tail -n 5 &gt; redo-figure-3.sh
+</code></pre>
+<p>After a moment’s work in an editor to remove the serial numbers on the commands, and to remove the final line where we called the <code>history</code> command, we have a completely accurate record of how we created that figure.</p>
+<h2 id="why-record-commands-in-the-history-before-running-them">Why Record Commands in the History Before Running Them?</h2>
+<p>If you run the command:</p>
+<div class="sourceCode" id="cb28"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> history <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> 5 <span class="op">&gt;</span> recent.sh</span></code></pre></div>
+<p>the last command in the file is the <code>history</code> command itself, i.e., the shell has added <code>history</code> to the command log before actually running it. In fact, the shell <em>always</em> adds commands to the log before running them. Why do you think it does this?</p>
+<h2 id="solution-1">Solution</h2>
+<p>If a command causes something to crash or hang, it might be useful to know what that command was, in order to investigate the problem. Were the command only be recorded after running it, we would not have a record of the last command run in the event of a crash.</p>
+<p>In practice, most people develop shell scripts by running commands at the shell prompt a few times to make sure they’re doing the right thing, then saving them in a file for re-use. This style of work allows people to recycle what they discover about their data and their workflow with one call to <code>history</code> and a bit of editing to clean up the output and save it as a shell script.</p>
+<h2 id="nelles-pipeline-creating-a-script">Nelle’s Pipeline: Creating a Script</h2>
+<p>Nelle’s supervisor insisted that all her analytics must be reproducible. The easiest way to capture all the steps is in a script.</p>
+<p>First we return to Nelle’s project directory:</p>
+<div class="sourceCode" id="cb29"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cd ../../north-pacific-gyre/</span></code></pre></div>
+<p>She creates a file using <code>nano</code> …</p>
+<div class="sourceCode" id="cb30"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb30-1"><a href="#cb30-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano do-stats.sh</span></code></pre></div>
+<p>…which contains the following:</p>
+<div class="sourceCode" id="cb31"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate stats for data files.</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> datafile <span class="kw">in</span> <span class="st">&quot;</span><span class="va">$@</span><span class="st">&quot;</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="va">$datafile</span></span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bash</span> goostats.sh <span class="va">$datafile</span> stats-<span class="va">$datafile</span></span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>She saves this in a file called <code>do-stats.sh</code> so that she can now re-do the first stage of her analysis by typing:</p>
+<div class="sourceCode" id="cb32"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash do-stats.sh NENE<span class="pp">*</span>A.txt NENE<span class="pp">*</span>B.txt</span></code></pre></div>
+<p>She can also do this:</p>
+<div class="sourceCode" id="cb33"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb33-1"><a href="#cb33-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash do-stats.sh NENE<span class="pp">*</span>A.txt NENE<span class="pp">*</span>B.txt <span class="kw">|</span> <span class="fu">wc</span> <span class="at">-l</span></span></code></pre></div>
+<p>so that the output is just the number of files processed rather than the names of the files that were processed.</p>
+<p>One thing to note about Nelle’s script is that it lets the person running it decide what files to process. She could have written it as:</p>
+<div class="sourceCode" id="cb34"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate stats for Site A and Site B data files.</span></span>
+<span id="cb34-2"><a href="#cb34-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> datafile <span class="kw">in</span> NENE<span class="pp">*</span>A.txt NENE<span class="pp">*</span>B.txt</span>
+<span id="cb34-3"><a href="#cb34-3" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb34-4"><a href="#cb34-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="va">$datafile</span></span>
+<span id="cb34-5"><a href="#cb34-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bash</span> goostats.sh <span class="va">$datafile</span> stats-<span class="va">$datafile</span></span>
+<span id="cb34-6"><a href="#cb34-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>The advantage is that this always selects the right files: she doesn’t have to remember to exclude the ‘Z” files. The disadvantage is that it <em>always</em> selects just those files — she can’t run it on all files (including the ‘Z” files), or on the ‘G” or ‘H” files her colleagues in Antarctica are producing, without editing the script. If she wanted to be more adventurous, she could modify her script to check for command-line arguments, and use <code>NENE*A.txt NENE*B.txt</code> if none were provided. Of course, this introduces another tradeoff between flexibility and complexity.</p>
+<h2 id="variables-in-shell-scripts">Variables in Shell Scripts</h2>
+<p>In the <code>alkanes</code> directory, imagine you have a shell script called <code>script.sh</code> containing the following commands:</p>
+<div class="sourceCode" id="cb35"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb35-1"><a href="#cb35-1" aria-hidden="true" tabindex="-1"></a><span class="fu">head</span> <span class="at">-n</span> <span class="va">$2</span> <span class="va">$1</span></span>
+<span id="cb35-2"><a href="#cb35-2" aria-hidden="true" tabindex="-1"></a><span class="fu">tail</span> <span class="at">-n</span> <span class="va">$3</span> <span class="va">$1</span></span></code></pre></div>
+<p>While you are in the <code>alkanes</code> directory, you type the following command:</p>
+<div class="sourceCode" id="cb36"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash script.sh <span class="st">&#39;*.pdb&#39;</span> 1 1</span></code></pre></div>
+<p>Which of the following outputs would you expect to see?</p>
+<ol>
+<li><p>All of the lines between the first and the last lines of each file ending in <code>.pdb</code> in the <code>alkanes</code> directory</p></li>
+<li><p>The first and the last line of each file ending in <code>.pdb</code> in the <code>alkanes</code> directory</p></li>
+<li><p>The first and the last line of each file in the <code>alkanes</code> directory</p></li>
+<li><p>An error because of the quotes around <code>*.pdb</code></p></li>
+</ol>
+<h2 id="solution-2">Solution</h2>
+<p>The correct answer is 2.</p>
+<p>The special variables <code>$1</code>, <code>$2</code> and <code>$3</code> represent the command line arguments given to the script, such that the commands run are:</p>
+<div class="sourceCode" id="cb37"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb37-1"><a href="#cb37-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> head <span class="at">-n</span> 1 cubane.pdb ethane.pdb octane.pdb pentane.pdb propane.pdb</span>
+<span id="cb37-2"><a href="#cb37-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> tail <span class="at">-n</span> 1 cubane.pdb ethane.pdb octane.pdb pentane.pdb propane.pdb</span></code></pre></div>
+<p>The shell does not expand <code>'*.pdb'</code> because it is enclosed by quote marks. As such, the first argument to the script is <code>'*.pdb'</code> which gets expanded within the script by <code>head</code> and <code>tail</code>.</p>
+<h2 id="find-the-longest-file-with-a-given-extension">Find the Longest File With a Given Extension</h2>
+<p>Write a shell script called <code>longest.sh</code> that takes the name of a directory and a filename extension as its arguments, and prints out the name of the file with the most lines in that directory with that extension. For example:</p>
+<div class="sourceCode" id="cb38"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash longest.sh shell-lesson-data/exercise-data/alkanes pdb</span></code></pre></div>
+<p>would print the name of the <code>.pdb</code> file in <code>shell-lesson-data/exercise-data/alkanes</code> that has the most lines.</p>
+<p>Feel free to test your script on another directory e.g.</p>
+<div class="sourceCode" id="cb39"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb39-1"><a href="#cb39-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash longest.sh shell-lesson-data/exercise-data/writing txt</span></code></pre></div>
+<h2 id="solution-3">Solution</h2>
+<div class="sourceCode" id="cb40"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Shell script which takes two arguments:</span></span>
+<span id="cb40-2"><a href="#cb40-2" aria-hidden="true" tabindex="-1"></a><span class="co">#    1. a directory name</span></span>
+<span id="cb40-3"><a href="#cb40-3" aria-hidden="true" tabindex="-1"></a><span class="co">#    2. a file extension</span></span>
+<span id="cb40-4"><a href="#cb40-4" aria-hidden="true" tabindex="-1"></a><span class="co"># and prints the name of the file in that directory</span></span>
+<span id="cb40-5"><a href="#cb40-5" aria-hidden="true" tabindex="-1"></a><span class="co"># with the most lines which matches the file extension.</span></span>
+<span id="cb40-6"><a href="#cb40-6" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb40-7"><a href="#cb40-7" aria-hidden="true" tabindex="-1"></a><span class="fu">wc</span> <span class="at">-l</span> <span class="va">$1</span>/<span class="pp">*</span>.<span class="va">$2</span> <span class="kw">|</span> <span class="fu">sort</span> <span class="at">-n</span> <span class="kw">|</span> <span class="fu">tail</span> <span class="at">-n</span> 2 <span class="kw">|</span> <span class="fu">head</span> <span class="at">-n</span> 1</span></code></pre></div>
+<p>The first part of the pipeline, <code>wc -l $1/*.$2 | sort -n</code>, counts the lines in each file and sorts them numerically (largest last). When there’s more than one file, <code>wc</code> also outputs a final summary line, giving the total number of lines across <em>all</em> files. We use <code>tail -n 2 | head -n 1</code> to throw away this last line.</p>
+<p>With <code>wc -l $1/*.$2 | sort -n | tail -n 1</code> we’ll see the final summary line: we can build our pipeline up in pieces to be sure we understand the output.</p>
+<h2 id="script-reading-comprehension">Script Reading Comprehension</h2>
+<p>For this question, consider the <code>shell-lesson-data/exercise-data/alkanes</code> directory once again. This contains a number of <code>.pdb</code> files in addition to any other files you may have created. Explain what each of the following three scripts would do when run as <code>bash script1.sh *.pdb</code>, <code>bash script2.sh *.pdb</code>, and <code>bash script3.sh *.pdb</code> respectively.</p>
+<div class="sourceCode" id="cb41"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb41-1"><a href="#cb41-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Script 1</span></span>
+<span id="cb41-2"><a href="#cb41-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="pp">*</span>.<span class="pp">*</span></span></code></pre></div>
+<div class="sourceCode" id="cb42"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Script 2</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> filename <span class="kw">in</span> <span class="va">$1</span> <span class="va">$2</span> <span class="va">$3</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">cat</span> <span class="va">$filename</span></span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<div class="sourceCode" id="cb43"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Script 3</span></span>
+<span id="cb43-2"><a href="#cb43-2" aria-hidden="true" tabindex="-1"></a><span class="bu">echo</span> <span class="va">$@</span>.pdb</span></code></pre></div>
+<h2 id="solutions">Solutions</h2>
+<p>In each case, the shell expands the wildcard in <code>*.pdb</code> before passing the resulting list of file names as arguments to the script.</p>
+<p>Script 1 would print out a list of all files containing a dot in their name. The arguments passed to the script are not actually used anywhere in the script.</p>
+<p>Script 2 would print the contents of the first 3 files with a <code>.pdb</code> file extension. <code>$1</code>, <code>$2</code>, and <code>$3</code> refer to the first, second, and third argument respectively.</p>
+<p>Script 3 would print all the arguments to the script (i.e. all the <code>.pdb</code> files), followed by <code>.pdb</code>. <code>$@</code> refers to <em>all</em> the arguments given to a shell script.</p>
+<pre class="output"><code>cubane.pdb ethane.pdb methane.pdb octane.pdb pentane.pdb propane.pdb.pdb
+</code></pre>
+<h2 id="debugging-scripts">Debugging Scripts</h2>
+<p>Suppose you have saved the following script in a file called <code>do-errors.sh</code> in Nelle’s <code>north-pacific-gyre</code> directory:</p>
+<div class="sourceCode" id="cb45"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Calculate stats for data files.</span></span>
+<span id="cb45-2"><a href="#cb45-2" aria-hidden="true" tabindex="-1"></a><span class="cf">for</span> datafile <span class="kw">in</span> <span class="st">&quot;</span><span class="va">$@</span><span class="st">&quot;</span></span>
+<span id="cb45-3"><a href="#cb45-3" aria-hidden="true" tabindex="-1"></a><span class="cf">do</span></span>
+<span id="cb45-4"><a href="#cb45-4" aria-hidden="true" tabindex="-1"></a>    <span class="bu">echo</span> <span class="va">$datfile</span></span>
+<span id="cb45-5"><a href="#cb45-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">bash</span> goostats.sh <span class="va">$datafile</span> stats-<span class="va">$datafile</span></span>
+<span id="cb45-6"><a href="#cb45-6" aria-hidden="true" tabindex="-1"></a><span class="cf">done</span></span></code></pre></div>
+<p>When you run it from the <code>north-pacific-gyre</code> directory:</p>
+<div class="sourceCode" id="cb46"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb46-1"><a href="#cb46-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash do-errors.sh NENE<span class="pp">*</span>A.txt NENE<span class="pp">*</span>B.txt</span></code></pre></div>
+<p>the output is blank. To figure out why, re-run the script using the <code>-x</code> option:</p>
+<div class="sourceCode" id="cb47"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> bash <span class="at">-x</span> do-errors.sh NENE<span class="pp">*</span>A.txt NENE<span class="pp">*</span>B.txt</span></code></pre></div>
+<p>What is the output showing you? Which line is responsible for the error?</p>
+<h2 id="solution-4">Solution</h2>
+<p>The <code>-x</code> option causes <code>bash</code> to run in debug mode. This prints out each command as it is run, which will help you to locate errors. In this example, we can see that <code>echo</code> isn’t printing anything. We have made a typo in the loop variable name, and the variable <code>datfile</code> doesn’t exist, hence returning an empty string.</p>
+<ul>
+<li><p>Save commands in files (usually called shell scripts) for re-use.</p></li>
+<li><p><code>bash [filename]</code> runs the commands saved in a file.</p></li>
+<li><p><code>$@</code> refers to all of a shell script’s command-line arguments.</p></li>
+<li><p><code>$1</code>, <code>$2</code>, etc., refer to the first command-line argument, the second command-line argument, etc.</p></li>
+<li><p>Place variables in quotes if the values might have spaces in them.</p></li>
+<li><p>Letting users decide what files to process is more flexible and more consistent with built-in Unix commands.</p></li>
+</ul>

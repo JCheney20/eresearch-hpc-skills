@@ -8,10 +8,10 @@
 // the map rather than rendering a dead end.
 
 import { getChallenge } from "./challenges/index.js";
-import { stateOf } from "./progress.js";
 import { renderMap } from "./ui/map.js";
 import { renderChallenge } from "./ui/challenge.js";
 import { renderReading } from "./ui/reading.js";
+import { renderLicenses } from "./ui/licenses.js";
 
 let teardown = null;
 
@@ -35,13 +35,19 @@ export function startRouter(hostId) {
     let screen;
     if (parts[0] === "c" && parts[1]) {
       const challenge = getChallenge(parts[1]);
-      if (!challenge || stateOf(challenge.slug) === "locked") {
+      if (!challenge) {
         location.hash = "#/";
         return;
       }
       screen = challenge.kind === "reading"
         ? renderReading(challenge, mount)
         : renderChallenge(challenge, mount);
+    } else if (parts[0] === "topic" && parts[1]) {
+      screen = renderMap(mount, { topicKey: parts[1] });
+    } else if (parts[0] === "journey") {
+      screen = renderMap(mount, { journey: true });
+    } else if (parts[0] === "licenses") {
+      screen = renderLicenses(mount);
     } else {
       screen = renderMap(mount);
     }

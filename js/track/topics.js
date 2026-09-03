@@ -1,7 +1,5 @@
-// Curriculum projection for the learner UI.
-//
-// The authored graph lives in content.js as explicit prerequisite groups.
-// Topics are presentation only; their order no longer creates dependencies.
+// Runtime projection of the authored curriculum. Graph connections recommend a
+// useful order; they never gate access to a challenge.
 
 import { CONTENT_RELEASE } from "./content.js";
 
@@ -9,13 +7,6 @@ const authored = CONTENT_RELEASE.topics.flatMap(topic =>
   topic.challenges.map(challenge => ({ ...challenge, topicKey: topic.key }))
 );
 const byNumber = new Map(authored.map(challenge => [challenge.number, challenge]));
-
-function sourceSlugs(groups) {
-  return groups.flatMap(group => group.sources)
-    .map(number => byNumber.get(number))
-    .filter(Boolean)
-    .map(challenge => challenge.slug);
-}
 
 let displayNumber = 0;
 export const TOPICS = CONTENT_RELEASE.topics.map(topic => ({
@@ -27,14 +18,15 @@ export const TOPICS = CONTENT_RELEASE.topics.map(topic => ({
     num: Number.parseInt(challenge.number, 16),
     displayNum: displayNumber++,
     topicKey: topic.key,
-    // Compatibility for existing display code. Unlocking uses prerequisiteGroups.
-    requires: sourceSlugs(challenge.prerequisiteGroups),
+    recommendedSlugs: challenge.recommendedAfter
+      .map(number => byNumber.get(number)?.slug)
+      .filter(Boolean),
   })),
 }));
 
-export const ROUTE_KEYS = ["transfer", "git", "cluster"];
-export const CORE_KEY = "core";
-export const FINALE_KEY = "finale";
+export const ROUTE_KEYS = TOPICS.map(topic => topic.key);
+export const CORE_KEY = "linux";
+export const FINALE_KEY = "hpc";
 
 const byKey = new Map(TOPICS.map(topic => [topic.key, topic]));
 export const ALL_NODES = TOPICS.flatMap(topic => topic.nodes);
@@ -75,13 +67,7 @@ export function nodeByNumber(number) {
   return nodesByNumber.get(number) || null;
 }
 
-export function requirementsMet(node, completedNumbers) {
-  const done = completedNumbers instanceof Set
-    ? completedNumbers
-    : new Set(completedNumbers);
-  return node.prerequisiteGroups.every(group => {
-    if (group.mode === "all") return group.sources.every(source => done.has(source));
-    if (group.mode === "any") return group.sources.some(source => done.has(source));
-    return false;
-  });
+// Kept while existing callers migrate; open curriculum always satisfies access.
+export function requirementsMet() {
+  return true;
 }

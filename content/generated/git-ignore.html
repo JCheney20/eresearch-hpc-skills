@@ -1,0 +1,152 @@
+<ul>
+<li><p>Configure Git to ignore specific files.</p></li>
+<li><p>Explain why ignoring files can be useful.</p></li>
+</ul>
+<ul>
+<li><p>How can I tell Git to ignore files I don’t want to track?</p></li>
+</ul>
+<p>What if we have files that we do not want Git to track for us, like backup files created by our editor or intermediate files created during data analysis? Let’s create a few dummy files:</p>
+<div class="sourceCode" id="cb1"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> mkdir pictures</span>
+<span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> touch a.png b.png c.png pictures/cake1.jpg pictures/cake2.jpg</span></code></pre></div>
+<p>and see what Git says:</p>
+<div class="sourceCode" id="cb2"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb2-1"><a href="#cb2-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<pre class="output"><code>On branch main
+Untracked files:
+  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+
+    a.png
+    b.png
+    c.png
+    pictures/
+
+nothing added to commit but untracked files present (use &quot;git add&quot; to track)
+</code></pre>
+<p>Putting these files under version control would be a waste of disk space. What’s worse, having them all listed could distract us from changes that actually matter, so let’s tell Git to ignore them.</p>
+<p>We do this by creating a file in the root directory of our project called <code>.gitignore</code>:</p>
+<div class="sourceCode" id="cb4"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> nano .gitignore</span></code></pre></div>
+<p>Type the text below into the <code>.gitignore</code> file:</p>
+<pre><code>*.png
+pictures/
+</code></pre>
+<p>Save the file and exit your editor.</p>
+<p>Verify that the file contains the files to ignore.</p>
+<div class="sourceCode" id="cb6"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> cat .gitignore</span></code></pre></div>
+<pre class="output"><code>*.png
+pictures/
+</code></pre>
+<p>These patterns tell Git to ignore any file whose name ends in <code>.png</code> and everything in the <code>pictures</code> directory. (If any of these files were already being tracked, Git would continue to track them.)</p>
+<p>Once we have created this file, the output of <code>git status</code> is much cleaner:</p>
+<div class="sourceCode" id="cb8"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<pre class="output"><code>On branch main
+Untracked files:
+  (use &quot;git add &lt;file&gt;...&quot; to include in what will be committed)
+
+    .gitignore
+
+nothing added to commit but untracked files present (use &quot;git add&quot; to track)
+</code></pre>
+<p>The only thing Git notices now is the newly-created <code>.gitignore</code> file. You might think we wouldn’t want to track it, but everyone we’re sharing our repository with will probably want to ignore the same things that we’re ignoring. Let’s add and commit <code>.gitignore</code>:</p>
+<div class="sourceCode" id="cb10"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add .gitignore</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git commit <span class="at">-m</span> <span class="st">&quot;Ignore png files and the pictures folder.&quot;</span></span>
+<span id="cb10-3"><a href="#cb10-3" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status</span></code></pre></div>
+<pre class="output"><code>On branch main
+nothing to commit, working tree clean
+</code></pre>
+<p>As a bonus, using <code>.gitignore</code> helps us avoid accidentally adding files to the repository that we don’t want to track:</p>
+<div class="sourceCode" id="cb12"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git add a.png</span></code></pre></div>
+<pre class="output"><code>The following paths are ignored by one of your .gitignore files:
+a.png
+Use -f if you really want to add them.
+</code></pre>
+<p>If we really want to override our ignore settings, we can use <code>git add -f</code> to force Git to add something. For example, <code>git add -f a.png</code>. We can also always see the status of ignored files if we want:</p>
+<div class="sourceCode" id="cb14"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb14-1"><a href="#cb14-1" aria-hidden="true" tabindex="-1"></a><span class="ex">$</span> git status <span class="at">--ignored</span></span></code></pre></div>
+<pre class="output"><code>On branch main
+Ignored files:
+ (use &quot;git add -f &lt;file&gt;...&quot; to include in what will be committed)
+
+        a.png
+        b.png
+        c.png
+        pictures/
+
+nothing to commit, working tree clean
+</code></pre>
+<h2 id="ignoring-nested-files">Ignoring Nested Files</h2>
+<p>Given a directory structure that looks like:</p>
+<div class="sourceCode" id="cb16"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb16-1"><a href="#cb16-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/cake</span></span>
+<span id="cb16-2"><a href="#cb16-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/pizza</span></span></code></pre></div>
+<p>How would you ignore only <code>pictures/cake</code> and not <code>pictures/pizza</code>?</p>
+<h2 id="solution">Solution</h2>
+<p>If you only want to ignore the contents of <code>pictures/cake</code>, you can change your <code>.gitignore</code> to ignore only the <code>/cake/</code> subfolder by adding the following line to your .gitignore:</p>
+<pre class="output"><code>pictures/cake/
+</code></pre>
+<p>This line will ensure only the contents of <code>pictures/cake</code> is ignored, and not the contents of <code>pictures/pizza</code>.</p>
+<p>As with most programming issues, there are a few alternative ways that one may ensure this ignore rule is followed. The “Ignoring Nested Files: Variation” exercise has a slightly different directory structure that presents an alternative solution. Further, the discussion page has more detail on ignore rules.</p>
+<h2 id="including-specific-files">Including Specific Files</h2>
+<p>How would you ignore all <code>.png</code> files in your root directory except for <code>final.png</code>? Hint: Find out what <code>!</code> (the exclamation point operator) does</p>
+<h2 id="solution-1">Solution</h2>
+<p>You would add the following two lines to your .gitignore:</p>
+<pre class="output"><code>*.png           # ignore all png files
+!final.png      # except final.png
+</code></pre>
+<p>The exclamation point operator will include a previously excluded entry.</p>
+<p>Note also that, if you’ve previously committed <code>.png</code> files in this lesson, they will not be ignored with this new rule. Only future additions of <code>.png</code> files to the root directory will be ignored.</p>
+<h2 id="ignoring-nested-files-variation">Ignoring Nested Files: Variation</h2>
+<p>Given a directory structure that looks similar to the earlier Nested Files exercise, but with a slightly different directory structure:</p>
+<div class="sourceCode" id="cb19"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb19-1"><a href="#cb19-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/cake</span></span>
+<span id="cb19-2"><a href="#cb19-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/pizza</span></span>
+<span id="cb19-3"><a href="#cb19-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/pie</span></span>
+<span id="cb19-4"><a href="#cb19-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/brownie</span></span></code></pre></div>
+<p>How would you ignore all of the contents in the pictures folder, but not <code>pictures/pie</code>?</p>
+<p>Hint: think a bit about how you created an exception with the <code>!</code> operator before.</p>
+<h2 id="solution-2">Solution</h2>
+<p>If you want to ignore the contents of <code>pictures/</code> but not those of <code>pictures/pie/</code>, you can change your <code>.gitignore</code> to ignore the contents of pictures folder, but create an exception for the contents of the <code>pictures/pie</code> subfolder. Your .gitignore would look like this:</p>
+<pre class="output"><code>pictures/*              # ignore everything in pictures folder
+!pictures/pie/          # do not ignore pictures/pie/ contents
+</code></pre>
+<h2 id="ignoring-all-data-files-in-a-directory">Ignoring all data Files in a Directory</h2>
+<p>Assuming you have an empty .gitignore file, and given a directory structure that looks like:</p>
+<div class="sourceCode" id="cb21"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb21-1"><a href="#cb21-1" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/data/location/gps/a.dat</span></span>
+<span id="cb21-2"><a href="#cb21-2" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/data/location/gps/b.dat</span></span>
+<span id="cb21-3"><a href="#cb21-3" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/data/location/gps/c.dat</span></span>
+<span id="cb21-4"><a href="#cb21-4" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/data/location/gps/info.txt</span></span>
+<span id="cb21-5"><a href="#cb21-5" aria-hidden="true" tabindex="-1"></a><span class="ex">pictures/plots</span></span></code></pre></div>
+<p>What’s the shortest <code>.gitignore</code> rule you could write to ignore all <code>.dat</code> files in <code>pictures/data/location/gps</code>? Do not ignore the <code>info.txt</code>.</p>
+<h2 id="solution-3">Solution</h2>
+<p>Appending <code>pictures/data/location/gps/*.dat</code> will match every file in <code>pictures/data/location/gps</code> that ends with <code>.dat</code>. The file <code>pictures/data/location/gps/info.txt</code> will not be ignored.</p>
+<h2 id="ignoring-all-data-files-in-the-repository">Ignoring all data Files in the repository</h2>
+<p>Let us assume you have many <code>.csv</code> files in different subdirectories of your repository. For example, you might have:</p>
+<div class="sourceCode" id="cb22"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb22-1"><a href="#cb22-1" aria-hidden="true" tabindex="-1"></a><span class="ex">results/a.csv</span></span>
+<span id="cb22-2"><a href="#cb22-2" aria-hidden="true" tabindex="-1"></a><span class="ex">data/experiment_1/b.csv</span></span>
+<span id="cb22-3"><a href="#cb22-3" aria-hidden="true" tabindex="-1"></a><span class="ex">data/experiment_2/c.csv</span></span>
+<span id="cb22-4"><a href="#cb22-4" aria-hidden="true" tabindex="-1"></a><span class="ex">data/experiment_2/variation_1/d.csv</span></span></code></pre></div>
+<p>How do you ignore all the <code>.csv</code> files, without explicitly listing the names of the corresponding folders?</p>
+<h2 id="solution-4">Solution</h2>
+<p>In the <code>.gitignore</code> file, write:</p>
+<pre class="output"><code>**/*.csv
+</code></pre>
+<p>This will ignore all the <code>.csv</code> files, regardless of their position in the directory tree. You can still include some specific exception with the exclamation point operator.</p>
+<h2 id="the-order-of-rules">The Order of Rules</h2>
+<p>Given a <code>.gitignore</code> file with the following contents:</p>
+<div class="sourceCode" id="cb24"><pre class="sourceCode bash"><code class="sourceCode bash"><span id="cb24-1"><a href="#cb24-1" aria-hidden="true" tabindex="-1"></a><span class="ex">*.csv</span></span>
+<span id="cb24-2"><a href="#cb24-2" aria-hidden="true" tabindex="-1"></a><span class="ex">!*.csv</span></span></code></pre></div>
+<p>What will be the result?</p>
+<h2 id="solution-5">Solution</h2>
+<p>The <code>!</code> modifier will negate an entry from a previously defined ignore pattern. Because the <code>!*.csv</code> entry negates all of the previous <code>.csv</code> files in the <code>.gitignore</code>, none of them will be ignored, and all <code>.csv</code> files will be tracked.</p>
+<h2 id="log-files">Log Files</h2>
+<p>You wrote a script that creates many intermediate log-files of the form <code>log_01</code>, <code>log_02</code>, <code>log_03</code>, etc. You want to keep them but you do not want to track them through <code>git</code>.</p>
+<ol>
+<li><p>Write <strong>one</strong> <code>.gitignore</code> entry that excludes files of the form <code>log_01</code>, <code>log_02</code>, etc.</p></li>
+<li><p>Test your “ignore pattern” by creating some dummy files of the form <code>log_01</code>, etc.</p></li>
+<li><p>You find that the file <code>log_01</code> is very important after all, add it to the tracked files without changing the <code>.gitignore</code> again.</p></li>
+<li><p>Discuss with your neighbor what other types of files could reside in your directory that you do not want to track and thus would exclude via <code>.gitignore</code>.</p></li>
+</ol>
+<h2 id="solution-6">Solution</h2>
+<ol>
+<li><p>append either <code>log_*</code> or <code>log*</code> as a new entry in your .gitignore</p></li>
+<li><p>track <code>log_01</code> using <code>git add -f log_01</code></p></li>
+</ol>
+<ul>
+<li><p>The .gitignore file is a text file that tells Git which files to track and which to ignore in the repository.</p></li>
+<li><p>You can list specific files or folders to be ignored by Git, or you can include files that would normally be ignored.</p></li>
+</ul>
