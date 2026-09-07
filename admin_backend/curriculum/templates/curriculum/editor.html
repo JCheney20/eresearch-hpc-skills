@@ -1,0 +1,65 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" href="{% static 'curriculum/editor.css' %}">{% endblock %}
+{% block extrahead %}{{ block.super }}<script defer src="{% static 'curriculum/editor.js' %}"></script>{% endblock %}
+
+{% block content %}
+{{ bootstrap|json_script:"curriculum-data" }}
+<header class="editor-head">
+  <div><p class="eyebrow">Open curriculum</p><h1>Content and graph editor</h1></div>
+  <div class="editor-actions"><span id="status" role="status"></span><button id="publish" class="button default">Publish release</button></div>
+</header>
+
+<div class="editor-tabs" role="tablist">
+  <button class="is-active" data-tab="content" role="tab">Challenge content</button>
+  <button data-tab="graph" role="tab">Recommended graph</button>
+</div>
+
+<section id="content-panel" class="editor-panel is-active">
+  <aside class="challenge-list">
+    <label for="challenge-search">Challenges</label>
+    <input id="challenge-search" type="search" placeholder="Find by number or name">
+    <div id="challenges"></div>
+  </aside>
+  <main class="content-editor">
+    <div id="no-challenge" class="empty-state">Choose a challenge to edit its draft.</div>
+    <form id="challenge-form" hidden>
+      <div class="field-grid">
+        <label>Title <input id="challenge-title" required></label>
+        <label>Kind <select id="challenge-kind"><option value="text">Text</option><option value="code">Code</option></select></label>
+        <label>Author <input id="challenge-author" required></label>
+        <label>Source URL <input id="challenge-source" type="url"></label>
+      </div>
+      <div class="section-head"><div><p class="eyebrow">Notebook</p><h2>Ordered blocks</h2></div><div class="block-add"><button type="button" data-add="typst">+ Typst</button><button type="button" data-add="callout">+ Callout</button><button type="button" data-add="bash">+ Bash</button></div></div>
+      <div id="blocks"></div>
+      <details id="code-fields" hidden><summary>Code challenge data</summary><label>Task<textarea id="challenge-task"></textarea></label><label>Answer or validator<textarea id="challenge-answer"></textarea></label><label>World JSON<textarea id="challenge-world">{}</textarea></label></details>
+      <div class="form-actions"><button class="button default" type="submit">Save challenge draft</button></div>
+    </form>
+    <aside class="preview"><p class="eyebrow">Learner preview</p><div id="preview-output">Add a block to begin.</div></aside>
+  </main>
+</section>
+
+<section id="graph-panel" class="editor-panel">
+  <div class="graph-toolbar">
+    <label>Layout <select id="graph-view"><option value="journey">Your Journey</option></select></label>
+    <button id="auto-layout" type="button">Reset to automatic layout</button>
+    <button id="save-graph" class="button default" type="button">Save graph</button>
+  </div>
+  <div class="graph-workspace">
+    <div id="graph-canvas" aria-label="Drag challenge nodes on the Cartesian graph">
+      <svg id="graph-wires" aria-hidden="true"></svg>
+      <div class="axis axis-x"></div><div class="axis axis-y"></div>
+    </div>
+    <aside class="graph-inspector">
+      <h2>Selected node</h2>
+      <label>Challenge <select id="graph-node"></select></label>
+      <label>Topic <select id="graph-topic"></select></label>
+      <fieldset><legend>Recommended after</legend><div id="graph-parents"></div></fieldset>
+      <button id="add-node" type="button">Add selected challenge to graph</button>
+      <button id="remove-node" class="deletelink" type="button">Remove from graph</button>
+      <p class="help">Dragging stores X/Y presentation coordinates only. Connections and access do not change.</p>
+    </aside>
+  </div>
+</section>
+{% endblock %}

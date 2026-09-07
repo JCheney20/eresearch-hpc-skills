@@ -17,6 +17,14 @@ Including another URLconf
 from django.contrib import admin
 from django.urls import path
 
+from curriculum import views
+
 urlpatterns = [
-    path('admin/', admin.site.urls),
+    path("admin/curriculum-editor/", views.editor, name="curriculum-editor"),
+    path("admin/curriculum-editor/challenge/", views.save_challenge, name="curriculum-save-challenge"),
+    path("admin/curriculum-editor/graph/", views.save_graph, name="curriculum-save-graph"),
+    path("admin/curriculum-editor/layout/", views.automatic_layout, name="curriculum-auto-layout"),
+    path("admin/curriculum-editor/preview/", views.preview_blocks, name="curriculum-preview"),
+    path("admin/curriculum-editor/publish/", views.publish_draft, name="curriculum-publish"),
+    path("admin/", admin.site.urls),
 ]

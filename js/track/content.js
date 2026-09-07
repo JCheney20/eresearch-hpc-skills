@@ -21,7 +21,7 @@ function imported(number, revision, slug, title, contentName, recommendedAfter =
   });
 }
 
-export const CONTENT_RELEASE = {
+const BUNDLED_CONTENT_RELEASE = {
   releaseId: "open-curriculum-001",
   topics: [
     {
@@ -114,3 +114,17 @@ export const CONTENT_RELEASE = {
     },
   ],
 };
+
+export async function loadContentRelease(fetchRelease) {
+  if (!fetchRelease) return BUNDLED_CONTENT_RELEASE;
+  try {
+    const response = await fetchRelease("/content/current.json", { cache: "no-store" });
+    if (response.ok) return await response.json();
+  } catch { /* Keep the bundled release available during failed publications. */ }
+  return BUNDLED_CONTENT_RELEASE;
+}
+
+const browserFetch = typeof window !== "undefined" && typeof fetch === "function"
+  ? fetch.bind(globalThis)
+  : null;
+export const CONTENT_RELEASE = await loadContentRelease(browserFetch);

@@ -26,6 +26,7 @@ The repository is static HTML, JavaScript, CSS, fonts, and vendored browser asse
 /srv/uwc-hpc-skills/
   releases/<immutable-code-release>/  # root-owned static application copy
   current -> releases/<release>       # Nginx document root; enables rollback
+/var/lib/uwc-hpc-admin/published/content/  # Admin-written immutable content releases
 /etc/nginx/sites-available/uwc-hpc-skills
 /etc/nginx/sites-enabled/uwc-hpc-skills
 ```
@@ -154,11 +155,11 @@ When learner SSO is introduced later, offer a one-time confirmed import of brows
 
 ## Phase 4: admin backend and publication pipeline
 
-The private Django scaffold in `admin_backend/` defines drafts, immutable challenge revisions, curriculum drafts, content releases, release membership, and audit records. Its first deployment will use Django's database-backed admin account at `/admin/`; university SSO and a separate admin hostname are deferred. Optimistic-concurrency forms, the notebook editor, publication validation/static generation, and export are still required before content editing is production-ready.
+The private Django backend in `admin_backend/` defines drafts, immutable challenge revisions, curriculum drafts, content releases, release membership, and audit records. Its visual editor at `/admin/curriculum-editor/` provides ordered block editing, server-rendered preview, separate Cartesian layouts for every Topic and Your Journey, draggable node placement, generated-layout reset, recommended-connection editing, optimistic saves, and static publication. Its first deployment uses Django's database-backed admin account; university SSO and a separate admin hostname are deferred.
 
 ### Notebook editor
 
-Creating a challenge begins by choosing `text` or `code`; kind may change only through a validated new revision. The custom editor manages ordered blocks rather than exposing raw JSON:
+Creating a challenge begins by choosing `text` or `code`; kind may change only through a validated new revision. The visual editor manages ordered blocks rather than exposing raw JSON:
 
 - **Typst** — source textarea, Bold/Italic/Link controls, syntax help, and live preview;
 - **Callout** — note, hint, or warning; imported exercise/solution callouts are temporary;
@@ -190,7 +191,7 @@ Use WAL mode, short transactions, and one writer at a time. Every draft save and
 
 ### Static publication
 
-After validation and preview, publishing generates immutable static learner assets: a current content manifest, ordered block JSON, sanitized HTML fragments, source/licence metadata, and files for retained challenge revisions. Nginx serves these assets; browsers do not query SQLite or compile Typst. This keeps the public learner path static and lets a browser reload a pinned revision.
+After validation and preview, publishing generates immutable static learner assets under `CONTENT_PUBLISH_ROOT`: a current content manifest, ordered block JSON, sanitized HTML fragments, source/licence metadata, separate Topic/Journey coordinates, and files for retained challenge revisions. `current.json` changes atomically. Nginx serves `/content/current.json` and `/content/releases/` from `/var/lib/uwc-hpc-admin/published/content`; browsers do not query SQLite or compile Typst. If dynamic content is unavailable, the learner uses the release bundled in `js/track/content.js`.
 
 Admin-authored content publications do not require a Git deployment. Engine/schema changes still require normal reviewed Git deployments.
 
@@ -229,7 +230,7 @@ A future SSO-backed terminal that connects to an actual HPC node is a separate s
 The following work was deliberately deferred from the open-curriculum checkpoint:
 
 1. **Content and accessibility cleanup** — add or verify image alternative text; repair malformed converted CHPC markup; turn imported exercises and solutions into proper callouts or challenges; verify heading hierarchy, tables, code blocks, links, keyboard navigation, mobile layouts, and screen-reader output.
-2. **Admin-format alignment** — update the Django model from the old reading/interactive card format to text/code revisions with ordered Typst, callout, and Bash blocks; add author, source, licence, adaptation, and timer metadata; replace prerequisite validation with recommended-tree validation; add migrations, tests, editing forms, and static publication.
+2. **Declarative code challenges** — replace developer-owned legacy code modules with a validated declarative world and terminal-state validator contract so newly created code challenges can be published entirely through the Admin.
 3. **UWC content licensing** — decide and record the licence for original UWC-authored material, then review the learner-visible attribution and licence wording for both local and imported content.
 4. **Real-browser acceptance** — test every route class in Firefox and Chromium, including representative imported and code challenges, keyboard-only use, responsive widths, timer and progress persistence, direct links, failed-content handling, and locally served images.
 5. **Production release** — review the final diff, back up the current site, deploy all static assets including `content/`, validate over HTTPS, exercise rollback, promote the release, and remove the temporary `/prototype/` route only after production verification.

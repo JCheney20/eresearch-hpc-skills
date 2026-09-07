@@ -5,6 +5,8 @@ from django.core.exceptions import ValidationError
 from django.core.validators import MinValueValidator, RegexValidator
 from django.db import models
 
+from .validation import validate_blocks, validate_graph, validate_source
+
 hex3 = RegexValidator(r"^[0-9A-F]{3}$", "Use three uppercase hexadecimal digits.")
 
 
@@ -36,11 +38,14 @@ class Challenge(models.Model):
 
 class ChallengeContent(models.Model):
     class Kind(models.TextChoices):
-        READING = "reading", "Reading"
-        INTERACTIVE = "interactive", "Interactive"
+        TEXT = "text", "Text"
+        CODE = "code", "Code"
 
-    kind = models.CharField(max_length=11, choices=Kind.choices)
+    kind = models.CharField(max_length=4, choices=Kind.choices)
     title = models.CharField(max_length=200)
+    author = models.CharField(max_length=200)
+    source = models.JSONField(default=dict, blank=True)
+    minimum_read_seconds = models.PositiveSmallIntegerField(default=120)
     content = models.JSONField(default=dict)
     world = models.JSONField(default=dict, blank=True)
 
@@ -49,19 +54,28 @@ class ChallengeContent(models.Model):
 
     def clean(self):
         super().clean()
-        if self.kind == self.Kind.READING:
-            if not self.content.get("cards"):
-                raise ValidationError({"content": "A reading challenge needs cards."})
+        try:
+            validate_blocks(self.content.get("blocks"))
+        except ValidationError as error:
+            raise ValidationError({"content": error.messages}) from error
+        try:
+            validate_source(self.source)
+        except ValidationError as error:
+            raise ValidationError({"source": error.messages}) from error
+
+        if self.kind == self.Kind.TEXT:
+            if self.minimum_read_seconds != 120:
+                raise ValidationError({"minimum_read_seconds": "Text challenges use a fixed 120-second timer."})
             if self.world:
-                raise ValidationError({"world": "A reading challenge cannot have a world."})
+                raise ValidationError({"world": "A text challenge cannot have a world."})
             return
 
-        required = {"scenario", "task", "answerLabel", "answer", "hints", "example", "solution", "variants"}
-        missing = sorted(required - self.content.keys())
-        if missing:
-            raise ValidationError({"content": f"Missing interactive fields: {', '.join(missing)}."})
-        if len(self.content["hints"]) != 3:
-            raise ValidationError({"content": "An interactive challenge needs exactly three hints."})
+        if not self.content.get("task"):
+            raise ValidationError({"content": "A code challenge needs a task."})
+        if not self.content.get("answer") and not self.content.get("validator"):
+            raise ValidationError({"content": "A code challenge needs an answer or validator."})
+        if not isinstance(self.content.get("hints", []), list):
+            raise ValidationError({"content": "Code challenge hints must be a list."})
         if not isinstance(self.world, dict):
             raise ValidationError({"world": "World must be a declarative object."})
 
@@ -107,6 +121,14 @@ class CurriculumDraft(models.Model):
     graph = models.JSONField(default=dict)
     updated_by = models.ForeignKey(settings.AUTH_USER_MODEL, null=True, blank=True, on_delete=models.SET_NULL)
     updated_at = models.DateTimeField(auto_now=True)
+
+    def clean(self):
+        super().clean()
+        validate_graph(
+            self.graph,
+            Challenge.objects.filter(archived=False).values_list("number", flat=True),
+            Topic.objects.filter(archived=False).values_list("key", flat=True),
+        )
 
     def __str__(self):
         return f"Curriculum draft v{self.version}"

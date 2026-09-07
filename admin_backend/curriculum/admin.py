@@ -1,4 +1,6 @@
 from django.contrib import admin
+from django.urls import reverse
+from django.utils.html import format_html
 
 from .models import (
     AuditRecord,
@@ -28,14 +30,34 @@ class ChallengeAdmin(admin.ModelAdmin):
 @admin.register(ChallengeDraft)
 class ChallengeDraftAdmin(admin.ModelAdmin):
     list_display = ("challenge", "title", "kind", "version", "updated_at", "updated_by")
-    readonly_fields = ("version", "updated_at", "updated_by")
     search_fields = ("challenge__number", "challenge__slug", "title")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return obj is None
+
+    def has_delete_permission(self, request, obj=None):
+        return False
 
 
 @admin.register(CurriculumDraft)
 class CurriculumDraftAdmin(admin.ModelAdmin):
-    list_display = ("id", "version", "updated_at", "updated_by")
-    readonly_fields = ("version", "updated_at", "updated_by")
+    list_display = ("id", "version", "updated_at", "updated_by", "open_editor")
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return obj is None
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    @admin.display(description="Visual editor")
+    def open_editor(self, obj):
+        return format_html('<a href="{}">Edit content and graph</a>', reverse("curriculum-editor"))
 
 
 class ImmutableAdmin(admin.ModelAdmin):

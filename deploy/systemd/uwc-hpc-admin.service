@@ -1,0 +1,21 @@
+[Unit]
+Description=UWC HPC Skills content administration
+After=network.target
+
+[Service]
+Type=simple
+User=uwc-hpc-admin
+Group=uwc-hpc-admin
+WorkingDirectory=/opt/uwc-hpc-admin/current/admin_backend
+EnvironmentFile=/etc/uwc-hpc-admin.env
+ExecStart=/opt/uwc-hpc-admin/venv/bin/gunicorn --bind 127.0.0.1:8001 --workers 2 --timeout 60 config.wsgi:application
+Restart=on-failure
+RestartSec=5s
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=true
+ReadWritePaths=/var/lib/uwc-hpc-admin
+NoNewPrivileges=true
+
+[Install]
+WantedBy=multi-user.target

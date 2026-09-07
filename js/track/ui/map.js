@@ -3,7 +3,7 @@
 
 import { el, svg, clear, ICON } from "./dom.js";
 import { topbar } from "./parts.js";
-import { ALL_NODES, TOPICS, topicByKey } from "../topics.js";
+import { ALL_NODES, LAYOUTS, TOPICS, topicByKey } from "../topics.js";
 import { isSolved, overallProgress, topicProgress } from "../progress.js";
 import { isBuilt } from "../challenges/index.js";
 
@@ -150,8 +150,8 @@ function pathNode(node, recommended) {
   return card;
 }
 
-function graphFor(nodes, name) {
-  const graph = el("div", "journeygraph");
+function graphFor(nodes, name, layout) {
+  const graph = el("div", "journeygraph" + (layout ? " has-layout" : ""));
   graph.setAttribute("aria-label", `${name} recommended learning tree`);
   const wires = svg("svg");
   wires.setAttribute("class", "wires");
@@ -160,14 +160,27 @@ function graphFor(nodes, name) {
 
   const elements = new Map();
   const firstOpen = nodes.find(node => !isSolved(node.slug) && isBuilt(node.slug));
-  for (const level of levelsFor(nodes)) {
-    const row = el("div", "journeyrow");
-    for (const node of spreadTerminalNodes(level, nodes)) {
+  if (layout) {
+    const height = Math.max(540, ...nodes.map(node => (layout[node.number]?.y || 0) + 180));
+    graph.setAttribute("style", `--graph-height:${height}px`);
+    for (const node of nodes) {
+      const point = layout[node.number] || { x: 500, y: 0 };
       const card = pathNode(node, node === firstOpen);
+      const x = Math.max(80, Math.min(920, point.x));
+      card.setAttribute("style", `--node-x:${x / 10}%;--node-y:${point.y + 40}px`);
       elements.set(node.number, card);
-      row.append(card);
+      graph.append(card);
     }
-    graph.append(row);
+  } else {
+    for (const level of levelsFor(nodes)) {
+      const row = el("div", "journeyrow");
+      for (const node of spreadTerminalNodes(level, nodes)) {
+        const card = pathNode(node, node === firstOpen);
+        elements.set(node.number, card);
+        row.append(card);
+      }
+      graph.append(row);
+    }
   }
   drawWires(graph, wires, elements, nodes, `journey-arrow-${name.toLowerCase().replace(/\W+/g, "-")}`);
   return graph;
@@ -190,7 +203,7 @@ function graphPage(topic) {
   if (topic) {
     page.append(heading("Focused Topic", topic.name, topic.blurb));
     page.append(el("p", "graphnote", "Lines show the recommended order. Every challenge can be opened now."));
-    page.append(graphFor(topic.nodes, topic.name));
+    page.append(graphFor(topic.nodes, topic.name, LAYOUTS[topic.key]));
   } else {
     page.append(heading(
       "Your Journey",
@@ -198,7 +211,7 @@ function graphPage(topic) {
       "Start at the beginning and follow the branches, or jump directly to any challenge. Connections recommend a logical path; they do not lock content.",
     ));
     page.append(el("p", "graphnote", "Recommended path · every node is available"));
-    page.append(graphFor(ALL_NODES, "Complete journey"));
+    page.append(graphFor(ALL_NODES, "Complete journey", LAYOUTS.journey));
   }
   return page;
 }
