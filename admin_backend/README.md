@@ -32,7 +32,7 @@ editor. Graph layouts are stored separately for each Topic and for Your Journey;
 connections. Draft saves use optimistic versions and reject stale browser tabs.
 
 Production uses `/var/lib/uwc-hpc-admin/content.db` through
-`DJANGO_DATABASE_PATH`, `/var/lib/uwc-hpc-admin/published/content` through
+`DJANGO_DATABASE_PATH`, `/srv/uwc-hpc-content/content` through
 `CONTENT_PUBLISH_ROOT`, a root-owned `DJANGO_SECRET_KEY`, Gunicorn bound only to
 loopback, and systemd. Publishing writes immutable releases and atomically updates
 `current.json`; Nginx serves that dynamic content while the committed release
@@ -45,8 +45,9 @@ Install the service only after setting the paths and secret in
 `deploy/systemd/uwc-hpc-admin.env.example`:
 
 ```bash
-sudo install -d -o uwc-hpc-admin -g uwc-hpc-admin \
-  /var/lib/uwc-hpc-admin/published/content /var/lib/uwc-hpc-admin/static
+sudo install -d -m 0700 -o uwc-hpc-admin -g uwc-hpc-admin /var/lib/uwc-hpc-admin
+sudo install -d -m 2750 -o uwc-hpc-admin -g www-data \
+  /srv/uwc-hpc-content /srv/uwc-hpc-content/content /srv/uwc-hpc-content/admin-static
 sudo -u uwc-hpc-admin /opt/uwc-hpc-admin/venv/bin/python admin_backend/manage.py migrate
 sudo -u uwc-hpc-admin /opt/uwc-hpc-admin/venv/bin/python admin_backend/manage.py bootstrap_content
 sudo -u uwc-hpc-admin /opt/uwc-hpc-admin/venv/bin/python admin_backend/manage.py collectstatic --noinput

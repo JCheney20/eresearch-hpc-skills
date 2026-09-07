@@ -6,6 +6,8 @@ After=network.target
 Type=simple
 User=uwc-hpc-admin
 Group=uwc-hpc-admin
+SupplementaryGroups=www-data
+UMask=0027
 WorkingDirectory=/opt/uwc-hpc-admin/current/admin_backend
 EnvironmentFile=/etc/uwc-hpc-admin.env
 ExecStart=/opt/uwc-hpc-admin/venv/bin/gunicorn --bind 127.0.0.1:8001 --workers 2 --timeout 60 config.wsgi:application
@@ -14,7 +16,7 @@ RestartSec=5s
 PrivateTmp=true
 ProtectSystem=strict
 ProtectHome=true
-ReadWritePaths=/var/lib/uwc-hpc-admin
+ReadWritePaths=/var/lib/uwc-hpc-admin /srv/uwc-hpc-content
 NoNewPrivileges=true
 
 [Install]
