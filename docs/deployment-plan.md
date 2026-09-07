@@ -26,7 +26,9 @@ The repository is static HTML, JavaScript, CSS, fonts, and vendored browser asse
 /srv/uwc-hpc-skills/
   releases/<immutable-code-release>/  # root-owned static application copy
   current -> releases/<release>       # Nginx document root; enables rollback
-/var/lib/uwc-hpc-admin/published/content/  # Admin-written immutable content releases
+/srv/uwc-hpc-content/content/          # Admin-written, Nginx-readable releases
+/srv/uwc-hpc-content/admin-static/     # Collected Django Admin assets
+/var/lib/uwc-hpc-admin/content.db       # Private SQLite state
 /etc/nginx/sites-available/uwc-hpc-skills
 /etc/nginx/sites-enabled/uwc-hpc-skills
 ```
@@ -191,7 +193,7 @@ Use WAL mode, short transactions, and one writer at a time. Every draft save and
 
 ### Static publication
 
-After validation and preview, publishing generates immutable static learner assets under `CONTENT_PUBLISH_ROOT`: a current content manifest, ordered block JSON, sanitized HTML fragments, source/licence metadata, separate Topic/Journey coordinates, and files for retained challenge revisions. `current.json` changes atomically. Nginx serves `/content/current.json` and `/content/releases/` from `/var/lib/uwc-hpc-admin/published/content`; browsers do not query SQLite or compile Typst. If dynamic content is unavailable, the learner uses the release bundled in `js/track/content.js`.
+After validation and preview, publishing generates immutable static learner assets under `CONTENT_PUBLISH_ROOT`: a current content manifest, ordered block JSON, sanitized HTML fragments, source/licence metadata, separate Topic/Journey coordinates, and files for retained challenge revisions. `current.json` changes atomically. Nginx serves `/content/current.json` and `/content/releases/` from `/srv/uwc-hpc-content/content`; browsers do not query SQLite or compile Typst. The SQLite directory remains private under `/var/lib/uwc-hpc-admin`. If dynamic content is unavailable, the learner uses the release bundled in `js/track/content.js`.
 
 Admin-authored content publications do not require a Git deployment. Engine/schema changes still require normal reviewed Git deployments.
 
