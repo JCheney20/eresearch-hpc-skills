@@ -16,11 +16,14 @@
 import { CHALLENGES } from "../js/track/challenges/index.js";
 import { makeSession, silentTerm } from "../js/track/session.js";
 import { ALL_NODES, TOPICS, topicOf, nodeByNumber } from "../js/track/topics.js";
-import { CONTENT_RELEASE } from "../js/track/content.js";
+import { CONTENT_RELEASE, loadContentRelease } from "../js/track/content.js";
 import { judge, normalise } from "../js/track/answer.js";
 import { existsSync, readFileSync } from "node:fs";
 
 let total = 0, failed = 0;
+
+const currentManifest = JSON.parse(readFileSync(new URL("../content/current.json", import.meta.url), "utf8"));
+const dynamicallyLoaded = await loadContentRelease(async () => ({ ok: true, json: async () => currentManifest }));
 
 function check(desc, cond, detail) {
   total++;
@@ -84,6 +87,14 @@ for (const node of ALL_NODES) {
 }
 
 check("the journey starts without a recommendation", TOPICS[0].nodes[0].recommendedAfter.length === 0);
+check("the browser loads the published current manifest",
+  dynamicallyLoaded.releaseId === currentManifest.releaseId);
+check("the browser current manifest contains every authored challenge",
+  currentManifest.topics.flatMap(topic => topic.challenges).length === ALL_NODES.length);
+check("the browser current manifest has separate Cartesian layouts",
+  ["journey", ...TOPICS.map(topic => topic.key)].every(view =>
+    currentManifest.layouts?.[view] && Object.values(currentManifest.layouts[view]).every(point =>
+      Number.isFinite(point.x) && Number.isFinite(point.y))));
 
 /* ---- each written challenge --------------------------------------------- */
 

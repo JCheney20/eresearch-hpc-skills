@@ -24,6 +24,7 @@ export const TOPICS = CONTENT_RELEASE.topics.map(topic => ({
   })),
 }));
 
+export const LAYOUTS = CONTENT_RELEASE.layouts || {};
 export const ROUTE_KEYS = TOPICS.map(topic => topic.key);
 export const CORE_KEY = "linux";
 export const FINALE_KEY = "hpc";

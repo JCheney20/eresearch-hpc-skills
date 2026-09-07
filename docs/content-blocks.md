@@ -101,6 +101,26 @@ A Bash block stores a command, expected output, and one display mode:
 Modes are `display`, `copy`, and `run`. `run` is available only when the
 simulated shell and declarative world support the command.
 
+## Recommended graph and layouts
+
+The Admin stores graph meaning separately from graph presentation:
+
+```json
+{
+  "nodes": [{"number":"000","topic":"linux","displayOrder":0}],
+  "connections": [{"source":"000","target":"016"}],
+  "layouts": {
+    "journey": {"000":{"x":500,"y":0}},
+    "linux": {"000":{"x":250,"y":0}}
+  }
+}
+```
+
+Connections must form an acyclic graph but never control learner access. Layouts
+use Cartesian X/Y coordinates and are stored independently for each Topic and
+for `journey`. Dragging changes only coordinates. Resetting a view discards its
+manual coordinates and deterministically regenerates them from connections.
+
 ## Publication
 
 The publisher validates block schemas, the restricted Typst AST, links, source

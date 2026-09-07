@@ -1,0 +1,1156 @@
+{
+  "releaseId": "open-curriculum-001",
+  "topics": [
+    {
+      "key": "linux",
+      "name": "Linux",
+      "blurb": "Learn what the shell is, move around safely, work with files, and connect to another computer.",
+      "challenges": [
+        {
+          "number": "000",
+          "revision": "002",
+          "id": "000002",
+          "kind": "reading",
+          "slug": "what-is-a-terminal",
+          "title": "Introducing the Shell",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [],
+          "contentUrl": "/content/challenges/shell-introduction.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "016",
+          "revision": "001",
+          "id": "016001",
+          "kind": "reading",
+          "slug": "navigating-files",
+          "title": "Navigating Files and Directories",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "000"
+          ],
+          "contentUrl": "/content/challenges/navigating-files.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "001",
+          "revision": "001",
+          "id": "001001",
+          "kind": "interactive",
+          "slug": "where-am-i",
+          "title": "Where am I",
+          "commands": [
+            "pwd",
+            "ls"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "016"
+          ]
+        },
+        {
+          "number": "002",
+          "revision": "001",
+          "id": "002001",
+          "kind": "interactive",
+          "slug": "moving-around",
+          "title": "Moving around",
+          "commands": [
+            "cd"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "001"
+          ]
+        },
+        {
+          "number": "003",
+          "revision": "001",
+          "id": "003001",
+          "kind": "interactive",
+          "slug": "same-command-more-questions",
+          "title": "Same command, more questions",
+          "commands": [
+            "ls -l",
+            "ll"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "002"
+          ]
+        },
+        {
+          "number": "004",
+          "revision": "001",
+          "id": "004001",
+          "kind": "interactive",
+          "slug": "ask-the-machine",
+          "title": "Ask the machine",
+          "commands": [
+            "man",
+            "tldr"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "003"
+          ]
+        },
+        {
+          "number": "01B",
+          "revision": "001",
+          "id": "01B001",
+          "kind": "reading",
+          "slug": "finding-things",
+          "title": "Finding Things",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "004"
+          ],
+          "contentUrl": "/content/challenges/finding-things.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "006",
+          "revision": "001",
+          "id": "006001",
+          "kind": "interactive",
+          "slug": "finding-the-line",
+          "title": "Finding the line",
+          "commands": [
+            "grep"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "01B"
+          ]
+        },
+        {
+          "number": "007",
+          "revision": "001",
+          "id": "007001",
+          "kind": "interactive",
+          "slug": "finding-the-file",
+          "title": "Finding the file",
+          "commands": [
+            "grep -r"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "006"
+          ]
+        },
+        {
+          "number": "018",
+          "revision": "001",
+          "id": "018001",
+          "kind": "reading",
+          "slug": "pipes-and-filters",
+          "title": "Pipes and Filters",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "007"
+          ],
+          "contentUrl": "/content/challenges/pipes-and-filters.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "017",
+          "revision": "001",
+          "id": "017001",
+          "kind": "reading",
+          "slug": "working-with-files",
+          "title": "Working With Files and Directories",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "000"
+          ],
+          "contentUrl": "/content/challenges/working-with-files.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "005",
+          "revision": "001",
+          "id": "005001",
+          "kind": "interactive",
+          "slug": "reading-files",
+          "title": "Reading files",
+          "commands": [
+            "cat",
+            "head",
+            "tail"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "017"
+          ]
+        },
+        {
+          "number": "01A",
+          "revision": "001",
+          "id": "01A001",
+          "kind": "reading",
+          "slug": "shell-scripts",
+          "title": "Shell Scripts",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "005"
+          ],
+          "contentUrl": "/content/challenges/shell-scripts.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "019",
+          "revision": "001",
+          "id": "019001",
+          "kind": "reading",
+          "slug": "loops",
+          "title": "Loops",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "01A"
+          ],
+          "contentUrl": "/content/challenges/loops.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        }
+      ]
+    },
+    {
+      "key": "git",
+      "name": "Git",
+      "blurb": "Keep a history of your work, understand changes, and collaborate without losing earlier versions.",
+      "challenges": [
+        {
+          "number": "014",
+          "revision": "002",
+          "id": "014002",
+          "kind": "reading",
+          "slug": "keeping-a-record-introduction",
+          "title": "Automated Version Control",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "017"
+          ],
+          "contentUrl": "/content/challenges/git-basics.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "01C",
+          "revision": "001",
+          "id": "01C001",
+          "kind": "reading",
+          "slug": "git-setup",
+          "title": "Setting Up Git",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "014"
+          ],
+          "contentUrl": "/content/challenges/git-setup.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "01D",
+          "revision": "001",
+          "id": "01D001",
+          "kind": "reading",
+          "slug": "git-create",
+          "title": "Creating a Repository",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "01C"
+          ],
+          "contentUrl": "/content/challenges/git-create.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "01E",
+          "revision": "001",
+          "id": "01E001",
+          "kind": "reading",
+          "slug": "git-changes",
+          "title": "Tracking Changes",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "01D"
+          ],
+          "contentUrl": "/content/challenges/git-changes.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "00B",
+          "revision": "001",
+          "id": "00B001",
+          "kind": "interactive",
+          "slug": "what-changed",
+          "title": "What changed",
+          "commands": [
+            "git status",
+            "git log"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "01E"
+          ],
+          "line": "What changed in this project, and when?"
+        },
+        {
+          "number": "00C",
+          "revision": "001",
+          "id": "00C001",
+          "kind": "interactive",
+          "slug": "saving-your-work",
+          "title": "Saving your work",
+          "commands": [
+            "git add",
+            "git commit"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "01E"
+          ],
+          "line": "How do you save your work in steps?"
+        },
+        {
+          "number": "01F",
+          "revision": "001",
+          "id": "01F001",
+          "kind": "reading",
+          "slug": "git-history",
+          "title": "Exploring History",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "01E"
+          ],
+          "contentUrl": "/content/challenges/git-history.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "020",
+          "revision": "001",
+          "id": "020001",
+          "kind": "reading",
+          "slug": "git-ignore",
+          "title": "Ignoring Things",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "01E"
+          ],
+          "contentUrl": "/content/challenges/git-ignore.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "021",
+          "revision": "001",
+          "id": "021001",
+          "kind": "reading",
+          "slug": "git-remotes",
+          "title": "Remotes in GitHub",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "01F",
+            "020"
+          ],
+          "contentUrl": "/content/challenges/git-remotes.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "00D",
+          "revision": "001",
+          "id": "00D001",
+          "kind": "interactive",
+          "slug": "getting-the-latest",
+          "title": "Getting the latest",
+          "commands": [
+            "git clone",
+            "git pull"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "021"
+          ],
+          "line": "How does someone else's work get onto your machine?"
+        },
+        {
+          "number": "022",
+          "revision": "001",
+          "id": "022001",
+          "kind": "reading",
+          "slug": "git-collaboration",
+          "title": "Collaborating",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "021"
+          ],
+          "contentUrl": "/content/challenges/git-collaboration.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "023",
+          "revision": "001",
+          "id": "023001",
+          "kind": "reading",
+          "slug": "git-conflicts",
+          "title": "Conflicts",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "022"
+          ],
+          "contentUrl": "/content/challenges/git-conflicts.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        }
+      ]
+    },
+    {
+      "key": "hpc",
+      "name": "HPC",
+      "blurb": "Understand shared computing, move data, request resources, and follow work through a scheduler.",
+      "challenges": [
+        {
+          "number": "008",
+          "revision": "001",
+          "id": "008001",
+          "kind": "interactive",
+          "slug": "getting-on-the-cluster",
+          "title": "Getting on the cluster",
+          "commands": [
+            "ssh"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "018",
+            "019"
+          ]
+        },
+        {
+          "number": "013",
+          "revision": "001",
+          "id": "013001",
+          "kind": "reading",
+          "slug": "moving-files-introduction",
+          "title": "How files move between computers",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "008"
+          ],
+          "line": "Local files, remote files, and why the direction matters."
+        },
+        {
+          "number": "009",
+          "revision": "001",
+          "id": "009001",
+          "kind": "interactive",
+          "slug": "bringing-files-back",
+          "title": "Bringing files back",
+          "commands": [
+            "scp"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "013"
+          ],
+          "line": "Which direction does a copy go, and what does a remote path look like?"
+        },
+        {
+          "number": "00A",
+          "revision": "001",
+          "id": "00A001",
+          "kind": "interactive",
+          "slug": "when-the-link-drops",
+          "title": "When the link drops",
+          "commands": [
+            "rsync"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "009"
+          ],
+          "line": "How do you finish a copy over a link that keeps dropping?"
+        },
+        {
+          "number": "015",
+          "revision": "001",
+          "id": "015001",
+          "kind": "reading",
+          "slug": "running-work-introduction",
+          "title": "What an HPC cluster is",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "018",
+            "019"
+          ],
+          "line": "Why shared computing separates login, scheduling, and running work."
+        },
+        {
+          "number": "00E",
+          "revision": "001",
+          "id": "00E001",
+          "kind": "interactive",
+          "slug": "is-there-room",
+          "title": "Is there room",
+          "commands": [
+            "df -h",
+            "free -h"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "015"
+          ],
+          "line": "Is there disk space, and is there memory?"
+        },
+        {
+          "number": "00F",
+          "revision": "001",
+          "id": "00F001",
+          "kind": "interactive",
+          "slug": "whats-running",
+          "title": "What is running",
+          "commands": [
+            "sinfo",
+            "squeue"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "00E"
+          ],
+          "line": "What is running on the cluster, and what is waiting?"
+        },
+        {
+          "number": "010",
+          "revision": "001",
+          "id": "010001",
+          "kind": "interactive",
+          "slug": "submitting-a-job",
+          "title": "Submitting a job",
+          "commands": [
+            "sbatch"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "00F"
+          ],
+          "line": "How do you send a job to the queue, and where does its output go?"
+        },
+        {
+          "number": "011",
+          "revision": "001",
+          "id": "011001",
+          "kind": "interactive",
+          "slug": "watching-it-change",
+          "title": "Watching it change",
+          "commands": [
+            "watch"
+          ],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "010"
+          ],
+          "line": "How do you watch something change without retyping the command?"
+        },
+        {
+          "number": "024",
+          "revision": "001",
+          "id": "024001",
+          "kind": "reading",
+          "slug": "chpc-scc-tutorial-1",
+          "title": "CHPC SCC Tutorial 1",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "015"
+          ],
+          "contentUrl": "/content/challenges/chpc-scc-tutorial-1.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "025",
+          "revision": "001",
+          "id": "025001",
+          "kind": "reading",
+          "slug": "chpc-scc-tutorial-2",
+          "title": "CHPC SCC Tutorial 2",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "024"
+          ],
+          "contentUrl": "/content/challenges/chpc-scc-tutorial-2.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "026",
+          "revision": "001",
+          "id": "026001",
+          "kind": "reading",
+          "slug": "chpc-scc-tutorial-3",
+          "title": "CHPC SCC Tutorial 3",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "025"
+          ],
+          "contentUrl": "/content/challenges/chpc-scc-tutorial-3.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "027",
+          "revision": "001",
+          "id": "027001",
+          "kind": "reading",
+          "slug": "chpc-scc-tutorial-4",
+          "title": "CHPC SCC Tutorial 4",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "026"
+          ],
+          "contentUrl": "/content/challenges/chpc-scc-tutorial-4.json",
+          "minimumReadSeconds": 120,
+          "workInProgress": true
+        },
+        {
+          "number": "012",
+          "revision": "001",
+          "id": "012001",
+          "kind": "interactive",
+          "slug": "putting-it-together",
+          "title": "Putting it together",
+          "commands": [],
+          "author": "Justin Cheney",
+          "updated": "2026-09-03",
+          "source": {
+            "label": "UWC HPC Skills"
+          },
+          "recommendedAfter": [
+            "00A",
+            "023",
+            "011"
+          ],
+          "line": "Find something in an output file, check the queue, and bring a result back.",
+          "note": "This is also where the trainer points you at signing up for a real cluster account."
+        }
+      ]
+    }
+  ],
+  "layouts": {
+    "journey": {
+      "000": {
+        "x": 500.0,
+        "y": 0
+      },
+      "016": {
+        "x": 333.33,
+        "y": 180
+      },
+      "017": {
+        "x": 666.67,
+        "y": 180
+      },
+      "001": {
+        "x": 250.0,
+        "y": 360
+      },
+      "005": {
+        "x": 500.0,
+        "y": 360
+      },
+      "014": {
+        "x": 750.0,
+        "y": 360
+      },
+      "002": {
+        "x": 250.0,
+        "y": 540
+      },
+      "01A": {
+        "x": 500.0,
+        "y": 540
+      },
+      "01C": {
+        "x": 750.0,
+        "y": 540
+      },
+      "003": {
+        "x": 250.0,
+        "y": 720
+      },
+      "019": {
+        "x": 500.0,
+        "y": 720
+      },
+      "01D": {
+        "x": 750.0,
+        "y": 720
+      },
+      "004": {
+        "x": 333.33,
+        "y": 900
+      },
+      "01E": {
+        "x": 666.67,
+        "y": 900
+      },
+      "00B": {
+        "x": 166.67,
+        "y": 1080
+      },
+      "01B": {
+        "x": 333.33,
+        "y": 1080
+      },
+      "01F": {
+        "x": 500.0,
+        "y": 1080
+      },
+      "020": {
+        "x": 666.67,
+        "y": 1080
+      },
+      "00C": {
+        "x": 833.33,
+        "y": 1080
+      },
+      "006": {
+        "x": 333.33,
+        "y": 1260
+      },
+      "021": {
+        "x": 666.67,
+        "y": 1260
+      },
+      "00D": {
+        "x": 250.0,
+        "y": 1440
+      },
+      "007": {
+        "x": 500.0,
+        "y": 1440
+      },
+      "022": {
+        "x": 750.0,
+        "y": 1440
+      },
+      "018": {
+        "x": 333.33,
+        "y": 1620
+      },
+      "023": {
+        "x": 666.67,
+        "y": 1620
+      },
+      "008": {
+        "x": 333.33,
+        "y": 1800
+      },
+      "015": {
+        "x": 666.67,
+        "y": 1800
+      },
+      "013": {
+        "x": 250.0,
+        "y": 1980
+      },
+      "00E": {
+        "x": 500.0,
+        "y": 1980
+      },
+      "024": {
+        "x": 750.0,
+        "y": 1980
+      },
+      "009": {
+        "x": 250.0,
+        "y": 2160
+      },
+      "00F": {
+        "x": 500.0,
+        "y": 2160
+      },
+      "025": {
+        "x": 750.0,
+        "y": 2160
+      },
+      "00A": {
+        "x": 250.0,
+        "y": 2340
+      },
+      "010": {
+        "x": 500.0,
+        "y": 2340
+      },
+      "026": {
+        "x": 750.0,
+        "y": 2340
+      },
+      "027": {
+        "x": 333.33,
+        "y": 2520
+      },
+      "011": {
+        "x": 666.67,
+        "y": 2520
+      },
+      "012": {
+        "x": 500.0,
+        "y": 2700
+      }
+    },
+    "linux": {
+      "000": {
+        "x": 500.0,
+        "y": 0
+      },
+      "016": {
+        "x": 333.33,
+        "y": 180
+      },
+      "017": {
+        "x": 666.67,
+        "y": 180
+      },
+      "001": {
+        "x": 333.33,
+        "y": 360
+      },
+      "005": {
+        "x": 666.67,
+        "y": 360
+      },
+      "002": {
+        "x": 333.33,
+        "y": 540
+      },
+      "01A": {
+        "x": 666.67,
+        "y": 540
+      },
+      "019": {
+        "x": 333.33,
+        "y": 720
+      },
+      "003": {
+        "x": 666.67,
+        "y": 720
+      },
+      "004": {
+        "x": 500.0,
+        "y": 900
+      },
+      "01B": {
+        "x": 500.0,
+        "y": 1080
+      },
+      "006": {
+        "x": 500.0,
+        "y": 1260
+      },
+      "007": {
+        "x": 500.0,
+        "y": 1440
+      },
+      "018": {
+        "x": 500.0,
+        "y": 1620
+      }
+    },
+    "git": {
+      "014": {
+        "x": 500.0,
+        "y": 0
+      },
+      "01C": {
+        "x": 500.0,
+        "y": 180
+      },
+      "01D": {
+        "x": 500.0,
+        "y": 360
+      },
+      "01E": {
+        "x": 500.0,
+        "y": 540
+      },
+      "00B": {
+        "x": 200.0,
+        "y": 720
+      },
+      "01F": {
+        "x": 400.0,
+        "y": 720
+      },
+      "020": {
+        "x": 600.0,
+        "y": 720
+      },
+      "00C": {
+        "x": 800.0,
+        "y": 720
+      },
+      "021": {
+        "x": 500.0,
+        "y": 900
+      },
+      "00D": {
+        "x": 333.33,
+        "y": 1080
+      },
+      "022": {
+        "x": 666.67,
+        "y": 1080
+      },
+      "023": {
+        "x": 500.0,
+        "y": 1260
+      }
+    },
+    "hpc": {
+      "008": {
+        "x": 333.33,
+        "y": 0
+      },
+      "015": {
+        "x": 666.67,
+        "y": 0
+      },
+      "013": {
+        "x": 250.0,
+        "y": 180
+      },
+      "00E": {
+        "x": 500.0,
+        "y": 180
+      },
+      "024": {
+        "x": 750.0,
+        "y": 180
+      },
+      "009": {
+        "x": 250.0,
+        "y": 360
+      },
+      "00F": {
+        "x": 500.0,
+        "y": 360
+      },
+      "025": {
+        "x": 750.0,
+        "y": 360
+      },
+      "00A": {
+        "x": 250.0,
+        "y": 540
+      },
+      "010": {
+        "x": 500.0,
+        "y": 540
+      },
+      "026": {
+        "x": 750.0,
+        "y": 540
+      },
+      "027": {
+        "x": 333.33,
+        "y": 720
+      },
+      "011": {
+        "x": 666.67,
+        "y": 720
+      },
+      "012": {
+        "x": 500.0,
+        "y": 900
+      }
+    }
+  }
+}
