@@ -3,23 +3,23 @@
   "kind": "text",
   "title": "Finding Things",
   "author": "Justin Cheney",
-  "updated": "2026-09-03",
+  "updated": "2026-09-08",
   "minimumReadSeconds": 120,
+  "workInProgress": true,
   "source": {
     "label": "shell-novice",
     "url": "https://github.com/swcarpentry/shell-novice/blob/22c5a874725bd3048eb7cfceeafd0db3a5e49a2f/episodes/07-find.md",
     "repository": "https://github.com/swcarpentry/shell-novice",
     "commit": "22c5a874725bd3048eb7cfceeafd0db3a5e49a2f",
     "license": "CC-BY-4.0",
-    "adaptation": "Formatting converted from upstream Markdown to Typst and HTML; wording retained for initial review."
+    "adaptation": "Formatting retained from upstream Markdown; wording retained for initial review."
   },
   "blocks": [
     {
       "id": "body",
-      "type": "typst",
-      "source": "/content/imports/finding-things.typ",
+      "type": "markdown",
+      "source": "/content/imports/finding-things.md",
       "rendered": "/content/generated/finding-things.html"
     }
-  ],
-  "workInProgress": true
+  ]
 }

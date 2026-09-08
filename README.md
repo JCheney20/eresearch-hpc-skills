@@ -49,7 +49,7 @@ Whether it is retired is not decided yet, which is why it is still here.
       progress.js         revision-aware browser progress
       answer.js           normalising and judging an answer
       ui/                 the three screens
-    content/              imported Typst, generated HTML and block JSON
+    content/              imported Markdown, generated HTML and block JSON
     tools/                checks and the pinned lesson importer
     vendor/               xterm.js
     admin_backend/        private Django content service (not yet deployed)

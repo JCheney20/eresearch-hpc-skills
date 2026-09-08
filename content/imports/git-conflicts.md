@@ -1,24 +1,28 @@
-// Imported from https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/episodes/09-conflict.md
-// Licensed under CC-BY-4.0; formatting converted on 2026-09-03.
+<!-- Imported from https://github.com/swcarpentry/git-novice/blob/967bc0b38826039f6554845248c8c294ebff1f56/episodes/09-conflict.md -->
+<!-- Licensed under CC-BY-4.0; formatting retained on 2026-09-08. -->
 
-#block[
+<div class="objectives">
+
 - Explain what conflicts are and when they can occur.
 - Resolve conflicts resulting from a merge.
 
-]
-#block[
-- What do I do when my changes conflict with someone else's?
+</div>
 
-]
-As soon as people can work in parallel, they'll likely step on each other's toes. This will even happen with a single person: if we are working on a piece of software on both our laptop and a server in the lab, we could make different changes to each copy. Version control helps us manage these #link("../learners/reference.md#conflict")[conflicts] by giving us tools to #link("../learners/reference.md#resolve")[resolve] overlapping changes.
+<div class="questions">
 
-To see how we can resolve conflicts, we must first create one. The file `guacamole.md` currently looks like this in both partners' copies of our `recipes` repository:
+- What do I do when my changes conflict with someone else’s?
 
-```bash
+</div>
+
+As soon as people can work in parallel, they’ll likely step on each other’s toes. This will even happen with a single person: if we are working on a piece of software on both our laptop and a server in the lab, we could make different changes to each copy. Version control helps us manage these [conflicts](../learners/reference.md#conflict) by giving us tools to [resolve](../learners/reference.md#resolve) overlapping changes.
+
+To see how we can resolve conflicts, we must first create one. The file `guacamole.md` currently looks like this in both partners’ copies of our `recipes` repository:
+
+``` bash
 $ cat guacamole.md
 ```
 
-```output
+``` output
 # Guacamole
 ## Ingredients
 * avocado
@@ -27,14 +31,14 @@ $ cat guacamole.md
 ## Instructions
 ```
 
-Let's add a line to the collaborator's copy only:
+Let’s add a line to the collaborator’s copy only:
 
-```bash
+``` bash
 $ nano guacamole.md
 $ cat guacamole.md
 ```
 
-```output
+``` output
 # Guacamole
 ## Ingredients
 * avocado
@@ -46,21 +50,21 @@ $ cat guacamole.md
 
 and then push the change to GitHub:
 
-```bash
+``` bash
 $ git add guacamole.md
 $ git commit -m "First step on the instructions"
 ```
 
-```output
+``` output
 [main 5ae9631] First step on the instructions
  1 file changed, 1 insertion(+)
 ```
 
-```bash
+``` bash
 $ git push origin main
 ```
 
-```output
+``` output
 Enumerating objects: 5, done.
 Counting objects: 100% (5/5), done.
 Delta compression using up to 8 threads
@@ -72,14 +76,14 @@ To https://github.com/alflin/recipes.git
    29aba7c..dabb4c8  main -> main
 ```
 
-Now let's have the owner make a different change to their copy #emph[without] updating from GitHub:
+Now let’s have the owner make a different change to their copy *without* updating from GitHub:
 
-```bash
+``` bash
 $ nano guacamole.md
 $ cat guacamole.md
 ```
 
-```output
+``` output
 # Guacamole
 ## Ingredients
 * avocado
@@ -91,23 +95,23 @@ $ cat guacamole.md
 
 We can commit the change locally:
 
-```bash
+``` bash
 $ git add guacamole.md
 $ git commit -m "Add first step"
 ```
 
-```output
+``` output
 [main 07ebc69] Add first step
  1 file changed, 1 insertion(+)
 ```
 
-but Git won't let us push it to GitHub:
+but Git won’t let us push it to GitHub:
 
-```bash
+``` bash
 $ git push origin main
 ```
 
-```output
+``` output
 To https://github.com/alflin/recipes.git
  ! [rejected]        main -> main (fetch first)
 error: failed to push some refs to 'https://github.com/alflin/recipes.git'
@@ -118,15 +122,15 @@ hint: (e.g., 'git pull ...') before pushing again.
 hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 ```
 
-#box(image("fig/conflict.svg"))
+<img src="fig/conflict.svg" alt="A diagram showing a conflict that might occur when two sets of independent changes are merged" />
 
-Git rejects the push because it detects that the remote repository has new updates that have not been incorporated into the local branch. What we have to do is pull the changes from GitHub, #link("../learners/reference.md#merge")[merge] them into the copy we're currently working in, and then push that. Let's start by pulling:
+Git rejects the push because it detects that the remote repository has new updates that have not been incorporated into the local branch. What we have to do is pull the changes from GitHub, [merge](../learners/reference.md#merge) them into the copy we’re currently working in, and then push that. Let’s start by pulling:
 
-```bash
+``` bash
 $ git pull origin main
 ```
 
-```output
+``` output
 remote: Enumerating objects: 5, done.
 remote: Counting objects: 100% (5/5), done.
 remote: Compressing objects: 100% (1/1), done.
@@ -140,12 +144,13 @@ CONFLICT (content): Merge conflict in guacamole.md
 Automatic merge failed; fix conflicts and then commit the result.
 ```
 
-#block[
-== You may need to tell Git what to do
-<you-may-need-to-tell-git-what-to-do>
+<div class="callout">
+
+## You may need to tell Git what to do
+
 If you see the below in your output, Git is asking what it should do.
 
-```output
+``` output
 hint: You have divergent branches and need to specify how to reconcile them.
 hint: You can do so by running one of the following commands sometime before
 hint: your next pull:
@@ -160,26 +165,27 @@ hint: or --ff-only on the command line to override the configured default per
 hint: invocation.
 ```
 
-In newer versions of Git it gives you the option of specifying different behaviours when a pull would merge divergent branches. In our case we want 'the default strategy'. To use this strategy run the following command to select it as the default thing git should do.
+In newer versions of Git it gives you the option of specifying different behaviours when a pull would merge divergent branches. In our case we want ‘the default strategy’. To use this strategy run the following command to select it as the default thing git should do.
 
-```bash
+``` bash
 $ git config pull.rebase false
 ```
 
 Then attempt the pull again.
 
-```bash
+``` bash
 $ git pull origin main
 ```
 
-]
+</div>
+
 The `git pull` command updates the local repository to include those changes already included in the remote repository. After the changes from remote branch have been fetched, Git detects that changes made to the local copy overlap with those made to the remote repository, and therefore refuses to merge the two versions to stop us from trampling on our previous work. The conflict is marked in in the affected file:
 
-```bash
+``` bash
 $ cat guacamole.md
 ```
 
-```output
+``` output
 # Guacamole
 ## Ingredients
 * avocado
@@ -193,15 +199,15 @@ $ cat guacamole.md
 >>>>>>> dabb4c8c450e8475aee9b14b4383acc99f42af1d
 ```
 
-Our change is preceded by `<<<<<<< HEAD`. Git has then inserted `=======` as a separator between the conflicting changes and marked the end of the content downloaded from GitHub with `>>>>>>>`. (The string of letters and digits after that marker identifies the commit we've just downloaded.)
+Our change is preceded by `<<<<<<< HEAD`. Git has then inserted `=======` as a separator between the conflicting changes and marked the end of the content downloaded from GitHub with `>>>>>>>`. (The string of letters and digits after that marker identifies the commit we’ve just downloaded.)
 
-It is now up to us to edit this file to remove these markers and reconcile the changes. We can do anything we want: keep the change made in the local repository, keep the change made in the remote repository, write something new to replace both, or get rid of the change entirely. Let's replace both so that the file looks like this:
+It is now up to us to edit this file to remove these markers and reconcile the changes. We can do anything we want: keep the change made in the local repository, keep the change made in the remote repository, write something new to replace both, or get rid of the change entirely. Let’s replace both so that the file looks like this:
 
-```bash
+``` bash
 $ cat guacamole.md
 ```
 
-```output
+``` output
 # Guacamole
 ## Ingredients
 * avocado
@@ -213,12 +219,12 @@ $ cat guacamole.md
 
 To finish merging, we add `guacamole.md` to the changes being made by the merge and then commit:
 
-```bash
+``` bash
 $ git add guacamole.md
 $ git status
 ```
 
-```output
+``` output
 On branch main
 All conflicts fixed but you are still merging.
   (use "git commit" to conclude merge)
@@ -228,21 +234,21 @@ Changes to be committed:
     modified:   guacamole.md
 ```
 
-```bash
+``` bash
 $ git commit -m "Merge changes from GitHub"
 ```
 
-```output
+``` output
 [main 2abf2b1] Merge changes from GitHub
 ```
 
 Now we can push our changes to GitHub:
 
-```bash
+``` bash
 $ git push origin main
 ```
 
-```output
+``` output
 Enumerating objects: 10, done.
 Counting objects: 100% (10/10), done.
 Delta compression using up to 8 threads
@@ -254,13 +260,13 @@ To https://github.com/alflin/recipes.git
    dabb4c8..2abf2b1  main -> main
 ```
 
-Git keeps track of what we've merged with what, so we don't have to fix things by hand again when the collaborator who made the first change pulls again:
+Git keeps track of what we’ve merged with what, so we don’t have to fix things by hand again when the collaborator who made the first change pulls again:
 
-```bash
+``` bash
 $ git pull origin main
 ```
 
-```output
+``` output
 remote: Enumerating objects: 10, done.
 remote: Counting objects: 100% (10/10), done.
 remote: Compressing objects: 100% (2/2), done.
@@ -277,11 +283,11 @@ Fast-forward
 
 We get the merged file:
 
-```bash
+``` bash
 $ cat guacamole.md
 ```
 
-```output
+``` output
 # Guacamole
 ## Ingredients
 * avocado
@@ -291,9 +297,9 @@ $ cat guacamole.md
 * peel the avocados and put them into a bowl.
 ```
 
-We don't need to merge again because Git knows someone has already done that.
+We don’t need to merge again because Git knows someone has already done that.
 
-Git's ability to resolve conflicts is very useful, but conflict resolution costs time and effort, and can introduce errors if conflicts are not resolved correctly. If you find yourself resolving a lot of conflicts in a project, consider these technical approaches to reducing them:
+Git’s ability to resolve conflicts is very useful, but conflict resolution costs time and effort, and can introduce errors if conflicts are not resolved correctly. If you find yourself resolving a lot of conflicts in a project, consider these technical approaches to reducing them:
 
 - Pull from upstream more frequently, especially before starting new work
 - Use topic branches to segregate work, merging to main when complete
@@ -304,33 +310,37 @@ Git's ability to resolve conflicts is very useful, but conflict resolution costs
 Conflicts can also be minimized with project management strategies:
 
 - Clarify who is responsible for what areas with your collaborators
-- Discuss what order tasks should be carried out in with your collaborators so that tasks expected to change the same lines won't be worked on simultaneously
-- If the conflicts are stylistic churn (e.g.~tabs vs.~spaces), establish a project convention that is governing and use code style tools (e.g. `htmltidy`, `perltidy`, `rubocop`, etc.) to enforce, if necessary
+- Discuss what order tasks should be carried out in with your collaborators so that tasks expected to change the same lines won’t be worked on simultaneously
+- If the conflicts are stylistic churn (e.g. tabs vs. spaces), establish a project convention that is governing and use code style tools (e.g. `htmltidy`, `perltidy`, `rubocop`, etc.) to enforce, if necessary
 
-#block[
-== Solving Conflicts that You Create
-<solving-conflicts-that-you-create>
+<div class="challenge">
+
+## Solving Conflicts that You Create
+
 Clone the repository created by your instructor. Add a new file to it, and modify an existing file (your instructor will tell you which one). When asked by your instructor, pull her changes from the repository to create a conflict, then resolve it.
 
-]
-#block[
-== Conflicts on Non-textual files
-<conflicts-on-non-textual-files>
+</div>
+
+<div class="challenge">
+
+## Conflicts on Non-textual files
+
 What does Git do when there is a conflict in an image or some other non-textual file that is stored in version control?
 
-#block[
-== Solution
-<solution>
-Let's try it. Suppose Alfredo takes a picture of its guacamole and calls it `guacamole.jpg`.
+<div class="solution">
+
+## Solution
+
+Let’s try it. Suppose Alfredo takes a picture of its guacamole and calls it `guacamole.jpg`.
 
 If you do not have an image file of guacamole available, you can create a dummy binary file like this:
 
-```bash
+``` bash
 $ head --bytes 1024 /dev/urandom > guacamole.jpg
 $ ls -lh guacamole.jpg
 ```
 
-```output
+``` output
 -rw-r--r-- 1 alflin 57095 1.0K Mar  8 20:24 guacamole.jpg
 ```
 
@@ -338,24 +348,24 @@ $ ls -lh guacamole.jpg
 
 Now, suppose Alfredo adds `guacamole.jpg` to his repository:
 
-```bash
+``` bash
 $ git add guacamole.jpg
 $ git commit -m "Add picture of guacamole"
 ```
 
-```output
+``` output
 [main 8e4115c] Add picture of guacamole
  1 file changed, 0 insertions(+), 0 deletions(-)
  create mode 100644 guacamole.jpg
 ```
 
-Suppose that Jimmy has added a similar picture in the meantime. Theirs is a picture of a guacamole with nachos, but it is #emph[also] called `guacamole.jpg`. When Alfredo tries to push, he gets a familiar message:
+Suppose that Jimmy has added a similar picture in the meantime. Theirs is a picture of a guacamole with nachos, but it is *also* called `guacamole.jpg`. When Alfredo tries to push, he gets a familiar message:
 
-```bash
+``` bash
 $ git push origin main
 ```
 
-```output
+``` output
 To https://github.com/alflin/recipes.git
  ! [rejected]        main -> main (fetch first)
 error: failed to push some refs to 'https://github.com/alflin/recipes.git'
@@ -366,15 +376,15 @@ hint: (e.g., 'git pull ...') before pushing again.
 hint: See the 'Note about fast-forwards' in 'git push --help' for details.
 ```
 
-We've learned that we must pull first and resolve any conflicts:
+We’ve learned that we must pull first and resolve any conflicts:
 
-```bash
+``` bash
 $ git pull origin main
 ```
 
 When there is a conflict on an image or other binary file, git prints a message like this:
 
-```output
+``` output
 $ git pull origin main
 remote: Counting objects: 3, done.
 remote: Compressing objects: 100% (3/3), done.
@@ -391,39 +401,39 @@ Automatic merge failed; fix conflicts and then commit the result.
 
 The conflict message here is mostly the same as it was for `guacamole.md`, but there is one key additional line:
 
-```output
+``` output
 warning: Cannot merge binary files: guacamole.jpg (HEAD vs. 439dc8c08869c342438f6dc4a2b615b05b93c76e)
 ```
 
 Git cannot automatically insert conflict markers into an image as it does for text files. So, instead of editing the image file, we must check out the version we want to keep. Then we can add and commit this version.
 
-On the key line above, Git has conveniently given us commit identifiers for the two versions of `guacamole.jpg`. Our version is `HEAD`, and Jimmy's version is `439dc8c0...`. If we want to use our version, we can use `git checkout`:
+On the key line above, Git has conveniently given us commit identifiers for the two versions of `guacamole.jpg`. Our version is `HEAD`, and Jimmy’s version is `439dc8c0...`. If we want to use our version, we can use `git checkout`:
 
-```bash
+``` bash
 $ git checkout HEAD guacamole.jpg
 $ git add guacamole.jpg
 $ git commit -m "Use image of just guacamole instead of with nachos"
 ```
 
-```output
+``` output
 [main 21032c3] Use image of just guacamole instead of with nachos
 ```
 
-If instead we want to use Jimmy's version, we can use `git checkout` with Jimmy's commit identifier, `439dc8c0`:
+If instead we want to use Jimmy’s version, we can use `git checkout` with Jimmy’s commit identifier, `439dc8c0`:
 
-```bash
+``` bash
 $ git checkout 439dc8c0 guacamole.jpg
 $ git add guacamole.jpg
 $ git commit -m "Use image of guacamole with nachos instead of just guacamole"
 ```
 
-```output
+``` output
 [main da21b34] Use image of guacamole with nachos instead of just guacamole
 ```
 
-We can also keep #emph[both] images. The catch is that we cannot keep them under the same name. But, we can check out each version in succession and #emph[rename] it, then add the renamed versions. First, check out each image and rename it:
+We can also keep *both* images. The catch is that we cannot keep them under the same name. But, we can check out each version in succession and *rename* it, then add the renamed versions. First, check out each image and rename it:
 
-```bash
+``` bash
 $ git checkout HEAD guacamole.jpg
 $ mv guacamole.jpg guacamole-only.jpg
 $ git checkout 439dc8c0 guacamole.jpg
@@ -432,14 +442,14 @@ $ mv guacamole.jpg guacamole-nachos.jpg
 
 Then, remove the old `guacamole.jpg` and add the two new files:
 
-```bash
+``` bash
 $ git rm guacamole.jpg
 $ git add guacamole-only.jpg
 $ git add guacamole-nachos.jpg
 $ git commit -m "Use two images: just guacamole and with nachos"
 ```
 
-```output
+``` output
 [main 94ae08c] Use two images: just guacamole and with nachos
  2 files changed, 0 insertions(+), 0 deletions(-)
  create mode 100644 guacamole-nachos.jpg
@@ -448,61 +458,54 @@ $ git commit -m "Use two images: just guacamole and with nachos"
 
 Now both images of guacamole are checked into the repository, and `guacamole.jpg` no longer exists.
 
-]
-]
-#block[
-== A Typical Work Session
-<a-typical-work-session>
+</div>
+
+</div>
+
+<div class="challenge">
+
+## A Typical Work Session
+
 You sit down at your computer to work on a shared project that is tracked in a remote Git repository. During your work session, you take the following actions, but not in this order:
 
-- #emph[Make changes] by appending the number `100` to a text file `numbers.txt`
-- #emph[Update remote] repository to match the local repository
-- #emph[Celebrate] your success with some fancy beverage(s)
-- #emph[Update local] repository to match the remote repository
-- #emph[Stage changes] to be committed
-- #emph[Commit changes] to the local repository
+- *Make changes* by appending the number `100` to a text file `numbers.txt`
+- *Update remote* repository to match the local repository
+- *Celebrate* your success with some fancy beverage(s)
+- *Update local* repository to match the remote repository
+- *Stage changes* to be committed
+- *Commit changes* to the local repository
 
-In what order should you perform these actions to minimize the chances of conflicts? Put the commands above in order in the #emph[action] column of the table below. When you have the order right, see if you can write the corresponding commands in the #emph[command] column. A few steps are populated to get you started.
+In what order should you perform these actions to minimize the chances of conflicts? Put the commands above in order in the *action* column of the table below. When you have the order right, see if you can write the corresponding commands in the *command* column. A few steps are populated to get you started.
 
-#figure(
-  align(center)[#table(
-    columns: (6.58%, 34.21%, 59.21%),
-    align: (auto,auto,auto,),
-    table.header([order], [action . . . . . . . . . .], [command . . . . . . . . . .],),
-    table.hline(),
-    [1], [], [],
-    [2], [], [`echo 100 >> numbers.txt`],
-    [3], [], [],
-    [4], [], [],
-    [5], [], [],
-    [6], [Celebrate!], [],
-  )]
-  , kind: table
-  )
+| order | action . . . . . . . . . . | command . . . . . . . . . . |
+|-------|----------------------------|-----------------------------|
+| 1     |                            |                             |
+| 2     |                            | `echo 100 >> numbers.txt`   |
+| 3     |                            |                             |
+| 4     |                            |                             |
+| 5     |                            |                             |
+| 6     | Celebrate!                 |                             |
 
-#block[
-== Solution
-<solution-1>
-#figure(
-  align(center)[#table(
-    columns: (6.58%, 34.21%, 59.21%),
-    align: (auto,auto,auto,),
-    table.header([order], [action . . . . . .], [command . . . . . . . . . . . . . . . . . . .],),
-    table.hline(),
-    [1], [Update local], [`git pull origin main`],
-    [2], [Make changes], [`echo 100 >> numbers.txt`],
-    [3], [Stage changes], [`git add numbers.txt`],
-    [4], [Commit changes], [`git commit -m "Add 100 to numbers.txt"`],
-    [5], [Update remote], [`git push origin main`],
-    [6], [Celebrate!], [],
-  )]
-  , kind: table
-  )
+<div class="solution">
 
-]
-]
-#block[
+## Solution
+
+| order | action . . . . . . | command . . . . . . . . . . . . . . . . . . . |
+|-------|--------------------|-----------------------------------------------|
+| 1     | Update local       | `git pull origin main`                        |
+| 2     | Make changes       | `echo 100 >> numbers.txt`                     |
+| 3     | Stage changes      | `git add numbers.txt`                         |
+| 4     | Commit changes     | `git commit -m "Add 100 to numbers.txt"`      |
+| 5     | Update remote      | `git push origin main`                        |
+| 6     | Celebrate!         |                                               |
+
+</div>
+
+</div>
+
+<div class="keypoints">
+
 - Conflicts occur when two or more people change the same lines of the same file.
-- The version control system does not allow people to overwrite each other's changes blindly, but highlights conflicts so that they can be resolved.
+- The version control system does not allow people to overwrite each other’s changes blindly, but highlights conflicts so that they can be resolved.
 
-]
+</div>

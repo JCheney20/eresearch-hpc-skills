@@ -141,8 +141,8 @@ content separately retains its pinned source and licence attribution.
 _Avoid_: Committer, uploader
 
 **Content block**:
-One ordered, stable-ID unit in a challenge revision: restricted Typst, callout, or
-Bash. Blocks are edited like notebook cells and published as safe static HTML.
+One ordered, stable-ID unit in a challenge revision: Markdown, callout, or Bash.
+Blocks are edited like notebook cells and published as safe static HTML.
 _Avoid_: Widget, component, card
 
 **Source**:

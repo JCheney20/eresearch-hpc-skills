@@ -79,12 +79,12 @@ Admins may author:
 
 - Topics: name, blurb, order, and each challenge's single Topic membership;
 - text and code challenge revisions;
-- an ordered notebook-style JSON block list containing restricted Typst, callout, and Bash blocks;
+- an ordered notebook-style JSON block list containing Markdown, callout, and Bash blocks;
 - tasks, hint ladders, answers, failure messages, variants, worlds, canned output, and allowed declarative command hooks for code challenges;
 - recommended graph connections; and
 - drafts and publications.
 
-The block contract is specified in `docs/content-blocks.md`. Typst blocks get a small formatting toolbar and immediate preview. Publication accepts only a documented Typst subset and generates sanitized semantic HTML; the learner browser never evaluates Typst. As Typst's HTML support matures, the subset may expand only after accessibility and rendering tests. Worlds use a limited declarative schema—filesystem data, canned output, variables, and allowed hooks—not arbitrary server-side JavaScript.
+The block contract is specified in `docs/content-blocks.md`. Markdown blocks get a small formatting toolbar and immediate preview. Publication renders and sanitizes Markdown before generating semantic HTML; the learner browser never evaluates untrusted source. Worlds use a limited declarative schema—filesystem data, canned output, variables, and allowed hooks—not arbitrary server-side JavaScript.
 
 ### Challenge identity and revisions
 
@@ -117,7 +117,7 @@ Recommended connections must reference existing challenge numbers and remain acy
 
 The future graph editor must support both automatic layout generated from the recommended connections and optional manual visual placement of nodes. Manual positions are presentation metadata only: moving a node must not change its connections, ordering, or accessibility, and an Admin must be able to reset a graph to its generated layout.
 
-Publication is blocked unless the candidate release validates block schemas, restricted Typst, source/licence metadata, challenge worlds, answers, worked examples, tree references, acyclicity, generated HTML, and learner rendering. The Admin also gets a learner-equivalent preview before publishing.
+Publication is blocked unless the candidate release validates block schemas, Markdown rendering, source/licence metadata, challenge worlds, answers, worked examples, tree references, acyclicity, generated HTML, and learner rendering. The Admin also gets a learner-equivalent preview before publishing.
 
 ### Imported source baseline
 
@@ -163,7 +163,7 @@ The private Django backend in `admin_backend/` defines drafts, immutable challen
 
 Creating a challenge begins by choosing `text` or `code`; kind may change only through a validated new revision. The visual editor manages ordered blocks rather than exposing raw JSON:
 
-- **Typst** — source textarea, Bold/Italic/Link controls, syntax help, and live preview;
+- **Markdown** — source textarea, Bold/Italic/Link controls, syntax help, and live preview;
 - **Callout** — note, hint, or warning; imported exercise/solution callouts are temporary;
 - **Bash** — command, expected output, and display/copy/run behavior.
 
@@ -193,7 +193,7 @@ Use WAL mode, short transactions, and one writer at a time. Every draft save and
 
 ### Static publication
 
-After validation and preview, publishing generates immutable static learner assets under `CONTENT_PUBLISH_ROOT`: a current content manifest, ordered block JSON, sanitized HTML fragments, source/licence metadata, separate Topic/Journey coordinates, and files for retained challenge revisions. `current.json` changes atomically. Nginx serves `/content/current.json` and `/content/releases/` from `/srv/uwc-hpc-content/content`; browsers do not query SQLite or compile Typst. The SQLite directory remains private under `/var/lib/uwc-hpc-admin`. If dynamic content is unavailable, the learner uses the release bundled in `js/track/content.js`.
+After validation and preview, publishing generates immutable static learner assets under `CONTENT_PUBLISH_ROOT`: a current content manifest, ordered block JSON, sanitized HTML fragments, source/licence metadata, separate Topic/Journey coordinates, and files for retained challenge revisions. `current.json` changes atomically. Nginx serves `/content/current.json` and `/content/releases/` from `/srv/uwc-hpc-content/content`; browsers do not query SQLite or render untrusted Markdown. The SQLite directory remains private under `/var/lib/uwc-hpc-admin`. If dynamic content is unavailable, the learner uses the release bundled in `js/track/content.js`.
 
 Admin-authored content publications do not require a Git deployment. Engine/schema changes still require normal reviewed Git deployments.
 
@@ -242,7 +242,7 @@ The following work was deliberately deferred from the open-curriculum checkpoint
 - Whether the later SSO deployment keeps `/admin/` or moves to a separate admin hostname.
 - University OIDC/SAML provider details and Admin-group mapping for that later migration.
 - Platform load-balancer health check, source CIDRs, and forwarded-header contract.
-- Restricted Typst validator/renderer implementation and declarative world schema.
+- Markdown renderer/sanitizer implementation and declarative world schema.
 - PBS source material appropriate for beginner instruction; the pinned CHPC SCC source currently covers Slurm but not PBS.
 - Off-VM backup destination, retention, and restore-test schedule.
 

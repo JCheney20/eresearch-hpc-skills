@@ -1,6 +1,6 @@
 import html
 import re
-from urllib.parse import urlparse
+from urllib.parse import urljoin, urlparse
 
 import bleach
 import markdown
@@ -9,12 +9,14 @@ from django.core.exceptions import ValidationError
 INLINE = re.compile(r'#link\("([^"]+)"\)\[([^]]+)\]|`([^`]+)`|\*([^*\n]+)\*|_([^_\n]+)_')
 MARKDOWN_TAGS = {
     "a", "abbr", "blockquote", "br", "code", "dd", "del", "div", "dl", "dt",
-    "em", "figcaption", "figure", "h1", "h2", "h3", "h4", "h5", "h6", "hr",
+    "em", "figcaption", "figure", "h1", "h2", "h3", "h4", "h5", "h6", "hr", "img", "input",
     "li", "ol", "p", "pre", "s", "samp", "strong", "sub", "sup", "table", "tbody",
     "td", "th", "thead", "tr", "ul",
 }
 MARKDOWN_ATTRIBUTES = {
     "a": ["href", "title"],
+    "img": ["src", "alt", "title"],
+    "input": ["type", "checked", "disabled"],
     "abbr": ["title"],
     "td": ["colspan", "rowspan"],
     "th": ["colspan", "rowspan"],
@@ -77,27 +79,34 @@ def render_typst(source):
     return "\n".join(output)
 
 
-def render_markdown(source):
-    markup = markdown.markdown(source, extensions=["extra", "sane_lists"])
-    return bleach.clean(
+def render_markdown(source, base_url=None):
+    markup = markdown.markdown(source, extensions=["extra", "sane_lists", "pymdownx.tasklist", "pymdownx.tilde"])
+    markup = bleach.clean(
         markup,
         tags=MARKDOWN_TAGS,
         attributes=MARKDOWN_ATTRIBUTES,
         protocols={"http", "https", "mailto"},
         strip=True,
     )
+    if base_url:
+        markup = re.sub(
+            r'href="([^"#][^"]*)"',
+            lambda match: f'href="{html.escape(urljoin(base_url, match.group(1)), quote=True)}"',
+            markup,
+        )
+    return markup
 
 
-def render_blocks(blocks):
+def render_blocks(blocks, source_url=None):
     rendered = []
     for block in blocks:
         kind = block["type"]
         if kind == "typst":
             markup = render_typst(block["source"])
         elif kind == "markdown":
-            markup = render_markdown(block["source"])
+            markup = render_markdown(block["source"], source_url)
         elif kind == "callout":
-            markup = f'<aside class="callout callout-{block["style"]}">{render_markdown(block["source"])}</aside>'
+            markup = f'<aside class="callout callout-{block["style"]}">{render_markdown(block["source"], source_url)}</aside>'
         else:
             command = html.escape(block["command"])
             output = html.escape(block.get("output", ""))

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Convert pinned upstream Markdown lessons into editable Typst and static HTML.
+"""Convert pinned upstream Markdown lessons into editable Markdown and static HTML.
 
 Usage:
   python3 tools/import-lessons.py /path/to/shell-novice /path/to/git-novice /path/to/scc
@@ -157,7 +157,7 @@ def main(paths):
 
         for slug, relative, title, _seconds in source["lessons"]:
             markdown = repo / relative
-            typst = imports / f"{slug}.typ"
+            imported = imports / f"{slug}.md"
             rendered = generated / f"{slug}.html"
             source_url = f"{source['github']}/blob/{actual}/{relative}"
             owner, repository = source["github"].split("/")[-2:]
@@ -170,18 +170,18 @@ def main(paths):
                 normalized.write_text(normalize_markdown(markdown))
                 raw_html = Path(tmp) / "lesson.html"
                 source_format = "markdown+fenced_divs+task_lists+pipe_tables+strikeout+autolink_bare_uris"
-                run("pandoc", str(normalized), "-f", source_format, "-t", "typst", "--wrap=none", "-o", str(typst))
-                # Pandoc's Typst writer currently emits this helper, while its
-                # Typst reader intentionally accepts only built-in constructs.
-                converted = typst.read_text().replace("#horizontalrule", "---")
                 notice = (
-                    f"// Imported from {source_url}\n"
-                    f"// Licensed under {source['license']}; formatting converted on {TODAY}.\n\n"
+                    f"<!-- Imported from {source_url} -->\n"
+                    f"<!-- Licensed under {source['license']}; formatting retained on {TODAY}. -->\n\n"
                 )
-                typst.write_text(notice + converted)
-                run("pandoc", str(typst), "-f", "typst", "-t", "html5", "--wrap=none", "-o", str(raw_html))
+                normalized_markdown = Path(tmp) / "lesson.md"
+                run("pandoc", str(normalized), "-f", source_format, "-t", "gfm", "--wrap=none", "-o", str(normalized_markdown))
+                imported.write_text(notice + normalized_markdown.read_text())
+                run("pandoc", str(normalized), "-f", source_format, "-t", "html5", "--wrap=none", "-o", str(raw_html))
                 fragment = rewrite_links(raw_html.read_text(), page_base, raw_base)
-                rendered.write_text(localize_images(fragment, slug, repo, raw_root))
+                rendered.write_text("\n".join(
+                    line.rstrip() for line in localize_images(fragment, slug, repo, raw_root).splitlines()
+                ) + "\n")
 
             data = {
                 "schemaVersion": 1,
@@ -197,12 +197,12 @@ def main(paths):
                     "repository": source["github"],
                     "commit": actual,
                     "license": source["license"],
-                    "adaptation": "Formatting converted from upstream Markdown to Typst and HTML; wording retained for initial review.",
+                    "adaptation": "Formatting retained from upstream Markdown; wording retained for initial review.",
                 },
                 "blocks": [{
                     "id": "body",
-                    "type": "typst",
-                    "source": f"/content/imports/{slug}.typ",
+                    "type": "markdown",
+                    "source": f"/content/imports/{slug}.md",
                     "rendered": f"/content/generated/{slug}.html",
                 }],
             }

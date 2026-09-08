@@ -161,10 +161,11 @@ class RenderingTests(TestCase):
             render_typst('#raw("<b>unsafe</b>")')
 
     def test_markdown_renders_common_content_and_removes_raw_html(self):
-        markup = render_markdown("## Hello\n\n**bold** and [a link](https://example.com).\n\n<script>alert(1)</script>")
+        markup = render_markdown("## Hello\n\n**bold** and [a link](guide.md).\n\n- [x] done\n\n<script>alert(1)</script>", "https://example.com/lesson/index.md")
         self.assertIn("<h2>Hello</h2>", markup)
         self.assertIn("<strong>bold</strong>", markup)
-        self.assertIn('href="https://example.com"', markup)
+        self.assertIn('href="https://example.com/lesson/guide.md"', markup)
+        self.assertIn('type="checkbox"', markup)
         self.assertNotIn("<script>", markup)
 
 
@@ -229,6 +230,16 @@ class BootstrapTests(TestCase):
             manifest = json.loads((Path(output) / "current.json").read_text())
         self.assertEqual(sum(len(topic["challenges"]) for topic in manifest["topics"]), 40)
         self.assertEqual(ChallengeRevision.objects.count(), 40)
+
+    def test_refresh_imported_markdown_updates_a_legacy_draft(self):
+        call_command("bootstrap_content", stdout=io.StringIO())
+        draft = ChallengeDraft.objects.get(challenge_id="000")
+        draft.content["blocks"][0]["type"] = "typst"
+        draft.save(update_fields=["content"])
+        call_command("refresh_imported_markdown", stdout=io.StringIO())
+        draft.refresh_from_db()
+        self.assertEqual(draft.content["blocks"][0]["type"], "markdown")
+        self.assertEqual(AuditRecord.objects.filter(action="refresh-imported-markdown").count(), 1)
 
 
 class PublicationTests(TestCase):

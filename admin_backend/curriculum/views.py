@@ -150,9 +150,10 @@ def automatic_layout(request):
 @require_POST
 def preview_blocks(request):
     try:
-        blocks = json.loads(request.body)["blocks"]
+        data = json.loads(request.body)
+        blocks = data["blocks"]
         validate_blocks(blocks)
-        return JsonResponse({"ok": True, "blocks": render_blocks(blocks)})
+        return JsonResponse({"ok": True, "blocks": render_blocks(blocks, data.get("sourceUrl"))})
     except (KeyError, json.JSONDecodeError, ValidationError) as error:
         return error_response(error)
 

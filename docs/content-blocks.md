@@ -50,8 +50,9 @@ without changing the stable challenge number.
 ### Markdown
 
 A Markdown block stores CommonMark-style source and a generated safe HTML
-fragment. Headings, emphasis, links, lists, fenced code, tables, and footnotes
-are supported. Raw HTML is removed before preview and publication.
+fragment. Headings, emphasis, links, images, lists, task lists, fenced code,
+tables, footnotes, and strikethrough are supported. Relative links resolve
+against the source URL. Raw HTML is removed before preview and publication.
 
 ```markdown
 ## Heading

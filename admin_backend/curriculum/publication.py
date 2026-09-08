@@ -57,7 +57,7 @@ def revision_for(challenge, actor):
 
 def write_text_challenge(root, release_id, challenge, revision):
     slug = challenge.slug
-    rendered = render_blocks(revision.content["blocks"])
+    rendered = render_blocks(revision.content["blocks"], revision.source.get("url"))
     blocks = []
     for block, result in zip(revision.content["blocks"], rendered):
         generated = root / "generated" / slug / f'{block["id"]}.html'

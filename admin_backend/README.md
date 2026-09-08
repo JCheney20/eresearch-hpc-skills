@@ -51,10 +51,13 @@ sudo install -d -m 2750 -o uwc-hpc-admin -g www-data \
 sudo -u uwc-hpc-admin /opt/uwc-hpc-admin/venv/bin/python admin_backend/manage.py migrate
 sudo -u uwc-hpc-admin /opt/uwc-hpc-admin/venv/bin/python admin_backend/manage.py bootstrap_content
 sudo -u uwc-hpc-admin /opt/uwc-hpc-admin/venv/bin/python admin_backend/manage.py collectstatic --noinput
+sudo -u uwc-hpc-admin /opt/uwc-hpc-admin/venv/bin/python admin_backend/manage.py refresh_imported_markdown
 sudo systemctl enable --now uwc-hpc-admin
 sudo nginx -t && sudo systemctl reload nginx
 ```
 
 `bootstrap_content` refuses to run once challenges exist. It preserves the
 current learner release as passthrough content until an Admin deliberately edits
-and republishes a challenge.
+and republishes a challenge. `refresh_imported_markdown` safely updates existing
+imported text drafts to the committed Markdown source; it leaves published
+revisions unchanged.

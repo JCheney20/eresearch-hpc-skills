@@ -84,7 +84,8 @@ function blockTemplate(block, index) {
   const item = document.createElement("section");
   item.className = "editor-block";
   item.dataset.index = index;
-  item.innerHTML = `<div class="block-head"><select class="block-type"><option value="markdown">Markdown</option><option value="callout">Callout</option><option value="bash">Bash</option><option value="typst">Legacy Typst</option></select><input class="block-id" aria-label="Stable block ID" value="${escapeAttribute(block.id)}"><button type="button" data-move="up" title="Move up">↑</button><button type="button" data-remove title="Remove block">×</button></div><div class="block-body"></div>`;
+  const last = index === selectedChallenge.draft.content.blocks.length - 1;
+  item.innerHTML = `<div class="block-head"><select class="block-type"><option value="markdown">Markdown</option><option value="callout">Callout</option><option value="bash">Bash</option><option value="typst">Legacy Typst</option></select><input class="block-id" aria-label="Stable block ID" value="${escapeAttribute(block.id)}"><div class="block-order"><button type="button" data-move="up" title="Move block up" ${index ? "" : "disabled"}>↑</button><button type="button" data-move="down" title="Move block down" ${last ? "disabled" : ""}>↓</button></div><button type="button" data-remove title="Remove block">×</button></div><div class="block-body"></div>`;
   item.querySelector(".block-type").value = block.type;
   const body = item.querySelector(".block-body");
   if (block.type === "bash") {
@@ -118,13 +119,14 @@ function bindBlock(item) {
     selectedChallenge.draft.content.blocks.splice(item.dataset.index, 1);
     renderBlocks();
   });
-  item.querySelector("[data-move]").addEventListener("click", () => {
+  item.querySelectorAll("[data-move]").forEach(button => button.addEventListener("click", () => {
     const index = Number(item.dataset.index);
-    if (!index) return;
+    const target = button.dataset.move === "up" ? index - 1 : index + 1;
     const blocks = syncBlocks();
-    [blocks[index - 1], blocks[index]] = [blocks[index], blocks[index - 1]];
+    if (target < 0 || target >= blocks.length) return;
+    [blocks[index], blocks[target]] = [blocks[target], blocks[index]];
     renderBlocks();
-  });
+  }));
   item.querySelectorAll("[data-wrap]").forEach(button => button.addEventListener("click", () => wrapSelection(item.querySelector(".block-source"), button.dataset.wrap)));
   item.querySelector("[data-link]")?.addEventListener("click", () => {
     const input = item.querySelector(".block-source");
@@ -158,10 +160,30 @@ function syncBlocks() {
   selectedChallenge.draft.content.blocks = rendered;
   return rendered;
 }
+function nextBlockId(type) {
+  const ids = new Set(selectedChallenge.draft.content.blocks.map(block => block.id));
+  let index = 1;
+  while (ids.has(`${type}-${index}`)) index += 1;
+  return `${type}-${index}`;
+}
 function renderBlocks() {
   const host = $("#blocks");
   host.replaceChildren();
-  selectedChallenge.draft.content.blocks.forEach((block, index) => host.append(blockTemplate(block, index)));
+  selectedChallenge.draft.content.blocks.forEach((block, index) => {
+    host.append(blockTemplate(block, index));
+    const insert = document.createElement("button");
+    insert.type = "button";
+    insert.className = "block-insert";
+    insert.textContent = "+";
+    insert.title = "Add a Markdown block after this block";
+    insert.addEventListener("click", () => {
+      const blocks = syncBlocks();
+      const type = "markdown";
+      blocks.splice(index + 1, 0, { id: nextBlockId(type), type, source: "" });
+      renderBlocks();
+    });
+    host.append(insert);
+  });
   schedulePreview();
 }
 function schedulePreview() {
@@ -172,7 +194,7 @@ async function preview() {
   const blocks = syncBlocks();
   if (!blocks.length) { $("#preview-output").textContent = "Add a block to begin."; return; }
   try {
-    const result = await post(state.urls.preview, { blocks });
+    const result = await post(state.urls.preview, { blocks, sourceUrl: selectedChallenge.draft.source?.url || "" });
     $("#preview-output").innerHTML = result.blocks.map(block => block.html).join("");
   } catch (error) {
     $("#preview-output").textContent = error.message;
@@ -182,11 +204,18 @@ document.querySelectorAll("[data-add]").forEach(button => button.addEventListene
   if (!selectedChallenge) return;
   syncBlocks();
   const type = button.dataset.add;
-  const id = `${type}-${selectedChallenge.draft.content.blocks.length + 1}`;
+  const id = nextBlockId(type);
   selectedChallenge.draft.content.blocks.push(type === "bash" ? { id, type, command: "", output: "", mode: "display" } : { id, type, source: "", ...(type === "callout" ? { style: "note" } : {}) });
   renderBlocks();
 }));
 $("#challenge-search").addEventListener("input", event => renderChoices(event.target.value));
+$("#challenge-rail-toggle").addEventListener("click", () => {
+  const panel = $("#content-panel");
+  const collapsed = panel.classList.toggle("is-rail-collapsed");
+  $("#challenge-rail-toggle").setAttribute("aria-expanded", String(!collapsed));
+  $("#challenge-rail-toggle span[aria-hidden]").textContent = collapsed ? "→" : "←";
+  $("#challenge-rail-toggle .vh").textContent = collapsed ? "Expand challenge list" : "Collapse challenge list";
+});
 $("#challenge-kind").addEventListener("change", showCodeFields);
 $("#challenge-form").addEventListener("submit", async event => {
   event.preventDefault();

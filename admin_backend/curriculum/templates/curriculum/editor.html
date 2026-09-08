@@ -18,9 +18,12 @@
 
 <section id="content-panel" class="editor-panel is-active">
   <aside class="challenge-list">
-    <label for="challenge-search">Challenges</label>
-    <input id="challenge-search" type="search" placeholder="Find by number or name">
-    <div id="challenges"></div>
+    <button id="challenge-rail-toggle" class="rail-toggle" type="button" aria-expanded="true" aria-controls="challenges"><span aria-hidden="true">←</span><span class="vh">Collapse challenge list</span></button>
+    <div class="challenge-list-content">
+      <label for="challenge-search">Challenges</label>
+      <input id="challenge-search" type="search" placeholder="Find by number or name">
+      <div id="challenges"></div>
+    </div>
   </aside>
   <main class="content-editor">
     <div id="no-challenge" class="empty-state">Choose a challenge to edit its draft.</div>

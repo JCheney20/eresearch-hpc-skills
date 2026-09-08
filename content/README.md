@@ -1,7 +1,7 @@
 # Imported lesson content
 
 `challenges/` contains the ordered block documents loaded by text challenges.
-`imports/` contains editable Typst source plus the pinned source manifest.
+`imports/` contains editable Markdown source plus the pinned source manifest.
 `generated/` contains the static HTML fragments served to learners. `assets/`
 contains local copies of lesson images so published lessons do not depend on
 upstream image hosting.
@@ -16,5 +16,5 @@ node tools/check.mjs
 ```
 
 Do not point the importer at newer commits without reviewing their content and
-licence changes. Generated HTML is committed so Nginx needs no Typst, Pandoc,
-Python, or database on the public path.
+licence changes. Generated HTML is committed so Nginx needs no Pandoc, Python,
+or database on the public path.

@@ -74,12 +74,12 @@ class Command(BaseCommand):
 
     def blocks_for(self, item, project_root):
         if not item.get("contentUrl"):
-            return [{"id": "legacy", "type": "typst", "source": f'= {item["title"]}\n\nThis challenge currently uses bundled learner content.'}]
+            return [{"id": "legacy", "type": "markdown", "source": f'## {item["title"]}\n\nThis challenge currently uses bundled learner content.'}]
         document = json.loads((project_root / item["contentUrl"].removeprefix("/")).read_text())
         blocks = []
         for block in document["blocks"]:
             value = {"id": block["id"], "type": block["type"]}
-            if block["type"] in {"typst", "callout"}:
+            if block["type"] in {"markdown", "typst", "callout"}:
                 value["source"] = (project_root / block["source"].removeprefix("/")).read_text()
                 if block["type"] == "callout":
                     value["style"] = block["style"]
