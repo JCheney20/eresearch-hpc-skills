@@ -20,10 +20,10 @@ from .models import (
     Topic,
 )
 from .publication import publish
-from .rendering import render_typst
+from .rendering import render_markdown, render_typst
 from .validation import validate_graph
 
-BLOCKS = [{"id": "intro", "type": "typst", "source": "= Start\n\nRead *this*."}]
+BLOCKS = [{"id": "intro", "type": "markdown", "source": "## Start\n\nRead **this**."}]
 CODE = {
     "blocks": BLOCKS,
     "task": "Print the directory.",
@@ -160,6 +160,13 @@ class RenderingTests(TestCase):
         with self.assertRaises(ValidationError):
             render_typst('#raw("<b>unsafe</b>")')
 
+    def test_markdown_renders_common_content_and_removes_raw_html(self):
+        markup = render_markdown("## Hello\n\n**bold** and [a link](https://example.com).\n\n<script>alert(1)</script>")
+        self.assertIn("<h2>Hello</h2>", markup)
+        self.assertIn("<strong>bold</strong>", markup)
+        self.assertIn('href="https://example.com"', markup)
+        self.assertNotIn("<script>", markup)
+
 
 class EditorViewTests(TestCase):
     def setUp(self):
@@ -256,6 +263,7 @@ class PublicationTests(TestCase):
         self.assertEqual(current["releaseId"], str(release.release_id))
         self.assertEqual(current["layouts"]["journey"]["000"], {"x": 250, "y": 40})
         self.assertTrue((root / "releases" / str(release.release_id) / "challenges" / "start.json").exists())
+        self.assertTrue((root / "releases" / str(release.release_id) / "source" / "start" / "intro.md").exists())
         self.assertEqual(ChallengeRevision.objects.count(), 1)
         with self.captureOnCommitCallbacks(execute=True):
             publish(self.curriculum, self.user, self.output.name)

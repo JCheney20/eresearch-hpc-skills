@@ -68,11 +68,12 @@ def write_text_challenge(root, release_id, challenge, revision):
             "type": block["type"],
             "rendered": f'/content/releases/{release_id}/generated/{slug}/{block["id"]}.html',
         }
-        if block["type"] in {"typst", "callout"}:
-            source = root / "source" / slug / f'{block["id"]}.typ'
+        if block["type"] in {"markdown", "typst", "callout"}:
+            extension = "typ" if block["type"] == "typst" else "md"
+            source = root / "source" / slug / f'{block["id"]}.{extension}'
             source.parent.mkdir(parents=True, exist_ok=True)
             source.write_text(block["source"])
-            published["source"] = f'/content/releases/{release_id}/source/{slug}/{block["id"]}.typ'
+            published["source"] = f'/content/releases/{release_id}/source/{slug}/{block["id"]}.{extension}'
         blocks.append(published)
 
     document = {

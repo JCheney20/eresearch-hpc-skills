@@ -2,9 +2,23 @@ import html
 import re
 from urllib.parse import urlparse
 
+import bleach
+import markdown
 from django.core.exceptions import ValidationError
 
 INLINE = re.compile(r'#link\("([^"]+)"\)\[([^]]+)\]|`([^`]+)`|\*([^*\n]+)\*|_([^_\n]+)_')
+MARKDOWN_TAGS = {
+    "a", "abbr", "blockquote", "br", "code", "dd", "del", "div", "dl", "dt",
+    "em", "figcaption", "figure", "h1", "h2", "h3", "h4", "h5", "h6", "hr",
+    "li", "ol", "p", "pre", "s", "samp", "strong", "sub", "sup", "table", "tbody",
+    "td", "th", "thead", "tr", "ul",
+}
+MARKDOWN_ATTRIBUTES = {
+    "a": ["href", "title"],
+    "abbr": ["title"],
+    "td": ["colspan", "rowspan"],
+    "th": ["colspan", "rowspan"],
+}
 
 
 def render_inline(source):
@@ -32,6 +46,7 @@ def render_typst(source):
         raise ValidationError("Only the Typst link function is supported.")
 
     output, paragraph, list_items = [], [], []
+
     def flush():
         if paragraph:
             output.append(f"<p>{render_inline(' '.join(paragraph))}</p>")
@@ -62,14 +77,27 @@ def render_typst(source):
     return "\n".join(output)
 
 
+def render_markdown(source):
+    markup = markdown.markdown(source, extensions=["extra", "sane_lists"])
+    return bleach.clean(
+        markup,
+        tags=MARKDOWN_TAGS,
+        attributes=MARKDOWN_ATTRIBUTES,
+        protocols={"http", "https", "mailto"},
+        strip=True,
+    )
+
+
 def render_blocks(blocks):
     rendered = []
     for block in blocks:
         kind = block["type"]
         if kind == "typst":
             markup = render_typst(block["source"])
+        elif kind == "markdown":
+            markup = render_markdown(block["source"])
         elif kind == "callout":
-            markup = f'<aside class="callout callout-{block["style"]}">{render_typst(block["source"])}</aside>'
+            markup = f'<aside class="callout callout-{block["style"]}">{render_markdown(block["source"])}</aside>'
         else:
             command = html.escape(block["command"])
             output = html.escape(block.get("output", ""))

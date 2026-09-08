@@ -84,7 +84,7 @@ function blockTemplate(block, index) {
   const item = document.createElement("section");
   item.className = "editor-block";
   item.dataset.index = index;
-  item.innerHTML = `<div class="block-head"><select class="block-type"><option value="typst">Typst</option><option value="callout">Callout</option><option value="bash">Bash</option></select><input class="block-id" aria-label="Stable block ID" value="${escapeAttribute(block.id)}"><button type="button" data-move="up" title="Move up">↑</button><button type="button" data-remove title="Remove block">×</button></div><div class="block-body"></div>`;
+  item.innerHTML = `<div class="block-head"><select class="block-type"><option value="markdown">Markdown</option><option value="callout">Callout</option><option value="bash">Bash</option><option value="typst">Legacy Typst</option></select><input class="block-id" aria-label="Stable block ID" value="${escapeAttribute(block.id)}"><button type="button" data-move="up" title="Move up">↑</button><button type="button" data-remove title="Remove block">×</button></div><div class="block-body"></div>`;
   item.querySelector(".block-type").value = block.type;
   const body = item.querySelector(".block-body");
   if (block.type === "bash") {
@@ -93,7 +93,8 @@ function blockTemplate(block, index) {
     body.querySelector(".bash-output").value = block.output || "";
     body.querySelector(".bash-mode").value = block.mode || "display";
   } else {
-    body.innerHTML = `<div class="typst-tools"><button type="button" data-wrap="*" title="Bold"><b>B</b></button><button type="button" data-wrap="_" title="Italic"><i>I</i></button><button type="button" data-link title="Link">Link</button>${block.type === "callout" ? '<select class="callout-style"><option>note</option><option>hint</option><option>warning</option><option>exercise</option><option>solution</option></select>' : ""}</div><textarea class="block-source" aria-label="Typst source"></textarea>`;
+    const isTypst = block.type === "typst";
+    body.innerHTML = `<div class="block-tools"><button type="button" data-wrap="${isTypst ? "*" : "**"}" title="Bold"><b>B</b></button><button type="button" data-wrap="${isTypst ? "_" : "*"}" title="Italic"><i>I</i></button><button type="button" data-link title="Link">Link</button>${block.type === "callout" ? '<select class="callout-style"><option>note</option><option>hint</option><option>warning</option><option>exercise</option><option>solution</option></select>' : ""}</div><textarea class="block-source" aria-label="${isTypst ? "Typst" : "Markdown"} source"></textarea>`;
     body.querySelector(".block-source").value = block.source || "";
     if (block.type === "callout") body.querySelector(".callout-style").value = block.style || "note";
   }
@@ -128,7 +129,8 @@ function bindBlock(item) {
   item.querySelector("[data-link]")?.addEventListener("click", () => {
     const input = item.querySelector(".block-source");
     const label = input.value.slice(input.selectionStart, input.selectionEnd) || "link text";
-    insertAtSelection(input, `#link("https://example.com")[${label}]`);
+    const isTypst = item.querySelector(".block-type").value === "typst";
+    insertAtSelection(input, isTypst ? `#link("https://example.com")[${label}]` : `[${label}](https://example.com)`);
   });
   item.addEventListener("input", schedulePreview);
   item.addEventListener("change", schedulePreview);

@@ -24,8 +24,8 @@ revision is an ordered list of small, typed blocks.
   "blocks": [
     {
       "id": "body",
-      "type": "typst",
-      "source": "/content/imports/shell-introduction.typ",
+      "type": "markdown",
+      "source": "/content/imports/shell-introduction.md",
       "rendered": "/content/generated/shell-introduction.html"
     }
   ]
@@ -47,34 +47,34 @@ without changing the stable challenge number.
 
 ## Blocks
 
-### Typst
+### Markdown
 
-A Typst block stores editable source and a generated safe HTML fragment. The
-first supported author-facing subset is:
+A Markdown block stores CommonMark-style source and a generated safe HTML
+fragment. Headings, emphasis, links, lists, fenced code, tables, and footnotes
+are supported. Raw HTML is removed before preview and publication.
 
-```typst
-= Heading
-== Subheading
-*bold*
-_italic_
-`inline code`
-#link("https://example.com")[descriptive link text]
-- list item
+```markdown
+## Heading
+
+**bold**, *italic*, and `inline code`
+
+[Descriptive link text](https://example.com)
+
+- List item
 ```
 
-The editor supplies Bold, Italic and Link buttons and an immediate preview.
-Publication rejects unsupported functions. As Typst's semantic HTML export
-matures, the whitelist may expand after accessibility and rendering tests; the
-learner browser never compiles Typst.
+The editor supplies Bold, Italic, and Link buttons and an immediate preview.
+The learner browser never renders untrusted source.
 
-The initial upstream imports were mechanically converted from Markdown to Typst
-with Pandoc. Their generated HTML is committed beside the source. The first
-local content edit must pass the same restricted-Typst validation used by the
-publisher.
+### Legacy Typst
+
+Existing imported Typst blocks remain readable and publishable so that old
+releases do not change. The editor does not create new Typst blocks. Convert a
+legacy block to Markdown when editing its source.
 
 ### Callout
 
-A callout contains a style and one restricted-Typst body:
+A callout contains a style and one Markdown body:
 
 ```json
 {"id":"note-1","type":"callout","style":"note","source":"..."}
@@ -123,7 +123,7 @@ manual coordinates and deterministically regenerates them from connections.
 
 ## Publication
 
-The publisher validates block schemas, the restricted Typst AST, links, source
-and licence metadata, Bash examples, worlds and validators. It then sanitizes
-and writes immutable HTML/JSON assets. Draft source remains editable in SQLite;
-Nginx serves only generated release files.
+The publisher validates block schemas, links, source and licence metadata, Bash
+examples, worlds and validators. It sanitizes Markdown output and writes
+immutable HTML/JSON assets. Draft source remains editable in SQLite; Nginx
+serves only generated release files.

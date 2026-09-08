@@ -32,8 +32,8 @@
 .block-head { display: grid; grid-template-columns: 110px minmax(120px, 1fr) auto auto; gap: 8px; align-items: center; margin-bottom: 10px; }
 .drag-handle { color: var(--body-quiet-color); cursor: grab; }
 .editor-block textarea { width: 100%; min-height: 130px; font-family: var(--font-family-monospace); }
-.typst-tools { display: flex; gap: 5px; margin-bottom: 6px; }
-.typst-tools button { min-width: 32px; }
+.block-tools { display: flex; gap: 5px; margin-bottom: 6px; }
+.block-tools button { min-width: 32px; }
 .block-bash { display: grid; gap: 8px; }
 .block-bash input, .block-bash textarea, .block-bash select { width: 100%; }
 .preview { min-width: 0; padding: 18px; border: 1px solid var(--hairline-color); background: var(--darkened-bg); align-self: start; position: sticky; top: 12px; }

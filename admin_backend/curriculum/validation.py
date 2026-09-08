@@ -5,7 +5,7 @@ from urllib.parse import urlparse
 from django.core.exceptions import ValidationError
 
 BLOCK_ID = re.compile(r"^[a-z][a-z0-9-]{0,63}$")
-BLOCK_TYPES = {"typst", "callout", "bash"}
+BLOCK_TYPES = {"markdown", "typst", "callout", "bash"}
 CALLOUT_STYLES = {"note", "hint", "warning", "exercise", "solution"}
 BASH_MODES = {"display", "copy", "run"}
 
@@ -26,8 +26,8 @@ def validate_blocks(blocks):
         kind = block.get("type")
         if kind not in BLOCK_TYPES:
             raise ValidationError(f'Block "{block_id}" has an unknown type.')
-        if kind in {"typst", "callout"} and not isinstance(block.get("source"), str):
-            raise ValidationError(f'Block "{block_id}" needs Typst source.')
+        if kind in {"markdown", "typst", "callout"} and not isinstance(block.get("source"), str):
+            raise ValidationError(f'Block "{block_id}" needs text source.')
         if kind == "callout" and block.get("style") not in CALLOUT_STYLES:
             raise ValidationError(f'Block "{block_id}" has an unknown callout style.')
         if kind == "bash":
